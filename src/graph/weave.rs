@@ -67,10 +67,7 @@ fn wrap_and_reflect_loom(n: usize, _z_adj: ZAdjacency, z_order: ZOrder) -> Loom 
             thread
                 .iter()
                 .rev()
-                .map(|&node| {
-                    let [x, y, z] = node;
-                    [x, y, -z]
-                })
+                .map(|&[x, y, z]| [x, y, -z])
                 .collect::<Tour>(),
         )
     });
