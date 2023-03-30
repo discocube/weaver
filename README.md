@@ -26,7 +26,7 @@ This algorithm is an artist's rendering of a graph object using programming as a
 
 After pages of studies, drawings, and a little math: this is the result of my using the artistic process to solve a mathematical problem without the means to solve it mathematically. When a graph becomes an artist's muse, how does the artist go about rendering their vision as a painter would paint a portrait, making it their own? Will I eventually draw functions with my mind where I otherwise would have imagined a sculpture? Or will I find patterns in the [music I make from the solutions?](https://soundcloud.com/ro-yu-489928073/tracks)
 
-Art manipulates language to create forms, showing us how a brush strokes the curve of the neck to disappear behind the back, or to with play colors and contrasts to bring the skin, of a subject, who lived 500 years ago, back to life. In this project, I studied the discocube visually as a body, imagining each turn not as a discrete mathematical object, but as the totality of possible movements, as an endlessly iterated dance captured in an infinitely open camera shutter, resulting in more doodles and sketches rather than pages of numbers and equations (I wish I learned more math!). The result is a family of algorithms for solving various types of Hamiltonian cycles, of which this repository provides the simplest and most descriptive: the weave algorithm. The other algorithms, housed in another private repository called "polish" center around the concept of polishing a diamond, i.e., improving upon the initial tour created by the weave algorithm so that the number of edges is evenly distributed across the x, y, and z axes, resulting in an always-turning Hamiltonian cycle.
+Art manipulates language to create forms, showing us how a brush strokes the curve of the neck to disappear behind the back, or to with play colors and contrasts to bring the skin, of a subject living 500 years ago, back to life. In this project, I studied the discocube visually as a body, imagining each turn not as a discrete mathematical object, but as the totality of possible movements, as an endlessly iterated dance captured in an infinitely open camera shutter, resulting in more doodles and sketches rather than pages of numbers and equations (I wish I learned more math!). The result is a family of algorithms for solving various types of Hamiltonian cycles, of which this repository provides the simplest and most descriptive: the weave algorithm. The other algorithms, housed in another private repository called "polish" center around the concept of polishing a diamond, i.e., improving upon the initial tour created by the weave algorithm so that the number of edges is evenly distributed across the x, y, and z axes, resulting in an always-turning Hamiltonian cycle.
 Why weave? Finding the solution to the problem reminded me of macramé, of tying knots, weaving and spinning yarn. I thought of how patterns in hand-woven fabric are actually unwitting recordings of a knitter's hand-movements, like how a piano roll is a recording of the pianist's finger hitting ebony, or how a seismograph records the motion of the earth, or how our skin is type of recording of our life... I followed the thought further and asked myself: was there was a pattern to expose and use to construct the discocube, level by level, similar to how one would knit a scarf, row by row until the desired result is reached? To illustrate the intention of the code succinctly, I've structured the code to mimic the process of weaving a piece of tapestry, from spinning the yarn to incorporating the weft into the warps. 
 
 ![First 11 discocubes and their order (number of nodes)](imgs/rect5857.png?raw=true "Discocubes orders")
@@ -72,6 +72,10 @@ cargo run --release [Graph start instance] [Graph end instance]
 cargo run --release 1 100
 ```
 build > run > make > solve > certify > for each graph starting from 32 to 1.373 million vertices.
+
+## Plotting the solution
+The solution can be plotted using pandas, numpy and plotly. I've put together an easy to use python module: https://github.com/discocube/plot_solution to plot and very the solution visually instead of only programmatically.
+
 
 ## Running times
 ![Running times from 8 to 68,085,920 vertices](imgs/8_to_212million.png?raw=true "Runtimes up to 212 million")
@@ -795,6 +799,175 @@ build > run > make > solve > certify > for each graph starting from 32 to 1.373 
 | 🇳  714 | ⭕️  487366880 | 🕗 663.9865     | 📌 HamCycle |        
 | 🇳  715 | ⭕️  489414640 | 🕗 649.8643     | 📌 HamCycle |        
 | 🇳  716 | ⭕️  491468128 | 🕗 652.14044    | 📌 HamCycle |          
+| 🇳  717 | ⭕️  493527352 | 🕗 659.4656     | 📌 HamCycle |          
+| 🇳  718 | ⭕️  495592320 | 🕗 667.9637     | 📌 HamCycle |          
+| 🇳  719 | ⭕️  497663040 | 🕗 689.3182     | 📌 HamCycle |          
+| 🇳  720 | ⭕️  499739520 | 🕗 691.4332     | 📌 HamCycle |          
+| 🇳  721 | ⭕️  501821768 | 🕗 700.131      | 📌 HamCycle |        
+| 🇳  722 | ⭕️  503909792 | 🕗 691.2255     | 📌 HamCycle |          
+| 🇳  723 | ⭕️  506003600 | 🕗 694.85944    | 📌 HamCycle |          
+| 🇳  724 | ⭕️  508103200 | 🕗 694.552      | 📌 HamCycle |        
+| 🇳  725 | ⭕️  510208600 | 🕗 700.2798     | 📌 HamCycle |          
+| 🇳  726 | ⭕️  512319808 | 🕗 711.0836     | 📌 HamCycle |          
+| 🇳  727 | ⭕️  514436832 | 🕗 709.978      | 📌 HamCycle |        
+| 🇳  728 | ⭕️  516559680 | 🕗 708.6386     | 📌 HamCycle |          
+| 🇳  729 | ⭕️  518688360 | 🕗 710.59827    | 📌 HamCycle |          
+| 🇳  730 | ⭕️  520822880 | 🕗 696.6343     | 📌 HamCycle |          
+| 🇳  731 | ⭕️  522963248 | 🕗 706.3575     | 📌 HamCycle |          
+| 🇳  732 | ⭕️  525109472 | 🕗 704.51105    | 📌 HamCycle |          
+| 🇳  733 | ⭕️  527261560 | 🕗 715.76654    | 📌 HamCycle |          
+| 🇳  734 | ⭕️  529419520 | 🕗 716.8163     | 📌 HamCycle |          
+| 🇳  735 | ⭕️  531583360 | 🕗 705.41565    | 📌 HamCycle |          
+| 🇳  736 | ⭕️  533753088 | 🕗 728.7352     | 📌 HamCycle |          
+| 🇳  737 | ⭕️  535928712 | 🕗 727.3157     | 📌 HamCycle |          
+| 🇳  738 | ⭕️  538110240 | 🕗 737.16486    | 📌 HamCycle |          
+| 🇳  739 | ⭕️  540297680 | 🕗 736.6044     | 📌 HamCycle |          
+| 🇳  740 | ⭕️  542491040 | 🕗 743.94226    | 📌 HamCycle |          
+| 🇳  741 | ⭕️  544690328 | 🕗 761.84845    | 📌 HamCycle |          
+| 🇳  742 | ⭕️  546895552 | 🕗 748.2603     | 📌 HamCycle |          
+| 🇳  743 | ⭕️  549106720 | 🕗 753.649      | 📌 HamCycle |        
+| 🇳  744 | ⭕️  551323840 | 🕗 766.7317     | 📌 HamCycle |          
+| 🇳  745 | ⭕️  553546920 | 🕗 764.153      | 📌 HamCycle |        
+| 🇳  746 | ⭕️  555775968 | 🕗 776.7221     | 📌 HamCycle |          
+| 🇳  747 | ⭕️  558010992 | 🕗 777.84644    | 📌 HamCycle |          
+| 🇳  748 | ⭕️  560252000 | 🕗 779.5181     | 📌 HamCycle |          
+| 🇳  749 | ⭕️  562499000 | 🕗 781.3824     | 📌 HamCycle |          
+| 🇳  750 | ⭕️  564752000 | 🕗 786.7109     | 📌 HamCycle |          
+| 🇳  751 | ⭕️  567011008 | 🕗 781.26154    | 📌 HamCycle |          
+| 🇳  752 | ⭕️  569276032 | 🕗 802.06433    | 📌 HamCycle |          
+| 🇳  753 | ⭕️  571547080 | 🕗 799.93066    | 📌 HamCycle |          
+| 🇳  754 | ⭕️  573824160 | 🕗 808.67163    | 📌 HamCycle |          
+| 🇳  755 | ⭕️  576107280 | 🕗 810.8434     | 📌 HamCycle |          
+| 🇳  756 | ⭕️  578396448 | 🕗 819.05066    | 📌 HamCycle |          
+| 🇳  757 | ⭕️  580691672 | 🕗 814.0104     | 📌 HamCycle |          
+| 🇳  758 | ⭕️  582992960 | 🕗 825.8387     | 📌 HamCycle |          
+| 🇳  759 | ⭕️  585300320 | 🕗 813.3797     | 📌 HamCycle |          
+| 🇳  760 | ⭕️  587613760 | 🕗 814.45306    | 📌 HamCycle |          
+| 🇳  761 | ⭕️  589933288 | 🕗 810.06885    | 📌 HamCycle |          
+| 🇳  762 | ⭕️  592258912 | 🕗 818.7698     | 📌 HamCycle |          
+| 🇳  763 | ⭕️  594590640 | 🕗 830.1747     | 📌 HamCycle |          
+| 🇳  764 | ⭕️  596928480 | 🕗 819.3192     | 📌 HamCycle |          
+| 🇳  765 | ⭕️  599272440 | 🕗 819.84174    | 📌 HamCycle |          
+| 🇳  766 | ⭕️  601622528 | 🕗 825.9119     | 📌 HamCycle |          
+| 🇳  767 | ⭕️  603978752 | 🕗 824.95276    | 📌 HamCycle |          
+| 🇳  768 | ⭕️  606341120 | 🕗 839.7549     | 📌 HamCycle |          
+| 🇳  769 | ⭕️  608709640 | 🕗 839.9701     | 📌 HamCycle |          
+| 🇳  770 | ⭕️  611084320 | 🕗 847.5698     | 📌 HamCycle |          
+| 🇳  771 | ⭕️  613465168 | 🕗 855.8702     | 📌 HamCycle |          
+| 🇳  772 | ⭕️  615852192 | 🕗 884.4243     | 📌 HamCycle |          
+| 🇳  773 | ⭕️  618245400 | 🕗 849.62134    | 📌 HamCycle |          
+| 🇳  774 | ⭕️  620644800 | 🕗 871.8819     | 📌 HamCycle |          
+| 🇳  775 | ⭕️  623050400 | 🕗 901.0242     | 📌 HamCycle |          
+| 🇳  776 | ⭕️  625462208 | 🕗 889.9719     | 📌 HamCycle |          
+| 🇳  777 | ⭕️  627880232 | 🕗 881.2467     | 📌 HamCycle |          
+| 🇳  778 | ⭕️  630304480 | 🕗 881.959      | 📌 HamCycle |        
+| 🇳  779 | ⭕️  632734960 | 🕗 904.2326     | 📌 HamCycle |          
+| 🇳  780 | ⭕️  635171680 | 🕗 901.1722     | 📌 HamCycle |          
+| 🇳  781 | ⭕️  637614648 | 🕗 896.6193     | 📌 HamCycle |          
+| 🇳  782 | ⭕️  640063872 | 🕗 896.7516     | 📌 HamCycle |          
+| 🇳  783 | ⭕️  642519360 | 🕗 904.9419     | 📌 HamCycle |          
+| 🇳  784 | ⭕️  644981120 | 🕗 917.5617     | 📌 HamCycle |          
+| 🇳  785 | ⭕️  647449160 | 🕗 902.4568     | 📌 HamCycle |          
+| 🇳  786 | ⭕️  649923488 | 🕗 915.41644    | 📌 HamCycle |          
+| 🇳  787 | ⭕️  652404112 | 🕗 912.26575    | 📌 HamCycle |          
+| 🇳  788 | ⭕️  654891040 | 🕗 946.83716    | 📌 HamCycle |          
+| 🇳  789 | ⭕️  657384280 | 🕗 934.7332     | 📌 HamCycle |          
+| 🇳  790 | ⭕️  659883840 | 🕗 945.3118     | 📌 HamCycle |          
+| 🇳  791 | ⭕️  662389728 | 🕗 940.4451     | 📌 HamCycle |          
+| 🇳  792 | ⭕️  664901952 | 🕗 967.11554    | 📌 HamCycle |          
+| 🇳  793 | ⭕️  667420520 | 🕗 959.1339     | 📌 HamCycle |          
+| 🇳  794 | ⭕️  669945440 | 🕗 968.47614    | 📌 HamCycle |          
+| 🇳  795 | ⭕️  672476720 | 🕗 953.41785    | 📌 HamCycle |          
+| 🇳  796 | ⭕️  675014368 | 🕗 969.8161     | 📌 HamCycle |          
+| 🇳  797 | ⭕️  677558392 | 🕗 985.97925    | 📌 HamCycle |          
+| 🇳  798 | ⭕️  680108800 | 🕗 978.6896     | 📌 HamCycle |          
+| 🇳  799 | ⭕️  682665600 | 🕗 992.1539     | 📌 HamCycle |          
+| 🇳  800 | ⭕️  685228800 | 🕗 998.6654     | 📌 HamCycle |          
+| 🇳  801 | ⭕️  687798408 | 🕗 986.23114    | 📌 HamCycle |          
+| 🇳  802 | ⭕️  690374432 | 🕗 995.90717    | 📌 HamCycle |          
+| 🇳  803 | ⭕️  692956880 | 🕗 1011.37915   | 📌 HamCycle |            
+| 🇳  804 | ⭕️  695545760 | 🕗 1015.4425    | 📌 HamCycle |          
+| 🇳  805 | ⭕️  698141080 | 🕗 1028.2537    | 📌 HamCycle |          
+| 🇳  806 | ⭕️  700742848 | 🕗 1027.4452    | 📌 HamCycle |          
+| 🇳  807 | ⭕️  703351072 | 🕗 1019.17346   | 📌 HamCycle |            
+| 🇳  808 | ⭕️  705965760 | 🕗 1040.656     | 📌 HamCycle |          
+| 🇳  809 | ⭕️  708586920 | 🕗 1036.1797    | 📌 HamCycle |          
+| 🇳  810 | ⭕️  711214560 | 🕗 1021.82355   | 📌 HamCycle |            
+| 🇳  811 | ⭕️  713848688 | 🕗 1053.1433    | 📌 HamCycle |          
+| 🇳  812 | ⭕️  716489312 | 🕗 1053.8279    | 📌 HamCycle |          
+| 🇳  813 | ⭕️  719136440 | 🕗 1034.6536    | 📌 HamCycle |          
+| 🇳  814 | ⭕️  721790080 | 🕗 1069.9127    | 📌 HamCycle |          
+| 🇳  815 | ⭕️  724450240 | 🕗 1070.0461    | 📌 HamCycle |          
+| 🇳  816 | ⭕️  727116928 | 🕗 1060.5667    | 📌 HamCycle |          
+| 🇳  817 | ⭕️  729790152 | 🕗 1083.5398    | 📌 HamCycle |          
+| 🇳  818 | ⭕️  732469920 | 🕗 1075.5547    | 📌 HamCycle |          
+| 🇳  819 | ⭕️  735156240 | 🕗 1095.4841    | 📌 HamCycle |          
+| 🇳  820 | ⭕️  737849120 | 🕗 1091.9056    | 📌 HamCycle |          
+| 🇳  821 | ⭕️  740548568 | 🕗 1086.7192    | 📌 HamCycle |          
+| 🇳  822 | ⭕️  743254592 | 🕗 1094.7296    | 📌 HamCycle |          
+| 🇳  823 | ⭕️  745967200 | 🕗 1098.8488    | 📌 HamCycle |          
+| 🇳  824 | ⭕️  748686400 | 🕗 1106.9021    | 📌 HamCycle |          
+| 🇳  825 | ⭕️  751412200 | 🕗 1100.246     | 📌 HamCycle |          
+| 🇳  826 | ⭕️  754144608 | 🕗 1126.7186    | 📌 HamCycle |          
+| 🇳  827 | ⭕️  756883632 | 🕗 1146.5054    | 📌 HamCycle |          
+| 🇳  828 | ⭕️  759629280 | 🕗 1162.1633    | 📌 HamCycle |          
+| 🇳  829 | ⭕️  762381560 | 🕗 1174.809     | 📌 HamCycle |          
+| 🇳  830 | ⭕️  765140480 | 🕗 1170.0933    | 📌 HamCycle |          
+| 🇳  831 | ⭕️  767906048 | 🕗 1188.7399    | 📌 HamCycle |          
+| 🇳  832 | ⭕️  770678272 | 🕗 1203.2622    | 📌 HamCycle |          
+| 🇳  833 | ⭕️  773457160 | 🕗 1190.826     | 📌 HamCycle |          
+| 🇳  834 | ⭕️  776242720 | 🕗 1211.4597    | 📌 HamCycle |          
+| 🇳  835 | ⭕️  779034960 | 🕗 1164.9359    | 📌 HamCycle |          
+| 🇳  836 | ⭕️  781833888 | 🕗 1182.0198    | 📌 HamCycle |          
+| 🇳  837 | ⭕️  784639512 | 🕗 1186.8093    | 📌 HamCycle |          
+| 🇳  838 | ⭕️  787451840 | 🕗 1209.8766    | 📌 HamCycle |          
+| 🇳  839 | ⭕️  790270880 | 🕗 1205.0645    | 📌 HamCycle |          
+| 🇳  840 | ⭕️  793096640 | 🕗 1226.6135    | 📌 HamCycle |          
+| 🇳  841 | ⭕️  795929128 | 🕗 1222.5034    | 📌 HamCycle |          
+| 🇳  842 | ⭕️  798768352 | 🕗 1237.177     | 📌 HamCycle |          
+| 🇳  843 | ⭕️  801614320 | 🕗 1231.9922    | 📌 HamCycle |          
+| 🇳  844 | ⭕️  804467040 | 🕗 1234.2844    | 📌 HamCycle |          
+| 🇳  845 | ⭕️  807326520 | 🕗 1237.1168    | 📌 HamCycle |          
+| 🇳  846 | ⭕️  810192768 | 🕗 1240.3177    | 📌 HamCycle |          
+| 🇳  847 | ⭕️  813065792 | 🕗 1248.7838    | 📌 HamCycle |          
+| 🇳  848 | ⭕️  815945600 | 🕗 1273.6678    | 📌 HamCycle |          
+| 🇳  849 | ⭕️  818832200 | 🕗 1262.9441    | 📌 HamCycle |          
+| 🇳  850 | ⭕️  821725600 | 🕗 1262.6003    | 📌 HamCycle |          
+| 🇳  851 | ⭕️  824625808 | 🕗 1278.4816    | 📌 HamCycle |          
+| 🇳  852 | ⭕️  827532832 | 🕗 1276.0511    | 📌 HamCycle |          
+| 🇳  853 | ⭕️  830446680 | 🕗 1260.8254    | 📌 HamCycle |          
+| 🇳  854 | ⭕️  833367360 | 🕗 1299.5009    | 📌 HamCycle |          
+| 🇳  855 | ⭕️  836294880 | 🕗 1284.1141    | 📌 HamCycle |          
+| 🇳  856 | ⭕️  839229248 | 🕗 1281.1891    | 📌 HamCycle |          
+| 🇳  857 | ⭕️  842170472 | 🕗 1312.8049    | 📌 HamCycle |          
+| 🇳  858 | ⭕️  845118560 | 🕗 1297.0094    | 📌 HamCycle |          
+| 🇳  859 | ⭕️  848073520 | 🕗 1311.4869    | 📌 HamCycle |          
+| 🇳  860 | ⭕️  851035360 | 🕗 1321.159     | 📌 HamCycle |          
+| 🇳  861 | ⭕️  854004088 | 🕗 1328.9614    | 📌 HamCycle |          
+| 🇳  862 | ⭕️  856979712 | 🕗 1336.1957    | 📌 HamCycle |          
+| 🇳  863 | ⭕️  859962240 | 🕗 1318.6458    | 📌 HamCycle |          
+| 🇳  864 | ⭕️  862951680 | 🕗 1345.3757    | 📌 HamCycle |          
+| 🇳  865 | ⭕️  865948040 | 🕗 1373.4031    | 📌 HamCycle |          
+| 🇳  866 | ⭕️  868951328 | 🕗 1358.4807    | 📌 HamCycle |          
+| 🇳  867 | ⭕️  871961552 | 🕗 1373.3682    | 📌 HamCycle |          
+| 🇳  868 | ⭕️  874978720 | 🕗 1359.3738    | 📌 HamCycle |          
+| 🇳  869 | ⭕️  878002840 | 🕗 1361.6593    | 📌 HamCycle |          
+| 🇳  870 | ⭕️  881033920 | 🕗 1406.5709    | 📌 HamCycle |          
+| 🇳  871 | ⭕️  884071968 | 🕗 1433.6284    | 📌 HamCycle |          
+| 🇳  872 | ⭕️  887116992 | 🕗 1420.4707    | 📌 HamCycle |          
+| 🇳  873 | ⭕️  890169000 | 🕗 1413.2761    | 📌 HamCycle |          
+| 🇳  874 | ⭕️  893228000 | 🕗 1460.4004    | 📌 HamCycle |          
+| 🇳  875 | ⭕️  896294000 | 🕗 1448.5476    | 📌 HamCycle |          
+| 🇳  876 | ⭕️  899367008 | 🕗 1446.5065    | 📌 HamCycle |          
+| 🇳  877 | ⭕️  902447032 | 🕗 1478.686     | 📌 HamCycle |          
+| 🇳  878 | ⭕️  905534080 | 🕗 1476.205     | 📌 HamCycle |          
+| 🇳  879 | ⭕️  908628160 | 🕗 1481.538     | 📌 HamCycle |     
+| 🇳  880 | ⭕️  911729280 | 🕗 1483.3105    | 📌 HamCycle |     
+| 🇳  881 | ⭕️  914837448 | 🕗 1467.383     | 📌 HamCycle |     
+| 🇳 1000 | ⭕️ 1337336000 | 🕗 2403.4136    | 📌 HamCycle | 🕗 CERTIFY: 565.8121
+| 🇳 1010 | 🕗 MAKE: 0.367315 | ⭕️ 1377817760 | 🕗 SOLVE: 2561.4006 | 📌 HamCycle | 🕗 CERTIFY: 586.4983
+| 🇳 1100 | 🕗 MAKE: 0.373897 | ⭕️ 1779509600 | 🕗 SOLVE: 3562.2673 | 📌 HamCycle | 🕗 CERTIFY: 696.28436
+| 🇳 1200 | 🕗 MAKE: 0.521218 | ⭕️ 2309763200 | 🕗 SOLVE: 8420.2519 | 📌 HamCycle
 ## Licensing:
 
 This package is licensed under the MIT license.
