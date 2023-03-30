@@ -3,6 +3,8 @@
 /// ```
 /// cargo run --release [N] [N_UPPER_INCLUSIVE] [STEPS]
 /// cargo run --release 1 100 2
+/// cargo run --release [N] [N_UPPER_INCLUSIVE] [STEPS]
+/// cargo run --release 1 100 2
 /// ```
 /// builds binary under hamcycle/target/release/hamcycle
 /// runs binary: ./hamcycle/target/release/hamcycle
@@ -17,8 +19,13 @@ extern crate rayon;
 
 pub mod graph;
 
+use graph::{
+    defs::*,
+    utils::certify::{is_hamiltonian_circuit, SequenceID},
+    utils::make::make_xs_graph,
+    weave,
+};
 use std::{env, time::Instant};
-use graph::{defs::*, utils::certify::{SequenceID, is_hamiltonian_circuit}, utils::make::make_z_graph, weave};
 
 pub fn main() -> Result<(), &'static str> {
     let args: Vec<String> = env::args().collect();
@@ -41,18 +48,16 @@ pub fn main() -> Result<(), &'static str> {
 
 pub fn find_solution(level: u32, _certify: bool) -> Result<Solution, &'static str> {
     let mut start: Instant = Instant::now();
-    let (n, order, z_adj, z_order, min_xyz) = make_z_graph(level);
+    let (n, order, z_order, min_xyz) = make_xs_graph(level);
     let dur_make = Instant::now() - start;
     start = Instant::now();
-    let solution = weave::weave(n as usize, z_adj, z_order, min_xyz, order);
+    let solution = weave::weave(n as usize, z_order, min_xyz, order);
     let dur_solve = Instant::now() - start;
-
     println!(
         "| 🇳 {n:>4} | 🕗 MAKE: {} | ⭕️ {order:>10} | 🕗 SOLVE: {} | 📌 HamCycle",
         dur_make.as_secs_f32(),
         dur_solve.as_secs_f32(),
     );
-
     start = Instant::now();
     let seq_id = is_hamiltonian_circuit(&solution, order as usize, min_xyz + 8);
     let dur_certify = Instant::now() - start;
@@ -63,6 +68,5 @@ pub fn find_solution(level: u32, _certify: bool) -> Result<Solution, &'static st
         dur_certify.as_secs_f32()
     );
     assert_eq!(seq_id, SequenceID::HamCycle);
-
     Ok(solution)
 }
