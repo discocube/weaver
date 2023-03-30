@@ -4,11 +4,11 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+chrono = "0.4.24"
 common_macros = "0.1.1"
 csv = "1.2.1"
 itertools = "0.10.5"
-ndarray = "0.15.6"
-plotters = "0.3.1"
+ndarray = { version = "0.15.6", features = ["blas", "rayon", "matrixmultiply-threading"] } 
 rayon = "1.7.0"
 serde = { version = "1", features = ["derive"] }
 
