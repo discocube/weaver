@@ -146,6 +146,8 @@ pub mod modify {
 }
 
 pub mod info {
+    use ndarray::Array1;
+
     use super::{Point, SignedIdx, Vert};
 
     pub fn are_adj([a, b, c]: [i16; 3], [x, y, z]: [i16; 3]) -> bool {
@@ -160,7 +162,7 @@ pub mod info {
             .expect("Something's wrong, the same verts are being compared.")
     }
 
-    pub fn absumv2d((x, y, _): Vert) -> i16 {
+    pub fn absumv2dx((x, y, _): Vert) -> i16 {
         let abs_sum = [x, y].iter().fold(0, |acc, x| {
             let mask = x >> 15;
             acc + (x ^ mask) - mask
@@ -169,35 +171,71 @@ pub mod info {
         (abs_sum ^ sign_bit) - sign_bit
     }
 
-    pub fn absumv3d((x, y, z): Vert) -> i16 {
-        let abs_sum = [x, y, z].iter().fold(0, |acc, x| {
-            let mask = x >> 15;
-            acc + (x ^ mask) - mask
-        });
-        let sign_bit = abs_sum >> 15;
-        (abs_sum ^ sign_bit) - sign_bit
+    pub fn absumv2d((x, y, _): Vert) -> i16 {
+        [x, y]
+            .iter()
+            .map(|v| {
+                let mask = v >> 15;
+                (v ^ mask) - mask
+            })
+            .sum()
     }
 
-    pub fn absumv2dc(vert: [i16; 2]) -> i16 {
-        let abs_sum = vert.iter().fold(0, |acc, x| {
+    pub fn absumv3d((x, y, z): Vert) -> i16 {
+        [x, y, z]
+            .iter()
+            .map(|v| {
+                let mask = v >> 15;
+                (v ^ mask) - mask
+            })
+            .sum()
+    }
+
+    pub fn absumv2dc([x, y]: [i16; 2]) -> i16 {
+        ((x ^ (x >> 15)) - (x >> 15)) + ((y ^ (y >> 15)) - (y >> 15))
+    }
+
+    /// mask = v >> 15, r = (v ^ mask) - mask;
+    pub fn absumv2dc2(vert: [i16; 2]) -> i16 {
+        vert.iter()
+            .map(|v| {
+                let mask = v >> 15;
+                (v ^ mask) - mask
+            })
+            .sum()
+    }
+
+    pub fn absumv2dc6(vert: [i16; 2]) -> i16 {
+        vert.iter().fold(0, |acc, x| {
             let mask = x >> 15;
             acc + (x ^ mask) - mask
-        });
-        let sign_bit = abs_sum >> 15;
-        (abs_sum ^ sign_bit) - sign_bit
+        })
+    }
+
+    pub fn absumvar(vect: &Array1<i16>) -> i16 {
+        vect.iter()
+            .map(|v| {
+                let mask = v >> 15;
+                (v ^ mask) - mask
+            })
+            .sum()
     }
 
     pub fn absumv(vert: [i16; 3]) -> Point {
-        let abs_sum = vert.iter().fold(0, |acc, x| {
-            let mask = x >> 15;
-            acc + (x ^ mask) - mask
-        });
-        let sign_bit = abs_sum >> 15;
-        (abs_sum ^ sign_bit) - sign_bit
+        vert.iter()
+            .map(|v| {
+                let mask = v >> 15;
+                (v ^ mask) - mask
+            })
+            .sum()
     }
 
     pub fn get_max_xyz(order: u32) -> SignedIdx {
         (get_n_from_order(order) * 2 - 1) as i32
+    }
+
+    pub fn get_max_xyz_from_n(n: u32) -> SignedIdx {
+        (n * 2 - 1) as i32
     }
 
     pub fn get_order_from_n(n: u32) -> u32 {
@@ -210,6 +248,10 @@ pub mod info {
 
     pub fn get_color_index(z: i16) -> u32 {
         (z % 4 + 4).try_into().unwrap()
+    }
+
+    pub fn get_zlen(n: u32) -> u32 {
+        2 * n * (n + 1)
     }
 }
 
@@ -334,7 +376,7 @@ pub mod make_edges_eadjs {
 pub mod certify {
     use itertools::all;
 
-    use super::{std::fmt, Adjacency, Itertools, Solution, info::absumv};
+    use super::{info::absumv, std::fmt, Adjacency, Itertools, Solution};
 
     #[derive(Debug, PartialEq)]
     pub enum SequenceID {
@@ -368,11 +410,16 @@ pub mod certify {
     }
 
     pub fn is_hamiltonian_circuit(seq: &Solution, order: usize, max_xyz_plus_4: i16) -> SequenceID {
-        if seq.iter().duplicates().count() > 0 
-            || seq.len() != order 
+        if seq.iter().duplicates().count() > 0
+            || seq.len() != order
             || !all(seq.iter(), |[x, y, z]| (x & 1) + (y & 1) + (z & 1) == 3)
             || !all(seq.iter(), |vert| absumv(*vert) < max_xyz_plus_4)
-            || seq.iter().fold((0, 0, 0), |acc: (i16, i16, i16), &[x, y, z]| (acc.0 + x, acc.1 + y, acc.2 + z)) != (0, 0, 0)
+            || seq
+                .iter()
+                .fold((0, 0, 0), |acc: (i16, i16, i16), &[x, y, z]| {
+                    (acc.0 + x, acc.1 + y, acc.2 + z)
+                })
+                != (0, 0, 0)
         {
             return SequenceID::Broken;
         }
@@ -381,69 +428,56 @@ pub mod certify {
 }
 
 pub mod csv_out {
-    use std::error::Error;
     use serde::Serialize;
-    use plotters::prelude::*;
-    use std::fs::File;
-    use std::io::prelude::*;
-    use std::path::Path;
-    
-    
+    use std::error::Error;
+
     #[derive(Debug, Serialize, serde::Deserialize)]
     #[serde(rename_all = "PascalCase")]
     struct Vector {
         x: i16,
         y: i16,
-        z: i16
+        z: i16,
     }
 
-    
-    pub fn create_3d_line_plot(file_path: &str) -> Result<(), Box<dyn Error>> {
-        let path = Path::new(file_path);
-        let mut file = File::open(&path)?;
-        let mut contents = String::new();
-        file.read_to_string(&mut contents)?;
-    
-        let mut rdr = csv::Reader::from_reader(contents.as_bytes());
-        let mut x_data = Vec::new();
-        let mut y_data = Vec::new();
-        let mut z_data = Vec::new();
-    
-        for result in rdr.deserialize() {
-            let vector: Vector = result?;
-            x_data.push(vector.x);
-            y_data.push(vector.y);
-            z_data.push(vector.z);
-        }
-    
-        let root = BitMapBackend::new("3d_line_plot.png", (640, 480)).into_drawing_area();
-        root.fill(&WHITE)?;
-    
-        let mut chart = ChartBuilder::on(&root)
-            .caption("3D Line Plot", ("sans-serif", 20))
-            .build_cartesian_3d(-100..100, -100..100, -100..100)?;
-    
-        chart.configure_axes().draw()?;
-    
-        chart.draw_series(LineSeries::new(
-            x_data
-                .iter()
-                .zip(y_data.iter())
-                .zip(z_data.iter())
-                .map(|((x, y), z)| (*x as i32, *y as i32, *z as i32)),
-            &BLACK,
-        ))?;
-    
-        Ok(())
-    }
-
-    pub fn vector_to_csv(data: Vec<[i16;3]>, file_path: &str) -> Result<(), Box<dyn Error>> {
-        let file = std::fs::File::create(&file_path)?;
+    pub fn vector_to_csv(data: Vec<[i16; 3]>, file_path: &str) -> Result<(), Box<dyn Error>> {
+        let file = std::fs::File::create(file_path)?;
         let mut writer = csv::Writer::from_writer(file);
         data.iter().for_each(|[x, y, z]| {
-            writer.serialize(Vector{x:*x, y:*y, z:*z}).ok();
+            writer
+                .serialize(Vector {
+                    x: *x,
+                    y: *y,
+                    z: *z,
+                })
+                .ok();
         });
         writer.flush()?;
         Ok(())
+    }
+}
+
+pub mod debug {
+    use chrono::{Datelike, Local, Timelike};
+    use std::fmt;
+
+    struct DateTimeString(String);
+
+    impl fmt::Display for DateTimeString {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            write!(f, "{}", self.0)
+        }
+    }
+
+    pub fn get_current_date_time() -> String {
+        let now = Local::now();
+        format!(
+            "📅 {:02}/{:02}/{:02}  ⌚ {:02}:{:02}:{:02}",
+            now.day(),
+            now.month(),
+            now.year() % 100,
+            now.hour(),
+            now.minute(),
+            now.second()
+        )
     }
 }
