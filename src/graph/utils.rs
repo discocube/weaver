@@ -26,12 +26,19 @@ pub mod make {
         (n, order, z_adj, z_order, max_xyz - 4)
     }
 
+    pub fn make_xs_graph(n: u32) -> (u32, u32, ZOrder, i16) {
+        let order = get_order_from_n(n);
+        let max_xyz = get_max_xyz(order) as i16;
+        let z_order = get_zlevel_order(n as usize);
+        (n, order, z_order, max_xyz - 4)
+    }
+
     fn make_xs_adjacency(n: usize, max_xyz: i16) -> (ZAdjacency, ZOrder) {
         let adj = make_z_adjacency_map(max_xyz);
         (adj, get_zlevel_order(n))
     }
 
-    fn make_z_adjacency_map(max_xyz: Point) -> ZAdjacency {
+    pub fn make_z_adjacency_map(max_xyz: Point) -> ZAdjacency {
         let max_xyz_plus_1 = max_xyz + 1;
         let verts = vertices_for_z_adjacency(max_xyz);
         verts
@@ -143,6 +150,10 @@ pub mod modify {
             .map(|point| [point[0], point[1]])
             .collect()
     }
+
+    pub fn add_points2d([x, y]: [i16; 2], [a, b]: [i16; 2]) -> [i16; 2] {
+        [x + a, y + b]
+    }
 }
 
 pub mod info {
@@ -250,7 +261,7 @@ pub mod info {
         (z % 4 + 4).try_into().unwrap()
     }
 
-    pub fn get_zlen(n: u32) -> u32 {
+    pub fn get_zlen(n: usize) -> usize {
         2 * n * (n + 1)
     }
 }
