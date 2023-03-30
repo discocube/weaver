@@ -147,20 +147,6 @@ pub fn spin_and_color_yarn_n(n: usize, max_xyz: i16, zlen: usize) -> Spool {
     Spool::from([(3, blue), (1, red)])
 }
 
-fn get_warps(z: i16, length: Count, bobbins: &Tour, spool: &Spool) -> Warps {
-    let mut yarn = spool[&get_color_index(z)].clone();
-    let start_pos: isize = (yarn.len_of(ndarray::Axis(0)) - length).try_into().unwrap();
-    yarn.slice_axis_inplace(Axis(0), Slice::new(start_pos, None, 1));
-    match yarn
-        .outer_iter()
-        .map(|row| [row[0], row[1], z])
-        .collect::<Vec<_>>()
-    {
-        node_yarn if bobbins.is_empty() => vec![node_yarn],
-        node_yarn => cut_yarn(node_yarn, bobbins),
-    }
-}
-
 pub fn spin_and_color_yarn_s(z_adj: ZAdjacency) -> Spool {
     let max_xyz = z_adj.keys().max().unwrap()[0].abs();
     let mut spindle = spinner(z_adj.len(), max_xyz);
@@ -213,6 +199,20 @@ pub fn spinner(order_z: usize, max_xyz: i16) -> Vec<[i16; 2]> {
 
 fn get_new_vect([x, y]: [i16; 2], [a, b]: [i16; 2]) -> [i16; 2] {
     [x + a, y + b]
+}
+
+fn get_warps(z: i16, length: Count, bobbins: &Tour, spool: &Spool) -> Warps {
+    let mut yarn = spool[&get_color_index(z)].clone();
+    let start_pos: isize = (yarn.len_of(ndarray::Axis(0)) - length).try_into().unwrap();
+    yarn.slice_axis_inplace(Axis(0), Slice::new(start_pos, None, 1));
+    match yarn
+        .outer_iter()
+        .map(|row| [row[0], row[1], z])
+        .collect::<Vec<_>>()
+    {
+        node_yarn if bobbins.is_empty() => vec![node_yarn],
+        node_yarn => cut_yarn(node_yarn, bobbins),
+    }
 }
 
 fn cut_yarn(yarn: Tour, cuts: &Tour) -> Warps {
