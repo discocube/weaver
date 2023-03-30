@@ -126,19 +126,16 @@ pub fn spin_and_color_yarn_n(n: usize, max_xyz: i16, zlen: usize) -> Spool {
             .collect(),
     )
     .unwrap();
-    let idxs: Vec<u32> = (2..=n as u32 * 2 + 1)
+    let mut cycler = [XY::X, XY::Y].iter().cycle();
+    for idx in (-(n as i64 * 2)..=-2)
         .step_by(2)
-        .flat_map(|cut| [cut, cut])
-        .collect_vec()
-        .iter()
-        .rev()
+        .flat_map(|cut| [-cut as usize, -cut as usize])
         .scan(0, |state, n| {
-            *state += *n;
+            *state += n;
             Some(*state - 1)
         })
-        .collect();
-    let mut cycler = [XY::X, XY::Y].iter().cycle();
-    for idx in idxs {
+        .collect::<Vec<usize>>()
+    {
         let rotation_point = blue.row(idx as usize).to_owned();
         let mut slice_points = blue.slice_mut(s![idx as usize.., ..]);
         let mut points = slice_points.view_mut();
