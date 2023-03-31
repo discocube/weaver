@@ -975,6 +975,33 @@ The solution can be plotted using pandas, numpy and plotly. I've put together an
 | 🇳 1200 | 🕗 MAKE: 0.521218 | ⭕️ 2309763200 | 🕗 SOLVE: 8420.2519 | 📌 HamCycle
 | 🇳 1300 | 🕗 MAKE: 0.580622 | ⭕️ 2936096800 | 🕗 SOLVE: 11424.484 | 📌 HamCycle
 | 🇳 1310 | 🕗 MAKE: 0.605197 | ⭕️ 3004322560 | 🕗 SOLVE: 11881.937 | 📌 HamCycle
+| 🇳 1320 | 🕗 MAKE: 0.000017 | ⭕️ 3073597120 | 🕗 SOLVE: 12736.059 | 📌 HamCycle | 40 / 41.7
+| 🇳 1330 | 🕗 MAKE: 0.000016 | ⭕️ 3143928480 | 🕗 SOLVE: 12246.044 | 📌 HamCycle | 40 / 41.7
+
+
+Estimate size of Vec<[i16;3] * order>, the datatype holding the solution.
+| Order (Billions) | Size (GB) |
+|------------------|-----------|
+| 1                | 5.88      |
+| 1.5              | 8.82      |
+| 2                | 11.76     |
+| 2.5              | 14.70     |
+| 3                | 17.64     |
+| 3.5              | 20.58     |
+| 4                | 23.53     |
+| 4.5              | 26.47     |
+| 5                | 29.41     |
+| 5.5              | 32.35     |
+| 6                | 35.29     |
+| 6.5              | 38.23     |
+| 7                | 41.18     |
+| 7.5              | 44.12     |
+| 8                | 47.06     |
+| 8.5              | 50.00     |
+| 9                | 52.94     |
+| 9.5              | 55.88     |
+| 10               | 58.82     |
+
 ## Licensing:
 
 This package is licensed under the MIT license.
