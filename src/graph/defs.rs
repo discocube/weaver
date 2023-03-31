@@ -1,5 +1,5 @@
 use itertools::Itertools;
-use ndarray::Array2;
+use ndarray::{array, Array1, Array2};
 use std::{
     collections::{HashMap, HashSet, VecDeque},
     iter::zip,
@@ -7,6 +7,7 @@ use std::{
 
 use super::utils::{check_edge::is_valid_edge, modify::orient};
 
+pub const LAST_ZLEVEL: i16 = -1;
 pub const DISP_VECTORS: [[[i16; 2]; 2]; 4] = [
     [[-2, 0], [0, -2]],
     [[-2, 0], [0, 2]],
@@ -40,6 +41,7 @@ pub type Var2 = [i16; 2];
 pub type Vert = (Point, Point, Point);
 pub type Verts = [[i16; 3]];
 pub type VecVert = Vec<Vert>;
+pub type Visited = HashMap<[i16; 2], bool>;
 pub type VIMap = HashMap<Vert, Node>;
 pub type Warps = Vec<Vec<[i16; 3]>>;
 pub type Weights = HashMap<Node, Point>;
@@ -60,24 +62,39 @@ pub struct GraphGuide {
     pub n: usize,
     pub order: usize,
     pub zlen: usize,
+    pub loom_size: usize,
     pub min_xyz: i16,
     pub max_xyz: i16,
     pub max_absumv: i16,
-    pub z_order: Vec<(i16, usize)>
+    pub max_absumv3d: i16,
+    pub zigzags: Vec<Array1<i16>>,
 }
 
 impl GraphGuide {
     pub fn new(n: usize) -> GraphGuide {
         let max_xyz = GraphGuide::get_max_xyz_from_n16(n);
-        GraphGuide { 
-            n, 
-            order: GraphGuide::get_order_from_n(n), 
-            zlen: GraphGuide::get_zlen(n), 
+        GraphGuide {
+            n,
+            order: GraphGuide::get_order_from_n(n),
+            zlen: GraphGuide::get_zlen(n),
+            loom_size: (n / 2) + 1,
             max_xyz,
-            min_xyz: max_xyz - 4, 
+            min_xyz: max_xyz - 4,
             max_absumv: max_xyz + 1,
-            z_order: GraphGuide::get_zlevel_order(n)
+            max_absumv3d: max_xyz + 2,
+            zigzags: vec![array![0, -2], array![-2, 0]],
         }
+    }
+
+    pub fn get_yarn_folds(n: usize) -> Vec<usize> {
+        (-(n as i64 * 2)..=-2)
+            .step_by(2)
+            .flat_map(|cut| [-cut as usize, -cut as usize])
+            .scan(0, |state, n| {
+                *state += n;
+                Some(*state - 1)
+            })
+            .collect()
     }
 
     pub fn get_max_xyz(order: usize) -> i32 {
@@ -128,7 +145,7 @@ impl GraphGuide {
         2 * n * (n + 1)
     }
 
-    fn get_zlevel_order(n: usize) -> Vec<(i16, usize)> {
+    pub fn get_zlevel_order(n: usize) -> Vec<(i16, usize)> {
         zip(
             (-((n * 2 - 1) as i16)..=-1).step_by(2),
             (1..=n).map(|_n| 2 * _n * (_n + 1)),
@@ -169,8 +186,8 @@ impl Weaver {
         other_data
             .iter()
             .circular_tuple_windows()
+            .filter(|&(m, n)| is_valid_edge(*m, *n, self.min_xyz, self.order, false))
             .map(|(a, b)| orient(*a, *b))
-            .filter(|&(m, n)| is_valid_edge(m, n, self.min_xyz, self.order, false))
             .collect()
     }
 
@@ -217,8 +234,8 @@ impl Weaver {
         self.data
             .iter()
             .circular_tuple_windows()
+            .filter(|&(m, n)| is_valid_edge(*m, *n, self.min_xyz, self.order, self.lead))
             .map(|(a, b)| orient(*a, *b))
-            .filter(|&(m, n)| is_valid_edge(m, n, self.min_xyz, self.order, self.lead))
             .collect()
     }
 
@@ -227,6 +244,7 @@ impl Weaver {
     }
 
     /// Python script using plotly and pandas to display the solution from the .csv file produced by the function below:
+    /// Save solution to file_path as a csv file where each axis X, Y, Z is a separate column.
     ///```
     /// import pandas as pd
     /// import plotly.express as px
@@ -235,10 +253,9 @@ impl Weaver {
     ///     df = pd.read_csv(file_path)
     ///     fig = px.line_3d(df, x='X', y='Y', z='Z')
     ///     fig.show()
-    ///
     ///```
-    /// Save solution to file_path as a csv file where each axis X, Y, Z is a separate column.
-    /// Structured for easy read and plotting using python and plotly (see above).
+    /// Also available as a [mini_module](https://github.com/discocube/plot_solution).
+
     pub fn save_to_csv(&self, file_path: &str) -> Result<(), Box<dyn Error>> {
         let file = std::fs::File::create(file_path)?;
         let mut writer = csv::Writer::from_writer(file);
