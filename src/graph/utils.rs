@@ -19,14 +19,14 @@ pub mod make {
         Adjacency, Neighbors, Point, Verts, ZAdjacency, ZOrder,
     };
 
-    pub fn make_z_graph(n: u32) -> (u32, u32, ZAdjacency, ZOrder, i16) {
+    pub fn make_z_graph(n: usize) -> (usize, usize, ZAdjacency, ZOrder, i16) {
         let order = get_order_from_n(n);
-        let max_xyz = get_max_xyz(order) as i16;
+        let max_xyz = get_max_xyz(order as usize) as i16;
         let (z_adj, z_order) = make_xs_adjacency(n as usize, max_xyz);
         (n, order, z_adj, z_order, max_xyz - 4)
     }
 
-    pub fn make_xs_graph(n: u32) -> (u32, u32, ZOrder, i16) {
+    pub fn make_xs_graph(n: usize) -> (usize, usize, ZOrder, i16) {
         let order = get_order_from_n(n);
         let max_xyz = get_max_xyz(order) as i16;
         let z_order = get_zlevel_order(n as usize);
@@ -75,7 +75,7 @@ pub mod make {
         .collect()
     }
 
-    pub fn make_adjacency(n: u32) -> Adjacency {
+    pub fn make_adjacency(n: usize) -> Adjacency {
         let order = get_order_from_n(n);
         let max_xyz = get_max_xyz(order) as i16;
         let verts: Vec<[i16; 3]> = vertices(max_xyz);
@@ -241,7 +241,7 @@ pub mod info {
             .sum()
     }
 
-    pub fn get_max_xyz(order: u32) -> SignedIdx {
+    pub fn get_max_xyz(order: usize) -> SignedIdx {
         (get_n_from_order(order) * 2 - 1) as i32
     }
 
@@ -249,12 +249,16 @@ pub mod info {
         (n * 2 - 1) as i32
     }
 
-    pub fn get_order_from_n(n: u32) -> u32 {
-        ((4.0 / 3.0) * ((n + 2) * (n + 1) * n) as f64).round() as u32
+    pub fn get_order_from_n(n: usize) -> usize {
+        ((4.0 / 3.0) * ((n + 2) * (n + 1) * n) as f64).round() as usize
     }
 
-    pub fn get_n_from_order(order: u32) -> u32 {
-        (((3.0 / 4.0) * order as f64).powf(1.0 / 3.0) - 2.0 / 3.0).round() as u32
+    pub fn get_order_from_n_u64(n: u64) -> u64 {
+        ((4.0 / 3.0) * ((n + 2) * (n + 1) * n) as f64).round() as u64
+    }
+
+    pub fn get_n_from_order(order: usize) -> usize {
+        (((3.0 / 4.0) * order as f64).powf(1.0 / 3.0) - 2.0 / 3.0).round() as usize
     }
 
     pub fn get_color_index(z: i16) -> u32 {
@@ -266,6 +270,69 @@ pub mod info {
     }
 }
 
+/// The sum of the absolute value of each scalar x, y and or z. 
+/// Also known as the L1-Norm.
+/// The L1 norm is calculated as the sum of the absolute vector values, where the absolute value of a scalar uses the notation |a1|. 
+/// In effect, the norm is a calculation of the Manhattan distance from the origin of the vector space.
+pub mod absumv {
+    use ndarray::Array1;
+
+    pub trait AbSumV {
+        fn absumv(&self) -> i16;
+    }
+    
+    impl AbSumV for [i16; 3] {
+        fn absumv(&self) -> i16 {
+            self.iter()
+                .map(|v| {
+                    let mask = v >> 15;
+                    (v ^ mask) - mask
+                })
+                .sum()
+        }
+    }
+    
+    impl AbSumV for Array1<i16> {
+        fn absumv(&self) -> i16 {
+            self.iter()
+                .map(|v| {
+                    let mask = *v >> 15;
+                    (*v ^ mask) - mask
+                })
+                .sum()
+        }
+    }
+    
+    impl AbSumV for [i16; 2] {
+        fn absumv(&self) -> i16 {
+            self.iter()
+                .map(|v| {
+                    let mask = v >> 15;
+                    (v ^ mask) - mask
+                })
+                .sum()
+        }
+    }
+    
+    impl AbSumV for (i16, i16, i16) {
+        fn absumv(&self) -> i16 {
+            let (x, y, z) = self;
+            let mask_x = x >> 15;
+            let mask_y = y >> 15;
+            let mask_z = z >> 15;
+            (x ^ mask_x) - mask_x + (y ^ mask_y) - mask_y + (z ^ mask_z) - mask_z
+        }
+    }
+    
+    impl AbSumV for (i16, i16) {
+        fn absumv(&self) -> i16 {
+            let (x, y) = self;
+            let mask_x = x >> 15;
+            let mask_y = y >> 15;
+            (x ^ mask_x) - mask_x + (y ^ mask_y) - mask_y
+        }
+    }
+}
 pub mod iters {
     pub fn uon(start: usize, end: usize, max_n: usize) -> impl Iterator<Item = usize> {
         (0..max_n + 2).filter_map(move |i| {
@@ -290,7 +357,7 @@ pub mod check_edge {
         v1: [i16; 3],
         v2: [i16; 3],
         min_xyz: Point,
-        order: u32,
+        order: usize,
         lead: bool,
     ) -> bool {
         if order < 160 {
@@ -490,5 +557,23 @@ pub mod debug {
             now.minute(),
             now.second()
         )
+    }
+
+    pub fn calculate_sizes(start: u64, end: u64, step: u64) -> Vec<(u64, f64)> {
+        let element_size = 6; // size of [i16; 3] in bytes
+        let mut order = start;
+        let mut sizes = Vec::new();
+        while order <= end {
+            let num_elements = order as usize;
+            let size = element_size as f64 * num_elements as f64 / 1024.0 / 1024.0 / 1024.0;
+            sizes.push((order, size));
+            order += step;
+        }
+        println!("| Order | Size (GB) |");
+        println!("|-------|-----------|");
+        for (order, size) in &sizes {
+            println!("| {:<5} | {:<9.2} |", order, size);
+        };
+        sizes
     }
 }
