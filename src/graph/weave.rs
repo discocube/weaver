@@ -9,14 +9,14 @@ use super::{
         Weaver, Yarn, YarnEnds, ZOrder, DISP_VECTORS, XY,
     },
     utils::{
-        info::{absumv2dc, are_adj, get_color_index, get_zlen},
+        info::{are_adj, get_color_index, get_zlen},
         make::make_z_adjacency_map,
         make_edges_eadjs::{make_eadjs, make_edges},
-        modify::add_points2d,
+        modify::add_points2d, absumv::AbSumV,
     },
 };
 
-pub fn weave(n: usize, z_order: ZOrder, min_xyz: Point, order: u32) -> Solution {
+pub fn weave(n: usize, z_order: ZOrder, min_xyz: Point, order: usize) -> Solution {
     let max_xyz = min_xyz + 4;
     let mut loom = wrap_and_reflect_loom(n, max_xyz, z_order);
     let mut weaver: Weaver = Weaver::new(loom[0].split_off(0), true, min_xyz, order);
@@ -97,7 +97,7 @@ pub fn spin_and_color_yarn_a(_n: usize, max_xyz: i16, zlen: usize) -> Spool {
                 (None, fiber)
                     if ix < tail || (spindle[spindle.len() - 2][0] == x) != (x == fiber[0]) =>
                 {
-                    Some((node, absumv2dc(fiber)))
+                    Some((node, fiber.absumv()))
                 }
                 _ => None,
             })
@@ -173,7 +173,7 @@ pub fn spin_and_color_yarn_s(_n: usize, max_xyz: i16, zlen: usize) -> Spool {
         let mut new_vect = add_points2d([x, y], curr_disp[yx]);
         let is_visited = visited.get(&new_vect).is_some();
         inside = !inside && is_visited;
-        if is_visited || !inside && absumv2dc(new_vect) > max_absumv {
+        if is_visited || !inside && new_vect.absumv() > max_absumv {
             curr_disp = disp_cycler.next().unwrap();
             new_vect = add_points2d([x, y], curr_disp[yx]);
         }
