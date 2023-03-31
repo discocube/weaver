@@ -14,30 +14,31 @@
 /// makes graph, solves it
 /// 1 (start with order 8 end at order 1,373,600) 100 in steps of two: [1, 3, 5, 7...]
 /// GOAL IS 8011618152. 8 BILLION FOR EACH PERSON ON THE EARTH. N = 1817.
-/// 
-/// 
+///
+///
 ///           
-///                         *-------*  
-///                        /|      /|  
-///                       *-------*-|-*
-///                       | |/|   | |/|
-///                 *-----|-*-----|-*--------*
-///                /|     |/| |   |/| |     /|  
-///               *-------*-------*---*----*-|   
-///               | |    /| |/   /| |/     | |  
-///               | *---*-------*-|-*------|-*  
-///               |/    | |/|   | |/|      |/   
-///               *-----|-*-----|-*--------*                  
-///                     |/| |   |/| |  
-///                     *-------*-|-*  
-///                       |/      |/   
-///                       *-------*          
-/// 
-/// 
-/// 
-/// 
-/// 
+///                         ◉―――――――◉  
+///                        ╱│      ╱│  
+///                       ◉―――⊖―――◉―│―◉
+///                       │ │╱│   │ │╱│
+///                 ◉―――――│―◉―――――│―◉――――――――◉
+///                ╱│     │╱│ │   │╱│ │     ╱│  
+///               ◉―――――――◉―――✧―――◉―――◉――――◉―│   
+///               │ │    ╱│ │╱   ╱│ │╱     │ │  
+///               │ ◉―――◉―――✧―――◉―│―◉――――――│―◉  
+///               │╱    │ │╱│   │ │╱│      │╱   
+///               ◉―――――│―◉―――――│―◉――――――――◉                  
+///                     │╱│ │   │╱│ │  
+///                     ◉―――✧―――◉―│―◉  
+///                       │╱      │╱   
+///                       ◉―――――――◉          
+///
+///
+///
+///
+///
 /////////////////////////////////////////////////////////////////////////////
+extern crate blas_src;
 extern crate chrono;
 extern crate rayon;
 
@@ -46,14 +47,12 @@ pub mod graph;
 use graph::{
     defs::*,
     utils::certify::{is_hamiltonian_circuit, SequenceID},
-    utils::info::get_order_from_n_u64,
-    utils::make::make_xs_graph,
+    utils::info::get_order_from_n,
     weave,
 };
 use std::{env, time::Instant};
 
 pub fn main() -> Result<(), &'static str> {
-    println!("{}", get_order_from_n_u64(1817));
     let args: Vec<String> = env::args().collect();
     let n_start = args
         .get(1)
@@ -72,12 +71,12 @@ pub fn main() -> Result<(), &'static str> {
     Ok(())
 }
 
-pub fn find_solution(level: usize, _certify: bool) -> Result<Solution, &'static str> {
+pub fn find_solution(n: usize, _certify: bool) -> Result<Solution, &'static str> {
     let mut start: Instant = Instant::now();
-    let (n, order, z_order, min_xyz) = make_xs_graph(level);
+    let order = get_order_from_n(n);
     let dur_make = Instant::now() - start;
     start = Instant::now();
-    let solution = weave::weave(n as usize, z_order, min_xyz, order);
+    let solution = weave::weave(n);
     let dur_solve = Instant::now() - start;
     println!(
         "| 🇳 {n:>4} | 🕗 MAKE: {} | ⭕️ {order:>10} | 🕗 SOLVE: {} |",
@@ -85,7 +84,11 @@ pub fn find_solution(level: usize, _certify: bool) -> Result<Solution, &'static 
         dur_solve.as_secs_f32(),
     );
     start = Instant::now();
-    let seq_id = is_hamiltonian_circuit(&solution, order as usize, min_xyz + 8);
+    let seq_id = is_hamiltonian_circuit(
+        &solution,
+        order as usize,
+        GraphGuide::get_max_absumv_from_n16(n),
+    );
     let dur_certify = Instant::now() - start;
     println!(
         "| 🇳 {n:>4} | 🕗 MAKE: {} | ⭕️ {order:>10} | 🕗 SOLVE: {} | 📌 {seq_id:?} | 🕗 CERTIFY: {}",
