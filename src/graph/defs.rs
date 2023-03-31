@@ -1,8 +1,18 @@
 use itertools::Itertools;
 use ndarray::Array2;
-use std::collections::{HashMap, HashSet, VecDeque};
+use std::{
+    collections::{HashMap, HashSet, VecDeque},
+    iter::zip,
+};
 
 use super::utils::{check_edge::is_valid_edge, modify::orient};
+
+pub const DISP_VECTORS: [[[i16; 2]; 2]; 4] = [
+    [[-2, 0], [0, -2]],
+    [[-2, 0], [0, 2]],
+    [[2, 0], [0, 2]],
+    [[2, 0], [0, -2]],
+];
 
 pub type Adjacency = HashMap<Node, Neighbors>;
 pub type ZAdjacency = HashMap<[Point; 2], Vec<[Point; 2]>>;
@@ -46,6 +56,87 @@ pub enum XY {
     Y,
 }
 
+pub struct GraphGuide {
+    pub n: usize,
+    pub order: usize,
+    pub zlen: usize,
+    pub min_xyz: i16,
+    pub max_xyz: i16,
+    pub max_absumv: i16,
+    pub z_order: Vec<(i16, usize)>
+}
+
+impl GraphGuide {
+    pub fn new(n: usize) -> GraphGuide {
+        let max_xyz = GraphGuide::get_max_xyz_from_n16(n);
+        GraphGuide { 
+            n, 
+            order: GraphGuide::get_order_from_n(n), 
+            zlen: GraphGuide::get_zlen(n), 
+            max_xyz,
+            min_xyz: max_xyz - 4, 
+            max_absumv: max_xyz + 1,
+            z_order: GraphGuide::get_zlevel_order(n)
+        }
+    }
+
+    pub fn get_max_xyz(order: usize) -> i32 {
+        (GraphGuide::get_n_from_order(order) * 2 - 1) as i32
+    }
+
+    pub fn get_max_xyz_i16(order: usize) -> i16 {
+        (GraphGuide::get_n_from_order(order) * 2 - 1) as i16
+    }
+
+    pub fn min_xyz_from_max(max_xyz: i16) -> i16 {
+        max_xyz - 4
+    }
+
+    pub fn get_max_xyz_from_n(n: u32) -> i32 {
+        (n * 2 - 1) as i32
+    }
+
+    pub fn get_max_xyz_from_n16(n: usize) -> i16 {
+        (n * 2 - 1) as i16
+    }
+
+    pub fn get_max_absumv_from_n16(n: usize) -> i16 {
+        (n * 2 + 1) as i16
+    }
+
+    pub fn get_min_xyz_from_n16(n: usize) -> i16 {
+        (n * 2 - 5) as i16
+    }
+
+    pub fn get_order_from_n(n: usize) -> usize {
+        ((4.0 / 3.0) * ((n + 2) * (n + 1) * n) as f64).round() as usize
+    }
+
+    pub fn get_order_from_n_u64(n: u64) -> u64 {
+        ((4.0 / 3.0) * ((n + 2) * (n + 1) * n) as f64).round() as u64
+    }
+
+    pub fn get_n_from_order(order: usize) -> u32 {
+        (((3.0 / 4.0) * order as f64).powf(1.0 / 3.0) - 2.0 / 3.0).round() as u32
+    }
+
+    pub fn get_color_index(z: i16) -> u32 {
+        (z % 4 + 4).try_into().unwrap()
+    }
+
+    pub fn get_zlen(n: usize) -> usize {
+        2 * n * (n + 1)
+    }
+
+    fn get_zlevel_order(n: usize) -> Vec<(i16, usize)> {
+        zip(
+            (-((n * 2 - 1) as i16)..=-1).step_by(2),
+            (1..=n).map(|_n| 2 * _n * (_n + 1)),
+        )
+        .collect()
+    }
+}
+
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "PascalCase")]
 struct Vector {
@@ -59,11 +150,11 @@ pub struct Weaver {
     pub data: Tour,
     lead: bool,
     min_xyz: Point,
-    order: u32,
+    order: usize,
 }
 
 impl Weaver {
-    pub fn new(mut data: YarnEnds, lead: bool, min_xyz: Point, order: u32) -> Weaver {
+    pub fn new(mut data: YarnEnds, lead: bool, min_xyz: Point, order: usize) -> Weaver {
         let mut preallocated = Vec::with_capacity(order as usize);
         preallocated.extend(data.drain(..));
         Weaver {
