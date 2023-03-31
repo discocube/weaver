@@ -19,18 +19,18 @@ pub mod make {
         Adjacency, Neighbors, Point, Verts, ZAdjacency, ZOrder,
     };
 
-    pub fn make_z_graph(n: usize) -> (usize, usize, ZAdjacency, ZOrder, i16) {
+    pub fn make_z_graph(n: usize) -> (usize, ZAdjacency, ZOrder, i16) {
         let order = get_order_from_n(n);
         let max_xyz = get_max_xyz(order as usize) as i16;
         let (z_adj, z_order) = make_xs_adjacency(n as usize, max_xyz);
-        (n, order, z_adj, z_order, max_xyz - 4)
+        (order, z_adj, z_order, max_xyz - 4)
     }
 
-    pub fn make_xs_graph(n: usize) -> (usize, usize, ZOrder, i16) {
+    pub fn make_xs_graph(n: usize) -> (usize, ZOrder, i16) {
         let order = get_order_from_n(n);
         let max_xyz = get_max_xyz(order) as i16;
         let z_order = get_zlevel_order(n as usize);
-        (n, order, z_order, max_xyz - 4)
+        (order, z_order, max_xyz - 4)
     }
 
     fn make_xs_adjacency(n: usize, max_xyz: i16) -> (ZAdjacency, ZOrder) {
@@ -150,10 +150,6 @@ pub mod modify {
             .map(|point| [point[0], point[1]])
             .collect()
     }
-
-    pub fn add_points2d([x, y]: [i16; 2], [a, b]: [i16; 2]) -> [i16; 2] {
-        [x + a, y + b]
-    }
 }
 
 pub mod info {
@@ -270,9 +266,35 @@ pub mod info {
     }
 }
 
-/// The sum of the absolute value of each scalar x, y and or z. 
-/// Also known as the L1-Norm.
-/// The L1 norm is calculated as the sum of the absolute vector values, where the absolute value of a scalar uses the notation |a1|. 
+pub mod add_vec {
+    pub trait AddVec {
+        fn add_vec(&self, other: [i16; 2]) -> [i16; 2];
+    }
+
+    impl AddVec for [i16; 2] {
+        fn add_vec(&self, [a, b]: [i16; 2]) -> [i16; 2] {
+            [self[0] + a, self[1] + b]
+        }
+    }
+}
+
+pub mod are_adj {
+    pub trait AreAdj {
+        fn are_adj(&self, other: [i16; 3]) -> bool;
+    }
+
+    impl AreAdj for [i16; 3] {
+        fn are_adj(&self, [x, y, z]: [i16; 3]) -> bool {
+            let [a, b, c] = self;
+            let n = a - x + b - y + c - z;
+            (n + (n >> 15)) ^ (n >> 15) == 2
+        }
+    }
+}
+
+/// The sum of the absolute value of each scalar x, y and or z.
+/// Also known as the L1-Norm- manhattan distance from a to b where b is the origin (0, 0, 0)
+/// The L1 norm is calculated as the sum of the absolute vector values, where the absolute value of a scalar uses the notation |a1|.
 /// In effect, the norm is a calculation of the Manhattan distance from the origin of the vector space.
 pub mod absumv {
     use ndarray::Array1;
@@ -280,7 +302,7 @@ pub mod absumv {
     pub trait AbSumV {
         fn absumv(&self) -> i16;
     }
-    
+
     impl AbSumV for [i16; 3] {
         fn absumv(&self) -> i16 {
             self.iter()
@@ -291,7 +313,7 @@ pub mod absumv {
                 .sum()
         }
     }
-    
+
     impl AbSumV for Array1<i16> {
         fn absumv(&self) -> i16 {
             self.iter()
@@ -302,7 +324,7 @@ pub mod absumv {
                 .sum()
         }
     }
-    
+
     impl AbSumV for [i16; 2] {
         fn absumv(&self) -> i16 {
             self.iter()
@@ -313,7 +335,7 @@ pub mod absumv {
                 .sum()
         }
     }
-    
+
     impl AbSumV for (i16, i16, i16) {
         fn absumv(&self) -> i16 {
             let (x, y, z) = self;
@@ -323,7 +345,7 @@ pub mod absumv {
             (x ^ mask_x) - mask_x + (y ^ mask_y) - mask_y + (z ^ mask_z) - mask_z
         }
     }
-    
+
     impl AbSumV for (i16, i16) {
         fn absumv(&self) -> i16 {
             let (x, y) = self;
@@ -454,7 +476,7 @@ pub mod make_edges_eadjs {
 pub mod certify {
     use itertools::all;
 
-    use super::{info::absumv, std::fmt, Adjacency, Itertools, Solution};
+    use super::{absumv::AbSumV, std::fmt, Adjacency, Itertools, Solution};
 
     #[derive(Debug, PartialEq)]
     pub enum SequenceID {
@@ -487,11 +509,11 @@ pub mod certify {
         }
     }
 
-    pub fn is_hamiltonian_circuit(seq: &Solution, order: usize, max_xyz_plus_4: i16) -> SequenceID {
+    pub fn is_hamiltonian_circuit(seq: &Solution, order: usize, max_absumv3d: i16) -> SequenceID {
         if seq.iter().duplicates().count() > 0
             || seq.len() != order
             || !all(seq.iter(), |[x, y, z]| (x & 1) + (y & 1) + (z & 1) == 3)
-            || !all(seq.iter(), |vert| absumv(*vert) < max_xyz_plus_4)
+            || !all(seq.iter(), |vert| vert.absumv() <= max_absumv3d)
             || seq
                 .iter()
                 .fold((0, 0, 0), |acc: (i16, i16, i16), &[x, y, z]| {
@@ -573,7 +595,7 @@ pub mod debug {
         println!("|-------|-----------|");
         for (order, size) in &sizes {
             println!("| {:<5} | {:<9.2} |", order, size);
-        };
+        }
         sizes
     }
 }
