@@ -86,7 +86,7 @@ pub fn find_solution(n: usize, _certify: bool) -> Result<Solution, &'static str>
     start = Instant::now();
     let seq_id = is_hamiltonian_circuit(
         &solution,
-        order as usize,
+        order,
         GraphGuide::get_max_absumv_from_n16(n),
     );
     let dur_certify = Instant::now() - start;
