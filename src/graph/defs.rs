@@ -172,7 +172,7 @@ pub struct Weaver {
 
 impl Weaver {
     pub fn new(mut data: YarnEnds, lead: bool, min_xyz: Point, order: usize) -> Weaver {
-        let mut preallocated = Vec::with_capacity(order as usize);
+        let mut preallocated = Vec::with_capacity(order);
         preallocated.extend(data.drain(..));
         Weaver {
             data: preallocated,
