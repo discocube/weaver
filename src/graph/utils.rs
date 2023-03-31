@@ -21,15 +21,15 @@ pub mod make {
 
     pub fn make_z_graph(n: usize) -> (usize, ZAdjacency, ZOrder, i16) {
         let order = get_order_from_n(n);
-        let max_xyz = get_max_xyz(order as usize) as i16;
-        let (z_adj, z_order) = make_xs_adjacency(n as usize, max_xyz);
+        let max_xyz = get_max_xyz(order) as i16;
+        let (z_adj, z_order) = make_xs_adjacency(n, max_xyz);
         (order, z_adj, z_order, max_xyz - 4)
     }
 
     pub fn make_xs_graph(n: usize) -> (usize, ZOrder, i16) {
         let order = get_order_from_n(n);
         let max_xyz = get_max_xyz(order) as i16;
-        let z_order = get_zlevel_order(n as usize);
+        let z_order = get_zlevel_order(n);
         (order, z_order, max_xyz - 4)
     }
 
@@ -594,7 +594,7 @@ pub mod debug {
         println!("| Order | Size (GB) |");
         println!("|-------|-----------|");
         for (order, size) in &sizes {
-            println!("| {:<5} | {:<9.2} |", order, size);
+            println!("| {order:<5} | {size:<9.2} |");
         }
         sizes
     }
