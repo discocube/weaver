@@ -984,7 +984,11 @@ The solution can be plotted using pandas, numpy and plotly. I've put together an
 | 🇳 1320 | 🕗 MAKE: 0.000017 | ⭕️ 3073597120 | 🕗 SOLVE: 12736.059 | 📌 HamCycle | 40 / 41.7
 | 🇳 1330 | 🕗 MAKE: 0.000016 | ⭕️ 3143928480 | 🕗 SOLVE: 12246.044 | 📌 HamCycle | 40 / 41.7
 | 🇳 1350 | 🕗 MAKE: 7e-08    | ⭕️ 3287793600 | 🕗 SOLVE: 5761.2993 |
-| 🇳 1400 | 🕗 MAKE: 4.81e-07 | ⭕️ 3666510400 | 🕗 SOLVE: 6919.091  |
+| 🇳 1400 | 🕗 MAKE: 4.81e-07 | ⭕️ 3666510400 | 🕗 SOLVE: 6919.091  | 
+| 🇳 1450 | 51.7 / 58.1
+
+
+
 
 ┌──────────────────────────────┐
 │ ESTIMATED SIZE OF SOLUTION   │
@@ -997,7 +1001,7 @@ The solution can be plotted using pandas, numpy and plotly. I've put together an
 | 2.5              | 14.70     |
 | 3                | 17.64     |
 | 3.5              | 20.58     |
-| 4                | 23.53     |
+| 4                | 23.53     | Usage is about twice.
 | 4.5              | 26.47     |
 | 5                | 29.41     |
 | 5.5              | 32.35     |
