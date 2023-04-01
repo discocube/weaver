@@ -124,14 +124,31 @@ fn cut_yarn(yarn: Tour, cuts: &Tour) -> Warps {
     let last_ix: usize = yarn.len() - 1;
     let last_idx: usize = cuts.len() - 1;
     let mut prev = -1_i32;
-    for (e, idx) in cuts
-        .iter()
+    cuts.iter()
         .filter_map(|node| yarn.iter().position(|&x| x == *node))
         .sorted()
         .enumerate()
-    {
-        if e == last_idx && idx != last_ix {
-            if let Some(first_slice) = yarn.get(prev as usize + 1..idx) {
+        .for_each(|(e, idx)| {
+            if e == last_idx && idx != last_ix {
+                if let Some(first_slice) = yarn.get(prev as usize + 1..idx) {
+                    if !first_slice.is_empty() {
+                        subtours.push(if cuts.contains(&first_slice[0]) {
+                            first_slice.to_vec()
+                        } else {
+                            first_slice.iter().rev().cloned().collect()
+                        });
+                    }
+                }
+                if let Some(first_slice) = yarn.get(idx..) {
+                    if !first_slice.is_empty() {
+                        subtours.push(if cuts.contains(&first_slice[0]) {
+                            first_slice.to_vec()
+                        } else {
+                            first_slice.iter().rev().cloned().collect()
+                        });
+                    }
+                }
+            } else if let Some(first_slice) = yarn.get(prev as usize + 1..=idx) {
                 if !first_slice.is_empty() {
                     subtours.push(if cuts.contains(&first_slice[0]) {
                         first_slice.to_vec()
@@ -140,26 +157,8 @@ fn cut_yarn(yarn: Tour, cuts: &Tour) -> Warps {
                     });
                 }
             }
-            if let Some(first_slice) = yarn.get(idx..) {
-                if !first_slice.is_empty() {
-                    subtours.push(if cuts.contains(&first_slice[0]) {
-                        first_slice.to_vec()
-                    } else {
-                        first_slice.iter().rev().cloned().collect()
-                    });
-                }
-            }
-        } else if let Some(first_slice) = yarn.get(prev as usize + 1..=idx) {
-            if !first_slice.is_empty() {
-                subtours.push(if cuts.contains(&first_slice[0]) {
-                    first_slice.to_vec()
-                } else {
-                    first_slice.iter().rev().cloned().collect()
-                });
-            }
-        }
-        prev = idx as i32;
-    }
+            prev = idx as i32;
+        });
     subtours
 }
 
