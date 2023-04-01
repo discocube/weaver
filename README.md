@@ -12,6 +12,14 @@ the set of points in a 3-dimensional square grid graph contained within an octah
 This algorithm is an artist's rendering of a graph object using programming as a language (instead of painting flowers and apples or singing hymns about angels) and means by which to describe his muse's body as an endless contour drawing or a Hamiltonian cycle in graph theory terms.
 
 
+![Alt text](imgs/elumina-inspiration-one-line-picasso-drawings-the-three-dancers-thumbnail.jpg?version%3D1680306692540)
+<small>Pablo Picasso  <em>Trois Danseuses (The Three Dancers)</em></small>
+
+What do a continuous contour line drawing and a Hamiltonian cycle have in common? Both involve tracing a path without interruption, using a continuous line to describe the subject being represented. To draw a continuous contour line drawing, a single, unbroken line is used to describe the shape and form of the subject. Whereas to form a Hamiltonian cycle, a path is traced through the vertices of a graph, visiting each vertex exactly once and returning to the starting vertex, using a continuous line to connect the vertices and describe the graph.
+
+![Alt text](imgs/hambw.png)
+<small><em>Hamiltonian cycles in all the platonic solids</em></small>
+
 <div style="display: flex;">
   <div style="flex: 1;">
     <img src="imgs/icosian.jpg" alt="Hauy's wooden crystal models" width="100%">
@@ -30,14 +38,6 @@ Art manipulates language to create forms, showing us how a brush strokes the cur
 Art manipulates language to create forms, showing us how a brush strokes the curve of the neck to disappear behind the back, or to with play colors and contrasts to bring the skin, of a subject living 500 years ago, back to life. In this project, I studied the discocube visually as a body, imagining each turn not as a discrete mathematical object, but as the totality of possible movements, as an endlessly iterated dance captured in an infinitely open camera shutter, resulting in more doodles and sketches rather than pages of numbers and equations (I wish I learned more math!). The result is a family of algorithms for solving various types of Hamiltonian cycles, of which this repository provides the simplest and most descriptive: the weave algorithm. The other algorithms, housed in another private repository called "polish" center around the concept of polishing a diamond, i.e., improving upon the initial tour created by the weave algorithm so that the number of edges is evenly distributed across the x, y, and z axes, resulting in an always-turning Hamiltonian cycle.
 
 Why weave? Finding the solution to the problem reminded me of macramé, of tying knots, weaving and spinning yarn. I thought of how patterns in hand-woven fabric are actually unwitting recordings of a knitter's hand-movements, like how a piano roll is a recording of the pianist's finger hitting ebony, or how a seismograph records the motion of the earth, or how our skin is type of recording of our life... I followed the thought further and asked myself: was there was a pattern to expose and use to construct the discocube, level by level, similar to how one would knit a scarf, row by row until the desired result is reached? To illustrate the intention of the code succinctly, I've structured the code to mimic the process of weaving a piece of tapestry, from spinning the yarn to incorporating the weft into the warps. 
-
-![Alt text](imgs/elumina-inspiration-one-line-picasso-drawings-the-three-dancers-thumbnail.jpg?version%3D1680306692540)
-<small>Pablo Picasso  <em>Trois Danseuses (The Three Dancers)</em></small>
-
-What do a continuous contour line drawing and a Hamiltonian cycle have in common? Both involve tracing a path without interruption, using a continuous line to describe the subject being represented. To draw a continuous contour line drawing, a single, unbroken line is used to describe the shape and form of the subject. Whereas to form a Hamiltonian cycle, a path is traced through the vertices of a graph, visiting each vertex exactly once and returning to the starting vertex, using a continuous line to connect the vertices and describe the graph.
-
-![Alt text](imgs/hambw.png)
-<small><em>Hamiltonian cycles in all the platonic solids</em></small>
 
 ![First 11 discocubes and their order (number of nodes)](imgs/rect5857.png?raw=true "Discocubes orders")
 *The first eleven discocubes and their respective orders (number of nodes)*
