@@ -26,7 +26,7 @@ What do a continuous contour line drawing and a Hamiltonian cycle have in common
   </div>
   <div style="flex: 2; padding-left: 20px;">
     <p>
-      <em>Named after Sir William Rowan Hamilton, the Hamiltonian cycle problem is a classic problem in graph theory. It requires finding a closed loop in a graph that visits every node exactly once, ending at the starting point. The problem was first formulated in the rules of his Icosian game, where players insert numbered pegs into holes on a wooden board to represent steps in a path. The objective is to insert the pegs in order along a path to form a closed loop, much like the Hamiltonian cycle problem where the pegs represent nodes in a graph and the path of inserted pegs represents the cycle.</em>
+      <em>Named after Sir William Rowan Hamilton, the Hamiltonian cycle problem is a classic problem in graph theory which is solved by finding a closed loop in a graph that visits every node exactly once, ending at the starting point. Hamilton formulated the problem in the rules of his Icosian game, where players insert numbered pegs into holes on a wooden board to represent steps in a path. The objective is to insert the pegs in order along a path to form a closed loop, much like the Hamiltonian cycle problem where the pegs represent nodes in a graph and the path of inserted pegs represents the cycle.</em>
     </p>
   </div>
 </div>
