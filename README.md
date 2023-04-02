@@ -1023,3 +1023,5 @@ The solution can be plotted using pandas, numpy and plotly. I've put together an
 This package is licensed under the MIT license.
  
 Thanks for making it this far!
+
+![Very first discocube in Berghain](imgs/ako.jpg?raw=true "Me and Discocube") 
