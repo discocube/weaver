@@ -13,12 +13,12 @@ This algorithm is an artist's rendering of a graph object using programming as a
 
 
 ![Alt text](imgs/elumina-inspiration-one-line-picasso-drawings-the-three-dancers-thumbnail.jpg?version%3D1680306692540)
-<small>Pablo Picasso  <em>Trois Danseuses (The Three Dancers)</em></small>
+<small>Pablo Picasso:  <em>Trois Danseuses (The Three Dancers)</em></small>
 
 What do a continuous contour line drawing and a Hamiltonian cycle have in common? Both involve tracing a path without interruption, using a continuous line to describe the subject being represented. To draw a continuous contour line drawing, a single, unbroken line is used to describe the shape and form of the subject. Whereas to form a Hamiltonian cycle, a path is traced through the vertices of a graph, visiting each vertex exactly once and returning to the starting vertex, using a continuous line to connect the vertices and describe the graph.
 
 ![Alt text](imgs/hambw.png)
-<small><em>Hamiltonian cycles in all the platonic solids</em></small>
+<small><em>The graphs from all the platonic solids are Hamiltonian.</em></small>
 
 <div style="display: flex;">
   <div style="flex: 1;">
