@@ -86,10 +86,8 @@ build > run > make > solve > certify > for each graph starting from 32 to 1.373 
 ## Plotting the solution
 The solution can be plotted using pandas, numpy and plotly. I've put together an easy to use python module: https://github.com/discocube/plot_solution to plot and very the solution visually instead of only programmatically.
 
-
-## Plotting the solution
-The solution can be plotted using pandas, numpy and plotly. I've put together an easy to use python module: https://github.com/discocube/plot_solution to plot and very the solution visually instead of only programmatically.
-
+![Very first discocube in Berghain](imgs/ako.png)
+*Me and Discocube in Berghain*
 
 ## Running times
 ![Running times from 8 to 68,085,920 vertices](imgs/8_to_212million.png?raw=true "Runtimes up to 212 million")
