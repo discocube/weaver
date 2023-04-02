@@ -1024,4 +1024,6 @@ This package is licensed under the MIT license.
  
 Thanks for making it this far!
 
-![Very first discocube in Berghain](imgs/ako.jpg?raw=true "Me and Discocube") 
+
+![Very first discocube in Berghain](imgs/ako.png)
+*Me and Discocube in Berghain*
