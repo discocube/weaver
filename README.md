@@ -8,7 +8,7 @@
 
 An algorithm for solving the Hamiltonian cycle problem deterministically and in linear time on all instances of discocube graphs (tested for graphs with over 8 billion vertices, the world's population). Discocube graphs are
 3-dimensional grid graphs derived from: a polycube of an octahedron | a Hauy construction of an octahedron with cubes as identical building blocks | the accretion of cubes around a central cube forming an octahedron at the limit |
-the set of points in a 3-dimensional square grid graph contained within an octahedron | L1-norm unit ball. 
+the set of points in a 3-dimensional square grid graph contained within an octahedron | a 3d L1-norm unit ball. 
 
 This algorithm is an artist's rendering of his muse, a graph object, using programming as a language (instead of painting flowers and apples or singing hymns about angels) and a means by which to describe his muse's body as an endless contour drawing or,  in graph theory terms, a Hamiltonian cycle.
 
