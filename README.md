@@ -975,7 +975,7 @@ The solution can be plotted using pandas, numpy and plotly. I've put together an
 | 🇳  879 | ⭕️  908628160 | 🕗 1481.538     | 📌 HamCycle |     
 | 🇳  880 | ⭕️  911729280 | 🕗 1483.3105    | 📌 HamCycle |     
 | 🇳  881 | ⭕️  914837448 | 🕗 1467.383     | 📌 HamCycle |     
-| 🇳 1000 | ⭕️ 1337336000 | 🕗 2403.4136    | 📌 HamCycle | 
+| 🇳 1000 | 🕗 MAKE: 0.345091 | ⭕️ 1337336000 | 🕗 SOLVE: 2403.4136 | 📌 HamCycle 
 | 🇳 1010 | 🕗 MAKE: 0.367315 | ⭕️ 1377817760 | 🕗 SOLVE: 2561.4006 | 📌 HamCycle 
 | 🇳 1100 | 🕗 MAKE: 0.373897 | ⭕️ 1779509600 | 🕗 SOLVE: 3562.2673 | 📌 HamCycle 
 | 🇳 1200 | 🕗 MAKE: 0.521218 | ⭕️ 2309763200 | 🕗 SOLVE: 8420.2519 | 📌 HamCycle
@@ -983,12 +983,11 @@ The solution can be plotted using pandas, numpy and plotly. I've put together an
 | 🇳 1310 | 🕗 MAKE: 0.605197 | ⭕️ 3004322560 | 🕗 SOLVE: 11881.937 | 📌 HamCycle
 | 🇳 1320 | 🕗 MAKE: 0.000017 | ⭕️ 3073597120 | 🕗 SOLVE: 12736.059 | 📌 HamCycle | 40 / 41.7
 | 🇳 1330 | 🕗 MAKE: 0.000016 | ⭕️ 3143928480 | 🕗 SOLVE: 12246.044 | 📌 HamCycle | 40 / 41.7
-| 🇳 1350 | 🕗 MAKE: 7e-08    | ⭕️ 3287793600 | 🕗 SOLVE: 5761.2993 |
-| 🇳 1400 | 🕗 MAKE: 4.81e-07 | ⭕️ 3666510400 | 🕗 SOLVE: 6919.091  | 
-| 🇳 1450 | 51.7 / 58.1
-
-
-
+| 🇳 1350 | 🕗 MAKE: 7e-08    | ⭕️ 3287793600 | 🕗 SOLVE: 5761.2993 | 📌 HamCycle
+| 🇳 1400 | 🕗 MAKE: 4.81e-07 | ⭕️ 3666510400 | 🕗 SOLVE: 6919.091  | 📌 HamCycle
+| 🇳 1450 | 🕗 MAKE: 2.01e-07 | ⭕️ 4073247200 | 🕗 SOLVE: 7296.6455 | 📌 HamCycle | 56.4 / 58.1
+| 🇳 1500 | 🕗 MAKE: 1.8e-07  | ⭕️ 4509004000 | 🕗 SOLVE: 8243.446  | 📌 HamCycle
+| 🇳 1817 | 🕗 MAKE: 4e-08    | ⭕️ 8011618152 | 🕗 SOLVE: 19884.557 | 📌 HamCycle
 
 ┌──────────────────────────────┐
 │ ESTIMATED SIZE OF SOLUTION   │
