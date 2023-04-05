@@ -1017,11 +1017,10 @@ The solution can be plotted using pandas, numpy and plotly. I've put together an
 | 🇳 1817 | ⭕️ 8011618152 | 🕗 19884.557   | 
 ```
 
-
-│ ESTIMATED SIZE OF SOLUTION   │
+ESTIMATED SIZE OF SOLUTION
 
 | ORDER (Billions) | SIZE (GB) |
-|------------------|-----------|
+|:-----------------|:----------|
 | 1                | 5.88      |
 | 1.5              | 8.82      |
 | 2                | 11.76     |
@@ -1037,11 +1036,10 @@ The solution can be plotted using pandas, numpy and plotly. I've put together an
 | 7                | 41.18     |
 | 7.5              | 44.12     |
 | 8                | 47.06     |
-| 8.5              | 50.00     | 
+| 8.5              | 50.00     |
 | 9                | 52.94     |
 | 9.5              | 55.88     |
 | 10               | 58.82     |
-└──────────────────────────────┘
 ## Licensing:
 
 This package is licensed under the MIT license.
