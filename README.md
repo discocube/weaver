@@ -52,6 +52,8 @@ The algorithm presented in this repository is the least complex, making it the f
 
 This algorithm has no while loops and will terminate after a definitive set of steps. The strength of this algorithm is knowing exactly when, where, and what is to happen, thereby reducing the amount of calculations needed (which is surprising as the creative process in creating this was anything but deterministic). It is a construction algorithm, constructing the path layer by layer until loops are produced, which are then joined using cycle merging. Further optimizations of the algorithm have also discarded the memory-heavy adjacency list, choosing instead to perform individual calculations where needed. Making and solving a graph with over a billion vertices, where n = 1000, won't require a distributed graph engine on the cloud anymore, and it takes a little over ten minutes.
 
+![NP-Completeness explained](https://youtu.be/ctwX--JEzSA)
+
 ![Discocubes](imgs/dcviews.png?raw=true "Discocubes")
 *Discocubes 8 - 1760*
 
