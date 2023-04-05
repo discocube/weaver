@@ -1018,9 +1018,8 @@ The solution can be plotted using pandas, numpy and plotly. I've put together an
 ```
 
 
-┌──────────────────────────────┐
 │ ESTIMATED SIZE OF SOLUTION   │
-|------------------------------|
+
 | ORDER (Billions) | SIZE (GB) |
 |------------------|-----------|
 | 1                | 5.88      |
