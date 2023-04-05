@@ -1045,7 +1045,3 @@ ESTIMATED SIZE OF SOLUTION
 This package is licensed under the MIT license.
  
 Thanks for making it this far!
-
-
-![Very first discocube in Berghain](imgs/ako.png)
-*Me and Discocube in Berghain*
