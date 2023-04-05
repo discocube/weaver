@@ -1015,8 +1015,9 @@ The solution can be plotted using pandas, numpy and plotly. I've put together an
 | 🇳 1650 | ⭕️ 6000394400 | 🕗 13756.121   |
 | 🇳 1700 | ⭕️ 6562231200 | 🕗 15356.612   |
 | 🇳 1817 | ⭕️ 8011618152 | 🕗 19884.557   | 
-
 ```
+
+
 ┌──────────────────────────────┐
 │ ESTIMATED SIZE OF SOLUTION   │
 |------------------------------|
@@ -1028,7 +1029,7 @@ The solution can be plotted using pandas, numpy and plotly. I've put together an
 | 2.5              | 14.70     |
 | 3                | 17.64     |
 | 3.5              | 20.58     |
-| 4                | 23.53     | Usage is about twice.
+| 4                | 23.53     |
 | 4.5              | 26.47     |
 | 5                | 29.41     |
 | 5.5              | 32.35     |
@@ -1037,7 +1038,7 @@ The solution can be plotted using pandas, numpy and plotly. I've put together an
 | 7                | 41.18     |
 | 7.5              | 44.12     |
 | 8                | 47.06     |
-| 8.5              | 50.00     | <------------ GOAL OF 8 BILLION
+| 8.5              | 50.00     | 
 | 9                | 52.94     |
 | 9.5              | 55.88     |
 | 10               | 58.82     |
