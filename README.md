@@ -90,8 +90,8 @@ The solution can be plotted using pandas, numpy and plotly. I've put together an
 *Me and Discocube in Berghain*
 
 ## Running times
-![Running times from 8 to 8 billion vertices](imgs/8_to_8billion.png?raw=true "Runtimes 8 to 8 billion")
-<small>Running times from 8 to 8 billion vertices</small>
+![Running times from 8 to over 8 billion vertices](imgs/8_to_8billion.png?raw=true "Runtimes 8 to over 8 billion")
+<small>Running times from 8 to over 8 billion vertices</small>
 
 #### Running times for graphs with 8 to over 8 billion vertices:
 ```
@@ -1015,6 +1015,7 @@ The solution can be plotted using pandas, numpy and plotly. I've put together an
 | 🇳 1750 | ⭕️ 7158088000 | 🕗 17332.516   |
 | 🇳 1800 | ⭕️ 7788964800 | 🕗 18339.63    |
 | 🇳 1817 | ⭕️ 8011618152 | 🕗 19884.557   | 
+| 🇳 1825 | ⭕️ 8117848200 | 🕗 23029.345   |
 ```
 
 ESTIMATED SIZE OF SOLUTION
