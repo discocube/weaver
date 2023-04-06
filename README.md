@@ -90,8 +90,8 @@ The solution can be plotted using pandas, numpy and plotly. I've put together an
 *Me and Discocube in Berghain*
 
 ## Running times
-![Running times from 8 to 68,085,920 vertices](imgs/8_to_212million.png?raw=true "Runtimes up to 212 million")
-8_to_68085920.png
+![Running times from 8 to 8 billion vertices](imgs/8_to_8
+<small>Running times from 8 to 8 billion vertices</small>
 
 #### Running times for the first 1850 instances: graphs with 8 to 8 Billion vertices:
 ```
