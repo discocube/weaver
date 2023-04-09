@@ -1,197 +1,94 @@
-use itertools::Itertools;
-use ndarray::prelude::*;
-use ndarray::{Axis, Slice};
-use rayon::prelude::*;
+use super::defs::*;
 
-use super::{
-    defs::{
-        Bobbins, Count, GraphGuide, Loom, LoomSlice, Solution, Spool, Tour, Visited, Warps, Weaver,
-        Yarn, YarnEnds, DISP_VECTORS, LAST_ZLEVEL,
-    },
-    utils::{
-        absumv::AbSumV,
-        add_vec::AddVec,
-        info::{are_adj, get_color_index},
-        make_edges_eadjs::{make_eadjs, make_edges},
-    },
-};
-
+/// 🕸️ Weave a Hamiltonian cycle by building chains level by level bottom up until subtours of half is formed. Mirror chains to form cycles for subsequent joining of weft with each warp in the loom until only the weft remains.\
+///
+///---\
+/// `🧭 g`: GraphInfo instance used to get information about the graph.\
+/// `🧵 spun`: Spool of yarn to be colored.\
+/// `🧶 yarns`: Blue and red yarn as an ndarray.\
+/// `📌 pins`: Pins are used cut the finished yarn and as markers to connect the current level to the previous.\
+/// `🪜 loom`: Container onto which threads are woven level by level using pins as markers to connect the previous level to the current.\
+/// `🪡 weft`: Leading loop into which the warps are incorporated. Weft object containing the solution.\
+/// `🧮 warps`: Threads which are built horizontally upwards level by level until half the graph has been built. \
+/// ---\
+///
+///```
+///pub fn weave(n: usize) -> Solution {
+///
+///    // Spin initial hamchain for last/longest level from whence all solutions derive.
+///    let spool = Spool::spin(n.get_spool_size());  
+///
+///    // Convert to ndarray and assign to blue. Copy blue, reflect, translate and assign to red.
+///    let yarns = Yarns::colorize(spool);  
+///
+///    // Init pin cushion with capacity provided by g.
+///    let mut pins: Cushion = Cushion::with_capacity(g.n);  
+///
+///    // Init `pins` with specific capacity provided by g.
+///    let mut loom: Loom = Loom::with_capacity(n.get_loom_size()); 
+///
+///    // Iterate over the setting for each level: `zrow`, `size`, `color`
+///    n.get_zpos_size_color().iter().for_each(|&((zrow, size), color)| {
+///
+///        // Extend each thread end w/ cut/finished yarn using pins from previous level for cutting.
+///        loom.extend_threads(zrow, color, size, &pins, &yarns);
+///
+///        // Prepare the pins for the next level.
+///        pins = loom.pin_ends(zrow == LAST_ROW);
+///    });
+///
+///    // Mirror loom's threads to form subcycles from subchains for subsequent merging.
+///    loom.mirror_threads();
+///
+///    // Split weft from the loom leaving only the warps.
+///    let (mut weft, mut loom) = loom.detach_weft(n);
+///
+///    // Iterate over each warp in the loom and incorporate into the weft.
+///    loom.iter_mut().for_each(|warp| {
+///
+///        // Get edges which are also valid bridges
+///        let warp_edges = warp.edges(weft.max_sum_z, weft.joined);
+///
+///        // Get the bridge edge on the weft to join to with the bridge edge of the warp.
+///        let weft_bridge = weft.edges().bridge(&warp_edges);
+///
+///        // Align/Rotate weft so the ends match weft's bridge.
+///        weft.align_to(weft_bridge);
+///
+///        // Align/Rotate weft so the ends match warp's bridge.
+///        warp.align_to(warp_edges.bridge(&weft_bridge));
+///
+///        // Now that both are aligned weft joins with warp by appending.
+///        weft.join(warp);
+///    });
+///
+///    // Retrieve the finished weave.
+///    weft.get_woven()
+///    }
+///```
+/// ---\
+///
+/// Spin and color yarn. From the bottom-up for each level: cut the yarn incorporate into the level using bobbins if necessary to affix to the previous threads. Prepare bobbins for the next level. When we've reached the top, reflect the loom. Separate the loom into a main weft and warps. Incorporate the weft into the warps. Return solution.\
+/// For each level, get the requested color and cut. If there are pins in the pin pins, cut accordingly and finish.\
+/// Merge subcycles by first calculating the bridge between warp's and weft's edges: Align each sequence to their respective edge such that the two sequences can be placed next to another. Append the warp to the weaver's weft. Continue to incorporate warps into the weft until only the weft remains.
+///
+///
 pub fn weave(n: usize) -> Solution {
-    let graph = GraphGuide::new(n);
-    let mut loom = wrap_and_reflect_loom(&graph);
-    let mut weaver: Weaver = Weaver::new(loom[0].split_off(0), true, graph.min_xyz, graph.order);
-    let mut loom = loom
-        .split_off(1)
-        .into_iter()
-        .map(|mut data| data.drain(..).collect())
-        .collect::<Vec<Vec<_>>>();
+    let yarns = Yarns::colorized(Spool::spin(n.get_spool_size()));
+    let mut pins: Cushion = Cushion::with_capacity(n);
+    let mut loom: Loom = Loom::with_capacity(n.get_loom_size());
+    n.get_zpos_size_color().iter().for_each(|&((zrow, size), color)| {
+        loom.extend_threads(zrow, color, size, &pins, &yarns);
+        pins = loom.pin_ends(zrow == LAST_ROW);
+    });
+    loom.mirror_threads();
+    let (mut weft, mut loom) = loom.detach_weft(n);
     loom.iter_mut().for_each(|warp| {
-        let warp_edges = weaver.make_edges_for(warp);
-        if let Some((m, n)) = (&weaver.edges()
-            & &warp_edges
-                .iter()
-                .flat_map(|(m, n)| make_edges(*m, *n, graph.min_xyz))
-                .collect())
-            .into_iter()
-            .next()
-        {
-            if let Some((j, k)) = (&make_eadjs(m, n, graph.min_xyz) & &warp_edges)
-                .into_iter()
-                .next()
-            {
-                weaver.rotated_to_edge((m, n));
-                Weaver::rotate_to_edge(
-                    warp,
-                    match are_adj(n, j) {
-                        true => (j, k),
-                        false => (k, j),
-                    },
-                );
-                weaver.data.append(warp);
-            }
-        }
+        let warp_edges = warp.edges(weft.max_sum_z, weft.joined);
+        let weft_bridge = weft.edges().bridge(&warp_edges);
+        weft.data.align_to(weft_bridge);
+        warp.align_to(warp_edges.bridge(&weft_bridge));
+        weft.join(warp);
     });
-    weaver.get_weave()
-}
-
-fn wrap_and_reflect_loom(graph: &GraphGuide) -> Loom {
-    let spool: Spool = spin_and_color_yarn(graph);
-    let mut bobbins: Bobbins = Bobbins::with_capacity(graph.n);
-    let mut loom: Loom = Loom::with_capacity(graph.loom_size);
-    GraphGuide::get_zlevel_order(graph.n)
-        .iter()
-        .for_each(|(z, length)| {
-            wrap_warps_onto_loom(get_warps(*z, *length, &bobbins, &spool), &mut loom);
-            match *z == LAST_ZLEVEL {
-                false => bobbins = pin_ends(&mut loom),
-                true => (),
-            }
-        });
-    loom.par_iter_mut().for_each(|thread| {
-        thread.extend(
-            thread
-                .iter()
-                .rev()
-                .map(|&[x, y, z]| [x, y, -z])
-                .collect::<Tour>(),
-        )
-    });
-    loom
-}
-
-pub fn spin_and_color_yarn(graph: &GraphGuide) -> Spool {
-    let start = [graph.max_xyz, 1];
-    let mut spindle: Vec<[i16; 2]> = vec![start; graph.zlen];
-    let mut visited: Visited = Visited::with_capacity(graph.zlen);
-    visited.insert(start, true);
-    let mut yxyx = [1, 0].iter().cycle();
-    let mut disp_cycler = DISP_VECTORS.iter().cycle();
-    let mut curr_disp = disp_cycler.next().unwrap();
-    let mut inside = false;
-    (0..graph.zlen - 1).for_each(|i| {
-        let yx = *yxyx.next().unwrap();
-        let mut new_vect = curr_disp[yx].add_vec(spindle[i]);
-        let is_visited = visited.get(&new_vect).is_some();
-        inside = !inside && is_visited;
-        if is_visited || !inside && new_vect.absumv() > graph.max_absumv {
-            curr_disp = disp_cycler.next().unwrap();
-            new_vect = curr_disp[yx].add_vec(spindle[i]);
-        }
-        spindle[i + 1] = new_vect;
-        visited.insert(new_vect, true);
-    });
-    let blue: Yarn = Yarn::from(spindle.drain(..).collect::<Vec<_>>());
-    let red: Yarn = blue.dot(&arr2(&[[-1, 0], [0, -1]])) + arr2(&[[0, 2]]);
-    Spool::from([(3, blue), (1, red)])
-}
-
-fn get_warps(z: i16, length: Count, bobbins: &Tour, spool: &Spool) -> Warps {
-    let mut yarn = spool[&get_color_index(z)].clone();
-    let start_pos: isize = (yarn.len_of(ndarray::Axis(0)) - length).try_into().unwrap();
-    yarn.slice_axis_inplace(Axis(0), Slice::new(start_pos, None, 1));
-    match yarn
-        .outer_iter()
-        .map(|row| [row[0], row[1], z])
-        .collect::<Vec<_>>()
-    {
-        _yarn if bobbins.is_empty() => vec![_yarn],
-        _yarn => cut_yarn(_yarn, bobbins),
-    }
-}
-
-fn cut_yarn(yarn: Tour, cuts: &Tour) -> Warps {
-    let mut subtours: Warps = Vec::with_capacity(cuts.len() + 1);
-    let last_ix: usize = yarn.len() - 1;
-    let last_idx: usize = cuts.len() - 1;
-    let mut prev = -1_i32;
-    cuts.iter()
-        .filter_map(|node| yarn.iter().position(|&x| x == *node))
-        .sorted()
-        .enumerate()
-        .for_each(|(e, idx)| {
-            if e == last_idx && idx != last_ix {
-                if let Some(first_slice) = yarn.get(prev as usize + 1..idx) {
-                    if !first_slice.is_empty() {
-                        subtours.push(if cuts.contains(&first_slice[0]) {
-                            first_slice.to_vec()
-                        } else {
-                            first_slice.iter().rev().cloned().collect()
-                        });
-                    }
-                }
-                if let Some(first_slice) = yarn.get(idx..) {
-                    if !first_slice.is_empty() {
-                        subtours.push(if cuts.contains(&first_slice[0]) {
-                            first_slice.to_vec()
-                        } else {
-                            first_slice.iter().rev().cloned().collect()
-                        });
-                    }
-                }
-            } else if let Some(first_slice) = yarn.get(prev as usize + 1..=idx) {
-                if !first_slice.is_empty() {
-                    subtours.push(if cuts.contains(&first_slice[0]) {
-                        first_slice.to_vec()
-                    } else {
-                        first_slice.iter().rev().cloned().collect()
-                    });
-                }
-            }
-            prev = idx as i32;
-        });
-    subtours
-}
-
-fn pin_ends(loom: &mut LoomSlice) -> Bobbins {
-    loom.iter_mut()
-        .flat_map(|thread| {
-            let [x, y, z] = thread[0];
-            let [i, j, k] = thread[thread.len() - 1];
-            let lhs = [x, y, z + 2];
-            let rhs = [i, j, k + 2];
-            thread.push_front(lhs);
-            thread.push_back(rhs);
-            [lhs, rhs]
-        })
-        .collect()
-}
-
-fn wrap_warps_onto_loom(mut warps: Warps, loom: &mut Loom) {
-    for thread in &mut *loom {
-        for warp in warps.iter_mut().filter(|w| !w.is_empty()) {
-            match (thread.front(), thread.back()) {
-                (Some(front), _) if *front == warp[0] => warp
-                    .drain(..)
-                    .skip(1)
-                    .for_each(|node| thread.push_front(node)),
-                (_, Some(back)) if *back == warp[0] => {
-                    thread.extend(warp.drain(..).skip(1));
-                }
-                _ => continue,
-            }
-        }
-    }
-    warps.iter_mut().filter(|s| !s.is_empty()).for_each(|seq| {
-        loom.append(&mut vec![seq.drain(..).collect::<YarnEnds>()]);
-    });
+    weft.get_woven()
 }
