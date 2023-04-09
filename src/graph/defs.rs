@@ -244,11 +244,10 @@ impl Weft {
         if !self.joined {
             self.joined = true;
             self.max_abs_z -= 2;
-            self.max_sum_z = self.max_abs_z * 2 - 2;
         } else {
             self.max_abs_z -= 4;
-            self.max_sum_z = self.max_abs_z * 2 - 2;
         }
+        self.max_sum_z = self.max_abs_z * 2 - 2;
     }
 
     /// Retrieve the finished solution.
