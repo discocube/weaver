@@ -1,34 +1,31 @@
 use itertools;
-use itertools::Itertools;
 use ndarray::{arr2, Array2};
 use rayon;
 use std;
 
-use super::defs::{
-    Adjacency, Edge, Edges, Neighbors, Point, SignedIdx, Solution, Vert, Verts, ZAdjacency, ZOrder,
-};
+use super::defs::{AbSumV, Adjacency, Neighbors, ScalarXyz, Verts, ZAdjacency, ZOrder};
 
 pub mod make {
+    use crate::graph::defs::InfoN;
+
     use super::{
         arr2,
-        info::{absumv, absumv2dc, get_max_xyz, get_order_from_n},
         itertools::{iproduct, Itertools},
-        modify::{shift_xy, shift_xyz},
         rayon::prelude::*,
         std::iter::zip,
-        Adjacency, Neighbors, Point, Verts, ZAdjacency, ZOrder,
+        AbSumV, Adjacency, Array2, Neighbors, ScalarXyz, Verts, ZAdjacency, ZOrder,
     };
 
     pub fn make_z_graph(n: usize) -> (usize, ZAdjacency, ZOrder, i16) {
-        let order = get_order_from_n(n);
-        let max_xyz = get_max_xyz(order) as i16;
+        let order = n.get_order_from_n();
+        let max_xyz = order.get_max_xyz_from_order() as i16;
         let (z_adj, z_order) = make_xs_adjacency(n, max_xyz);
         (order, z_adj, z_order, max_xyz - 4)
     }
 
     pub fn make_xs_graph(n: usize) -> (usize, ZOrder, i16) {
-        let order = get_order_from_n(n);
-        let max_xyz = get_max_xyz(order) as i16;
+        let order = n.get_order_from_n();
+        let max_xyz = n.get_max_xyz_from_order() as i16;
         let z_order = get_zlevel_order(n);
         (order, z_order, max_xyz - 4)
     }
@@ -38,7 +35,7 @@ pub mod make {
         (adj, get_zlevel_order(n))
     }
 
-    pub fn make_z_adjacency_map(max_xyz: Point) -> ZAdjacency {
+    pub fn make_z_adjacency_map(max_xyz: ScalarXyz) -> ZAdjacency {
         let max_xyz_plus_1 = max_xyz + 1;
         let verts = vertices_for_z_adjacency(max_xyz);
         verts
@@ -48,21 +45,21 @@ pub mod make {
                     *vert,
                     shift_xy(arr2(&[*vert]))
                         .into_iter()
-                        .filter(|neigh| *neigh != *vert && absumv2dc(*neigh) <= max_xyz_plus_1)
+                        .filter(|neigh| *neigh != *vert && neigh.absumv() <= max_xyz_plus_1)
                         .collect_vec(),
                 )
             })
             .collect()
     }
 
-    fn vertices_for_z_adjacency(max_xyz: Point) -> Vec<[i16; 2]> {
+    fn vertices_for_z_adjacency(max_xyz: ScalarXyz) -> Vec<[i16; 2]> {
         let max_xyz_plus_1 = max_xyz + 1;
         iproduct!(
             (-max_xyz..=max_xyz).step_by(2),
             (-max_xyz..=max_xyz).step_by(2)
         )
-        .filter(|&(x, y)| absumv2dc([x, y]) <= max_xyz_plus_1)
-        .sorted_by_key(|&(x, y)| (absumv2dc([x, y]), x, y))
+        .filter(|&(x, y)| [x, y].absumv() <= max_xyz_plus_1)
+        .sorted_by_key(|&(x, y)| ([x, y].absumv(), x, y))
         .map(|(x, y)| [x, y])
         .collect::<Vec<_>>()
     }
@@ -76,31 +73,25 @@ pub mod make {
     }
 
     pub fn make_adjacency(n: usize) -> Adjacency {
-        let order = get_order_from_n(n);
-        let max_xyz = get_max_xyz(order) as i16;
+        let order = n.get_order_from_n();
+        let max_xyz = order.get_max_xyz_from_order() as i16;
         let verts: Vec<[i16; 3]> = vertices(max_xyz);
         adjacency_map(&verts, max_xyz + 2)
     }
 
-    fn vertices(max_xyz: Point) -> Vec<[i16; 3]> {
+    fn vertices(max_xyz: ScalarXyz) -> Vec<[i16; 3]> {
         let max_xyz_plus_4 = max_xyz + 4;
         iproduct!(
             (-max_xyz..=max_xyz).step_by(2),
             (-max_xyz..=max_xyz).step_by(2),
             (-max_xyz..=max_xyz).step_by(2)
         )
-        .filter_map(|(x, y, z)| {
-            if absumv([x, y, z]) < max_xyz_plus_4 {
-                Some([x, y, z])
-            } else {
-                None
-            }
-        })
-        .sorted_by_key(|&vert| (absumv(vert), vert[0], vert[1]))
+        .filter_map(|(x, y, z)| ([x, y, z].absumv() < max_xyz_plus_4).then_some([x, y, z]))
+        .sorted_by_key(|&vert| (vert.absumv(), vert[0], vert[1]))
         .collect::<Vec<_>>()
     }
 
-    fn adjacency_map(verts: &Verts, max_xyz_plus_2: Point) -> Adjacency {
+    fn adjacency_map(verts: &Verts, max_xyz_plus_2: ScalarXyz) -> Adjacency {
         verts
             .par_iter()
             .map(|vert| {
@@ -110,26 +101,15 @@ pub mod make {
                         .into_iter()
                         .filter(|new_neighbor_vert| {
                             *vert != *new_neighbor_vert
-                                && absumv(*new_neighbor_vert) <= max_xyz_plus_2
+                                && new_neighbor_vert.absumv() <= max_xyz_plus_2
                         })
                         .collect::<Neighbors>(),
                 )
             })
             .collect()
     }
-}
 
-pub mod modify {
-    use super::{arr2, Array2, Point};
-
-    pub fn orient(m: [i16; 3], n: [i16; 3]) -> ([i16; 3], [i16; 3]) {
-        match m < n {
-            true => (m, n),
-            false => (n, m),
-        }
-    }
-
-    pub fn shift_xyz(vert: Array2<Point>) -> Vec<[i16; 3]> {
+    pub fn shift_xyz(vert: Array2<ScalarXyz>) -> Vec<[i16; 3]> {
         (vert
             + arr2(&[
                 [2, 0, 0],
@@ -144,7 +124,7 @@ pub mod modify {
         .collect()
     }
 
-    pub fn shift_xy(vert: Array2<Point>) -> Vec<[i16; 2]> {
+    pub fn shift_xy(vert: Array2<ScalarXyz>) -> Vec<[i16; 2]> {
         (vert + arr2(&[[2, 0], [-2, 0], [0, 2], [0, -2]]))
             .outer_iter()
             .map(|point| [point[0], point[1]])
@@ -152,213 +132,10 @@ pub mod modify {
     }
 }
 
-pub mod info {
-    use ndarray::Array1;
-
-    use super::{Point, SignedIdx, Vert};
-
-    pub fn are_adj([a, b, c]: [i16; 3], [x, y, z]: [i16; 3]) -> bool {
-        let n = a - x + b - y + c - z;
-        let mask = n >> 15;
-        (n + mask) ^ mask == 2
-    }
-
-    pub fn axis2d((x, y, _): &Vert, (a, b, _): &Vert) -> usize {
-        (0..2)
-            .find(|&i| [x, y][i] != [a, b][i])
-            .expect("Something's wrong, the same verts are being compared.")
-    }
-
-    pub fn absumv2dx((x, y, _): Vert) -> i16 {
-        let abs_sum = [x, y].iter().fold(0, |acc, x| {
-            let mask = x >> 15;
-            acc + (x ^ mask) - mask
-        });
-        let sign_bit = abs_sum >> 15;
-        (abs_sum ^ sign_bit) - sign_bit
-    }
-
-    pub fn absumv2d((x, y, _): Vert) -> i16 {
-        [x, y]
-            .iter()
-            .map(|v| {
-                let mask = v >> 15;
-                (v ^ mask) - mask
-            })
-            .sum()
-    }
-
-    pub fn absumv3d((x, y, z): Vert) -> i16 {
-        [x, y, z]
-            .iter()
-            .map(|v| {
-                let mask = v >> 15;
-                (v ^ mask) - mask
-            })
-            .sum()
-    }
-
-    pub fn absumv2dc([x, y]: [i16; 2]) -> i16 {
-        ((x ^ (x >> 15)) - (x >> 15)) + ((y ^ (y >> 15)) - (y >> 15))
-    }
-
-    /// mask = v >> 15, r = (v ^ mask) - mask;
-    pub fn absumv2dc2(vert: [i16; 2]) -> i16 {
-        vert.iter()
-            .map(|v| {
-                let mask = v >> 15;
-                (v ^ mask) - mask
-            })
-            .sum()
-    }
-
-    pub fn absumv2dc6(vert: [i16; 2]) -> i16 {
-        vert.iter().fold(0, |acc, x| {
-            let mask = x >> 15;
-            acc + (x ^ mask) - mask
-        })
-    }
-
-    pub fn absumvar(vect: &Array1<i16>) -> i16 {
-        vect.iter()
-            .map(|v| {
-                let mask = v >> 15;
-                (v ^ mask) - mask
-            })
-            .sum()
-    }
-
-    pub fn absumv(vert: [i16; 3]) -> Point {
-        vert.iter()
-            .map(|v| {
-                let mask = v >> 15;
-                (v ^ mask) - mask
-            })
-            .sum()
-    }
-
-    pub fn get_max_xyz(order: usize) -> SignedIdx {
-        (get_n_from_order(order) * 2 - 1) as i32
-    }
-
-    pub fn get_max_xyz_from_n(n: u32) -> SignedIdx {
-        (n * 2 - 1) as i32
-    }
-
-    pub fn get_order_from_n(n: usize) -> usize {
-        ((4.0 / 3.0) * ((n + 2) * (n + 1) * n) as f64).round() as usize
-    }
-
-    pub fn get_order_from_n_u64(n: u64) -> u64 {
-        ((4.0 / 3.0) * ((n + 2) * (n + 1) * n) as f64).round() as u64
-    }
-
-    pub fn get_n_from_order(order: usize) -> usize {
-        (((3.0 / 4.0) * order as f64).powf(1.0 / 3.0) - 2.0 / 3.0).round() as usize
-    }
-
-    pub fn get_color_index(z: i16) -> u32 {
-        (z % 4 + 4).try_into().unwrap()
-    }
-
-    pub fn get_zlen(n: usize) -> usize {
-        2 * n * (n + 1)
-    }
-}
-
-pub mod add_vec {
-    pub trait AddVec {
-        fn add_vec(&self, other: [i16; 2]) -> [i16; 2];
-    }
-
-    impl AddVec for [i16; 2] {
-        fn add_vec(&self, [a, b]: [i16; 2]) -> [i16; 2] {
-            [self[0] + a, self[1] + b]
-        }
-    }
-}
-
-pub mod are_adj {
-    pub trait AreAdj {
-        fn are_adj(&self, other: [i16; 3]) -> bool;
-    }
-
-    impl AreAdj for [i16; 3] {
-        fn are_adj(&self, [x, y, z]: [i16; 3]) -> bool {
-            let [a, b, c] = self;
-            let n = a - x + b - y + c - z;
-            (n + (n >> 15)) ^ (n >> 15) == 2
-        }
-    }
-}
-
-/// The sum of the absolute value of each scalar x, y and or z.
-/// Also known as the L1-Norm- manhattan distance from a to b where b is the origin (0, 0, 0)
-/// The L1 norm is calculated as the sum of the absolute vector values, where the absolute value of a scalar uses the notation |a1|.
-/// In effect, the norm is a calculation of the Manhattan distance from the origin of the vector space.
-pub mod absumv {
-    use ndarray::Array1;
-
-    pub trait AbSumV {
-        fn absumv(&self) -> i16;
-    }
-
-    impl AbSumV for [i16; 3] {
-        fn absumv(&self) -> i16 {
-            self.iter()
-                .map(|v| {
-                    let mask = v >> 15;
-                    (v ^ mask) - mask
-                })
-                .sum()
-        }
-    }
-
-    impl AbSumV for Array1<i16> {
-        fn absumv(&self) -> i16 {
-            self.iter()
-                .map(|v| {
-                    let mask = *v >> 15;
-                    (*v ^ mask) - mask
-                })
-                .sum()
-        }
-    }
-
-    impl AbSumV for [i16; 2] {
-        fn absumv(&self) -> i16 {
-            self.iter()
-                .map(|v| {
-                    let mask = v >> 15;
-                    (v ^ mask) - mask
-                })
-                .sum()
-        }
-    }
-
-    impl AbSumV for (i16, i16, i16) {
-        fn absumv(&self) -> i16 {
-            let (x, y, z) = self;
-            let mask_x = x >> 15;
-            let mask_y = y >> 15;
-            let mask_z = z >> 15;
-            (x ^ mask_x) - mask_x + (y ^ mask_y) - mask_y + (z ^ mask_z) - mask_z
-        }
-    }
-
-    impl AbSumV for (i16, i16) {
-        fn absumv(&self) -> i16 {
-            let (x, y) = self;
-            let mask_x = x >> 15;
-            let mask_y = y >> 15;
-            (x ^ mask_x) - mask_x + (y ^ mask_y) - mask_y
-        }
-    }
-}
 pub mod iters {
-    pub fn uon(start: usize, end: usize, max_n: usize) -> impl Iterator<Item = usize> {
-        (0..max_n + 2).filter_map(move |i| {
-            let _uon = (0..max_n * 2 + 2)
+    pub fn uon(start: usize, end: usize) -> impl Iterator<Item = usize> {
+        (0..2000 + 2).filter_map(move |i| {
+            let _uon = (0..2000 * 2 + 2)
                 .step_by(2)
                 .take(i)
                 .map(|n| n * (n + 2))
@@ -372,111 +149,8 @@ pub mod iters {
     }
 }
 
-pub mod check_edge {
-    use super::Point;
-
-    pub fn is_valid_edge(
-        v1: [i16; 3],
-        v2: [i16; 3],
-        min_xyz: Point,
-        order: usize,
-        lead: bool,
-    ) -> bool {
-        if order < 160 {
-            return valid_edge(v1, v2);
-        }
-        match lead {
-            true => valid_main_edge(v1, v2, min_xyz),
-            false => valid_other_edge(v1, v2, min_xyz),
-        }
-    }
-
-    pub fn valid_edge([x1, y1, _]: [i16; 3], [x2, y2, _]: [i16; 3]) -> bool {
-        matches!(x1 + y1 + x2 + y2, 4..=10)
-    }
-
-    pub fn valid_main_edge([x, y, z]: [i16; 3], [x2, y2, z2]: [i16; 3], min_xyz: Point) -> bool {
-        if z.abs() == min_xyz && min_xyz == z2.abs() {
-            (x == 1 || x == 3) && y == y2 && y2 == 1 && (x2 == 1 || x2 == 3)
-        } else {
-            x == x2 && x2 == 1 && y == y2 && y2 == 1
-        }
-    }
-
-    pub fn valid_other_edge([x, y, z]: [i16; 3], [x2, y2, z2]: [i16; 3], min_xyz: Point) -> bool {
-        if z.abs() == min_xyz && min_xyz == z2.abs() {
-            (x == 1 || x == 3) && y == y2 && y2 == 3 && (x2 == 1 || x2 == 3)
-        } else {
-            x == x2 && x2 == 3 && y == y2 && y2 == 1
-        }
-    }
-}
-
-pub mod make_edges_eadjs {
-    use super::{Edge, Edges};
-    use rayon::prelude::*;
-
-    pub fn make_eadjs([a, b, c]: [i16; 3], [x, y, z]: [i16; 3], min_xyz: i16) -> Edges {
-        match (a != x, b != y, c != z) {
-            (true, false, false) => [[0, 2, 0], [0, -2, 0], [0, 0, 2], [0, 0, -2]],
-            (false, true, false) => [[2, 0, 0], [-2, 0, 0], [0, 0, 2], [0, 0, -2]],
-            (false, false, true) => [[2, 0, 0], [-2, 0, 0], [0, 2, 0], [0, -2, 0]],
-            _ => panic!("NOT A VALID EDGE"),
-        }
-        .par_iter()
-        .filter_map(|[i, j, k]| {
-            get_valid_eadj([a + i, b + j, c + k], [x + i, y + j, z + k], min_xyz)
-        })
-        .collect()
-    }
-
-    pub fn make_edges([a, b, c]: [i16; 3], [x, y, z]: [i16; 3], min_xyz: i16) -> Edges {
-        match (a != x, b != y, c != z) {
-            (true, false, false) => [[0, 2, 0], [0, -2, 0], [0, 0, 2], [0, 0, -2]],
-            (false, true, false) => [[2, 0, 0], [-2, 0, 0], [0, 0, 2], [0, 0, -2]],
-            (false, false, true) => [[2, 0, 0], [-2, 0, 0], [0, 2, 0], [0, -2, 0]],
-            _ => panic!("NOT A VALID EDGE"),
-        }
-        .par_iter()
-        .filter_map(|[i, j, k]| {
-            get_valid_edge([a + i, b + j, c + k], [x + i, y + j, z + k], min_xyz)
-        })
-        .collect()
-    }
-
-    pub fn get_valid_edge([x, y, z]: [i16; 3], [a, b, c]: [i16; 3], min_xyz: i16) -> Option<Edge> {
-        match z.abs() == min_xyz
-            && min_xyz == c.abs()
-            && (x == 1 || x == 3)
-            && y == b
-            && b == 1
-            && (a == 1 || a == 3)
-            || x == a && a == 1 && y == b && b == 1
-        {
-            true => Some(([x, y, z], [a, b, c])),
-            false => None,
-        }
-    }
-
-    pub fn get_valid_eadj([x, y, z]: [i16; 3], [a, b, c]: [i16; 3], min_xyz: i16) -> Option<Edge> {
-        match z.abs() == min_xyz
-            && min_xyz == c.abs()
-            && (x == 1 || x == 3)
-            && y == b
-            && b == 3
-            && (a == 1 || a == 3)
-            || x == a && a == 3 && y == b && b == 1
-        {
-            true => Some(([x, y, z], [a, b, c])),
-            false => None,
-        }
-    }
-}
-
 pub mod certify {
-    use itertools::all;
-
-    use super::{absumv::AbSumV, std::fmt, Adjacency, Itertools, Solution};
+    use super::std::fmt;
 
     #[derive(Debug, PartialEq)]
     pub enum SequenceID {
@@ -493,66 +167,6 @@ pub mod certify {
                 SequenceID::HamCycle => write!(f, "HamCycle"),
             }
         }
-    }
-
-    pub fn id_seq(seq: &Solution, adj: &Adjacency) -> SequenceID {
-        if seq.iter().duplicates().count() > 0 || seq.len() != adj.len() {
-            return SequenceID::Broken;
-        }
-        match seq
-            .windows(2)
-            .all(|window| adj[&window[0]].contains(&window[1]))
-        {
-            true if adj[&seq[seq.len() - 1]].contains(&seq[0]) => SequenceID::HamCycle,
-            true => SequenceID::HamChain,
-            false => SequenceID::Broken,
-        }
-    }
-
-    pub fn is_hamiltonian_circuit(seq: &Solution, order: usize, max_absumv3d: i16) -> SequenceID {
-        if seq.iter().duplicates().count() > 0
-            || seq.len() != order
-            || !all(seq.iter(), |[x, y, z]| (x & 1) + (y & 1) + (z & 1) == 3)
-            || !all(seq.iter(), |vert| vert.absumv() <= max_absumv3d)
-            || seq
-                .iter()
-                .fold((0, 0, 0), |acc: (i16, i16, i16), &[x, y, z]| {
-                    (acc.0 + x, acc.1 + y, acc.2 + z)
-                })
-                != (0, 0, 0)
-        {
-            return SequenceID::Broken;
-        }
-        SequenceID::HamCycle
-    }
-}
-
-pub mod csv_out {
-    use serde::Serialize;
-    use std::error::Error;
-
-    #[derive(Debug, Serialize, serde::Deserialize)]
-    #[serde(rename_all = "PascalCase")]
-    struct Vector {
-        x: i16,
-        y: i16,
-        z: i16,
-    }
-
-    pub fn vector_to_csv(data: Vec<[i16; 3]>, file_path: &str) -> Result<(), Box<dyn Error>> {
-        let file = std::fs::File::create(file_path)?;
-        let mut writer = csv::Writer::from_writer(file);
-        data.iter().for_each(|[x, y, z]| {
-            writer
-                .serialize(Vector {
-                    x: *x,
-                    y: *y,
-                    z: *z,
-                })
-                .ok();
-        });
-        writer.flush()?;
-        Ok(())
     }
 }
 
@@ -582,12 +196,12 @@ pub mod debug {
     }
 
     pub fn calculate_sizes(start: u64, end: u64, step: u64) -> Vec<(u64, f64)> {
-        let element_size = 6; // size of [i16; 3] in bytes
+        let size_i16x3 = 6;
         let mut order = start;
         let mut sizes = Vec::new();
         while order <= end {
             let num_elements = order as usize;
-            let size = element_size as f64 * num_elements as f64 / 1024.0 / 1024.0 / 1024.0;
+            let size = size_i16x3 as f64 * num_elements as f64 / 1024.0 / 1024.0 / 1024.0;
             sizes.push((order, size));
             order += step;
         }
