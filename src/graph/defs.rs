@@ -243,6 +243,7 @@ impl Weft {
         self.data.append(warp);
         if !self.joined {
             self.joined = true;
+        }
         self.max_abs_z -= if !self.joined {2} else {4};
         self.max_sum_z = self.max_abs_z * 2 - 2;
     }
