@@ -118,6 +118,14 @@ pub mod spin_yarn {
         }
     }
 
+    /// 2d displacement vectors for walking a zig-zag.
+    pub const DISP_VECTORS: [[V2d; 2]; 4] = [
+        [[-2, 0], [0, -2]],
+        [[-2, 0], [0, 2]],
+        [[2, 0], [0, 2]],
+        [[2, 0], [0, -2]],
+    ];
+
     /// A struct responsible for providing the right set of displacement vectors so that an inward-turning zigzag is produced from an initial vector.
     pub struct Spinner<'a> {
         /// Value of n.
@@ -365,6 +373,9 @@ pub mod extend_loom_threads {
 
 pub mod mark_thread_ends {
     use crate::graph::defs::*;
+
+    /// Last z-level elevation.
+    pub const LAST_ROW: ScalarXyz = -1;
 
     pub trait MarkEnds {
         /// 📌 Pins are used to carry over the values of each end of each thread in the loom from the previous level to the next. For each thread end `[thread[0], thread[thread.len() - 1]]` in the loom make a pin by adding 2 (length of an edge) to the z-scalar value: `[x, y, z + 2]`. Collect the pins in the cushion for cutting later.
