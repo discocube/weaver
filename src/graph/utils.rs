@@ -25,7 +25,7 @@ pub mod make {
     use std::iter::zip;
 
     use super::graph_types::*;
-    use crate::check::L1Norm;
+    use crate::graph::ops::check::L1Norm;
     use crate::graph::ops::graph_info_from_n::*;
 
     pub fn make_z_graph(n: usize) -> (usize, ZAdjacency, ZOrder, i16) {
