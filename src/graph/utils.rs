@@ -1,20 +1,32 @@
-use itertools;
-use ndarray::{arr2, Array2};
-use rayon;
-use std;
+/// Types used for the Graph and its instances.
+pub mod graph_types {
+    use std::collections::{HashMap, HashSet};
 
-use super::defs::{AbSumV, Adjacency, Neighbors, ScalarXyz, Verts, ZAdjacency, ZOrder};
+    pub type Adjacency = HashMap<V3, Neighbors>;
+    pub type Neighbors = HashSet<V3>;
+    pub type ScalarXyz = i16;
+    pub type V2 = [ScalarXyz; 2];
+    pub type V3 = [ScalarXyz; 3];
+    pub type Vert = (ScalarXyz, ScalarXyz, ScalarXyz);
+    pub type Verts = [V3];
+    pub type Vs = HashSet<V3>;
+    pub type VIMap = HashMap<Vert, V3>;
+    pub type Visited = HashMap<V2, bool>;
+    pub type ZAdjacency = HashMap<[ScalarXyz; 2], Vec<[ScalarXyz; 2]>>;
+    pub type ZOrder = Vec<(ScalarXyz, usize)>;
+    pub type ZlevelVsMap = HashMap<ScalarXyz, Vs>;
+}
 
+///  Make Graph from n. No longer used to construct cycle owing to heavy memory use.
 pub mod make {
-    use crate::graph::defs::InfoN;
+    use itertools::{iproduct, Itertools};
+    use ndarray::{arr2, Array2};
+    use rayon::prelude::*;
+    use std::iter::zip;
 
-    use super::{
-        arr2,
-        itertools::{iproduct, Itertools},
-        rayon::prelude::*,
-        std::iter::zip,
-        AbSumV, Adjacency, Array2, Neighbors, ScalarXyz, Verts, ZAdjacency, ZOrder,
-    };
+    use super::graph_types::*;
+    use crate::check::L1Norm;
+    use crate::graph::ops::graph_info_from_n::*;
 
     pub fn make_z_graph(n: usize) -> (usize, ZAdjacency, ZOrder, i16) {
         let order = n.get_order_from_n();
@@ -45,7 +57,7 @@ pub mod make {
                     *vert,
                     shift_xy(arr2(&[*vert]))
                         .into_iter()
-                        .filter(|neigh| *neigh != *vert && neigh.absumv() <= max_xyz_plus_1)
+                        .filter(|neigh| *neigh != *vert && neigh.l1norm() <= max_xyz_plus_1)
                         .collect_vec(),
                 )
             })
@@ -58,8 +70,8 @@ pub mod make {
             (-max_xyz..=max_xyz).step_by(2),
             (-max_xyz..=max_xyz).step_by(2)
         )
-        .filter(|&(x, y)| [x, y].absumv() <= max_xyz_plus_1)
-        .sorted_by_key(|&(x, y)| ([x, y].absumv(), x, y))
+        .filter(|&(x, y)| [x, y].l1norm() <= max_xyz_plus_1)
+        .sorted_by_key(|&(x, y)| ([x, y].l1norm(), x, y))
         .map(|(x, y)| [x, y])
         .collect::<Vec<_>>()
     }
@@ -86,8 +98,8 @@ pub mod make {
             (-max_xyz..=max_xyz).step_by(2),
             (-max_xyz..=max_xyz).step_by(2)
         )
-        .filter_map(|(x, y, z)| ([x, y, z].absumv() < max_xyz_plus_4).then_some([x, y, z]))
-        .sorted_by_key(|&vert| (vert.absumv(), vert[0], vert[1]))
+        .filter_map(|(x, y, z)| ([x, y, z].l1norm() < max_xyz_plus_4).then_some([x, y, z]))
+        .sorted_by_key(|&vert| (vert.l1norm(), vert[0], vert[1]))
         .collect::<Vec<_>>()
     }
 
@@ -101,7 +113,7 @@ pub mod make {
                         .into_iter()
                         .filter(|new_neighbor_vert| {
                             *vert != *new_neighbor_vert
-                                && new_neighbor_vert.absumv() <= max_xyz_plus_2
+                                && new_neighbor_vert.l1norm() <= max_xyz_plus_2
                         })
                         .collect::<Neighbors>(),
                 )
@@ -149,27 +161,7 @@ pub mod iters {
     }
 }
 
-pub mod certify {
-    use super::std::fmt;
-
-    #[derive(Debug, PartialEq)]
-    pub enum SequenceID {
-        Broken,
-        HamChain,
-        HamCycle,
-    }
-
-    impl fmt::Display for SequenceID {
-        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-            match self {
-                SequenceID::Broken => write!(f, "Broken"),
-                SequenceID::HamChain => write!(f, "HamChain"),
-                SequenceID::HamCycle => write!(f, "HamCycle"),
-            }
-        }
-    }
-}
-
+/// Helper methods for debugging, timing, refactoring.
 pub mod debug {
     use chrono::{Datelike, Local, Timelike};
     use std::fmt;
