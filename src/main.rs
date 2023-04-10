@@ -39,14 +39,23 @@
 ///
 ///                                               
 /////////////////////////////////////////////////////////////////////////////
-extern crate blas_src;
-extern crate chrono;
 extern crate rayon;
+
+use std::{
+    env,
+    time::{Duration, Instant},
+};
 
 pub mod graph;
 
-use graph::{defs::*, utils::certify::SequenceID, utils::debug::get_current_date_time, weave};
-use std::{env, time::Instant};
+use graph::{
+    defs::*, 
+    ops::{
+        graph_info_from_n::*,
+        check::{Certify, SequenceID}
+    }, 
+    utils::debug::get_current_date_time, weave
+};
 
 pub fn main() -> Result<(), &'static str> {
     std::env::set_var("RUST_BACKTRACE", "1");
@@ -71,25 +80,33 @@ pub fn main() -> Result<(), &'static str> {
 // Solve on one or many by step or by steps. Time it and certify.
 pub fn find_solutions(n: usize, _certify: bool) -> Result<Solution, &'static str> {
     let order = n.get_order_from_n();
+    let mut solution = Solution::new();
+    let mut _start: Instant = Instant::now();
     if order > 1000000000 {
         println!("{} | SOLVING ORDER ⭕️ {order}", get_current_date_time());
     }
-    let mut start: Instant = Instant::now();
-    let solution = weave::weave(n);
-    let dur_solve = Instant::now() - start;
-    if order > 10000000 {
+    let mut min_dur = Duration::new(1000000, 0);
+    for _ in 0..1 {
+        let start = Instant::now();
+        solution = weave::weave(n);
+        let dur_solve = Instant::now() - start;
+        if dur_solve < min_dur {
+            min_dur = dur_solve;
+        }
+    }
+    if order > 0 {
         println!(
             "| 🇳 {n:>4} | ⭕️ {order:>10} | 🕗 {:.10} |",
-            dur_solve.as_secs_f32(),
+            min_dur.as_secs_f32(),
         );
     } else {
-        start = Instant::now();
+        _start = Instant::now();
         let seq_id = solution.certify(order, n.get_max_absumv());
-        let dur_certify = Instant::now() - start;
+        let _dur_certify = Instant::now() - _start;
         println!(
             "| 🇳 {n:>4} | ⭕️ {order:>10} | 🕗 SOLVE: {:.10} | 📌 {seq_id:?} | 🕗 CERTIFY: {:.10}",
-            dur_solve.as_secs_f32(),
-            dur_certify.as_secs_f32()
+            min_dur.as_secs_f32(),
+            _dur_certify.as_secs_f32()
         );
         assert_eq!(seq_id, SequenceID::HamCycle);
     }
