@@ -2,7 +2,7 @@
 pub mod prelude {
     pub use super::{
         color_spun_yarn::*, extend_loom_threads::*, finish_colored_yarn::*, graph_info_from_n::*,
-        mark_thread_ends::*, merge_cycle::*, mirror_loom::*, spin_yarn::*,
+        mark_thread_ends::*, merge_cycles::*, mirror_loom::*, spin_yarn::*,
     };
 }
 
@@ -30,7 +30,7 @@ pub mod graph_info_from_n {
         /// spool size is the number of verts in the graph whose z-scalar value is -1.
         fn spool_size(self) -> (Count, Count);
         /// Get length of the current level.
-        fn zrow_color_size(self) -> ZrowColorSize;
+        fn zrow_color_len(self) -> ZrowColorSize;
     }
 
     impl InfoN for Count {
@@ -65,7 +65,7 @@ pub mod graph_info_from_n {
             (self, 2 * self * (self + 1))
         }
 
-        fn zrow_color_size(self) -> ZrowColorSize {
+        fn zrow_color_len(self) -> ZrowColorSize {
             let spool_length = 2 * self * (self + 1);
             zip(
                 zip(
@@ -232,12 +232,13 @@ pub mod color_spun_yarn {
     }
 }
 
+/// Cuts using pins and affixes the yarn to the current elevation.
 pub mod finish_colored_yarn {
     use crate::graph::defs::*;
     use itertools::Itertools;
     use ndarray::s;
 
-    pub trait Finish {
+    pub trait PrepareYarn {
         /// 👨‍🍳 Measure requested color and size as a slice and finish by positioning the yarn to the current elevation by adding a scalar `zpos` to each item in the slice and cutting finished yarn if there are pins in the pins by calling `cut_yarn(_yarn, pins)` or return uncut.
         ///
         ///---\
@@ -252,11 +253,11 @@ pub mod finish_colored_yarn {
         /// Cut finished yarn if `pins` is not empty, `cut_yarn(_yarn, &pins)`. Return the finished (cut or not) yarn.
         ///
         ///
-        fn finish(&self, zpos: i16, color: u8, size: usize, pins: &PinCushion) -> Warps;
+        fn prep(&self, zpos: i16, color: u8, size: usize, pins: &PinCushion) -> Warps;
     }
 
-    impl Finish for Yarns {
-        fn finish(&self, zpos: i16, color: u8, size: usize, pins: &PinCushion) -> Warps {
+    impl PrepareYarn for Yarns {
+        fn prep(&self, zpos: i16, color: u8, size: usize, pins: &PinCushion) -> Warps {
             match self[&color]
                 .slice(s![size.., ..])
                 .outer_iter()
@@ -350,10 +351,11 @@ pub mod extend_loom_threads {
         }
     }
 
+    /// Extend vec to the front or back of the deque by pushing each element using `push_front` or `push_back` but skipping the first which is similar to removing the marker used to match the ends.
     pub trait ExtendThreadFrontBack {
-        /// Extend vec to the front of the deque by pushing each element using `push_front` but skipping the first. Named ExtendFront to disambiguate with ExtendLeft, which usually involves reversing the sequence before extending.
+        /// Extend vec to the front of the deque by pushing each element using `push_front` but skipping the first.
         fn extend_thread_front(&mut self, pinned: &mut Warp);
-        /// Extend vec to the back of the deque by pushing each element using `push_back` but skipping the first. Named ExtendFront to disambiguate with ExtendLeft, which usually involves reversing the sequence before extending.
+        /// Extend vec to the back of the deque by pushing each element using `push_back` but skipping the first.
         fn extend_thread_back(&mut self, pinned: &mut Warp);
     }
 
@@ -455,11 +457,11 @@ pub mod mirror_loom {
     }
 }
 
-pub mod merge_cycle {
+pub mod merge_cycles {
     use super::graph_info_from_n::InfoN;
     use crate::graph::defs::*;
-    use common_macros::hash_set;
     use itertools::Itertools;
+    use std::collections::HashSet;
 
     pub trait GetWeftWarps {
         /// Remove the threads from the loom and separate into weft and warps. Prepare for cycle merging. Loop over each warp, join with the weft until the end of the loop where there will only be the weft.
@@ -517,7 +519,7 @@ pub mod merge_cycle {
         pub fn edges(&mut self) -> Edges {
             self.data
                 .iter()
-                .circular_tuple_windows()
+                .tuple_windows()
                 .filter(|(&[_, _, z], &[a, _, c])| {
                     a == (if self.joined { 1 } else { 3 }) && (z + c).absbit() == self.max_sum_z
                 })
@@ -543,16 +545,16 @@ pub mod merge_cycle {
         }
     }
 
-    pub trait WarpEdges {
+    pub trait GetWarpEdges {
         /// Construct edges from the Vec and filter.
         /// 'vec![1, 2, 3]' -> `hash_set![(1, 2), (2, 3), (3, 1)]` which is then filtered further to avoid memory waste.
-        fn edges(&self, min_xyz: i16, joined: bool) -> Edges;
+        fn edges(&self, min_xyz: i16, joined: bool) -> WarpEdges;
     }
 
-    impl WarpEdges for Warp {
-        fn edges(&self, max_sum_z: i16, joined: bool) -> Edges {
+    impl GetWarpEdges for Warp {
+        fn edges(&self, max_sum_z: i16, joined: bool) -> WarpEdges {
             self.iter()
-                .circular_tuple_windows()
+                .tuple_windows()
                 .filter(|(&[x, y, z], &[_, b, c])| {
                     (x == 3 || x == 1)
                         && (y == 3 || y == 1)
@@ -614,59 +616,53 @@ pub mod merge_cycle {
         }
     }
 
+    /// Get the Adjacent edges for either a weft edge or warp edges.
     pub trait GetEadjs {
         /// Get the adjacent/parallel edges of edges.
         fn get_eadjs(&self) -> Edges;
     }
 
-    impl GetEadjs for Edges {
+    impl GetEadjs for WarpEdges {
         fn get_eadjs(&self) -> Edges {
             self.iter()
                 .filter(|([x, y, _], _)| (x == &3 || x == &1) && (y == &3 || y == &1))
-                .flat_map(|&(q, r)| (q, r).get_eadj())
+                .flat_map(|&(q, r)| {
+                    let ([a, b, c], [x, y, z]) = (q, r);
+                    match (a != x, b != y, c != z) {
+                        (true, false, false) => HashSet::from([([a, b - 2, c], [x, y - 2, z])]),
+                        (false, true, false) => HashSet::from([([a, b, c + 2], [x, y, z + 2])]),
+                        (false, false, true) => HashSet::from([
+                            ([a - 2, b, c], [x - 2, y, z]),
+                            ([a, b + 2, c], [x, y + 2, z]),
+                        ]),
+                        _ => panic!("NOT A VALID EDGE"),
+                    }
+                })
                 .collect()
         }
     }
 
-    impl GetEadjs for Edge {
+    impl GetEadjs for WeftEdge {
+        /// Get the adjacent edges for weft
         fn get_eadjs(&self) -> Edges {
             let ([a, b, c], [x, y, z]) = *self;
             match (a != x, b != y, c != z) {
-                (true, false, false) => hash_set!(([a, b + 2, c], [x, y + 2, z])),
-                (false, true, false) => hash_set!(([a + 2, b, c], [x + 2, y, z])),
-                (false, false, true) => hash_set!(([a + 2, b, c], [x + 2, y, z])),
+                (true, false, false) => HashSet::from([([a, b + 2, c], [x, y + 2, z])]),
+                (false, true, false) => HashSet::from([([a + 2, b, c], [x + 2, y, z])]),
+                (false, false, true) => HashSet::from([([a + 2, b, c], [x + 2, y, z])]),
                 _ => panic!("NOT A VALID EDGE"),
             }
         }
     }
 
-    pub trait GetEadj {
-        /// Get and filter the adjacent edges of an edge.
-        fn get_eadj(self) -> Edges;
-    }
-
-    impl GetEadj for Edge {
-        fn get_eadj(self) -> Edges {
-            let ([a, b, c], [x, y, z]) = self;
-            match (a != x, b != y, c != z) {
-                (true, false, false) => hash_set!(([a, b - 2, c], [x, y - 2, z])),
-                (false, true, false) => hash_set!(([a, b, c + 2], [x, y, z + 2])),
-                (false, false, true) => hash_set!(
-                    ([a - 2, b, c], [x - 2, y, z]),
-                    ([a, b + 2, c], [x, y + 2, z])
-                ),
-                _ => panic!("NOT A VALID EDGE"),
-            }
-        }
-    }
-
+    /// A trait for warp which the weft struct contains.
     pub trait AlignToEdge {
         /// Align self to given edge such that the lhs of edge and self match and the rhs of edge and self match.
-        fn align_to(&mut self, edge: (V3d, V3d));
+        fn align_to(&mut self, edge: Edge);
     }
 
     impl AlignToEdge for Warp {
-        fn align_to(&mut self, (lhs, rhs): (V3d, V3d)) {
+        fn align_to(&mut self, (lhs, rhs): Edge) {
             match (
                 self.iter().position(|&x| x == lhs).unwrap(),
                 self.iter().position(|&x| x == rhs).unwrap(),
@@ -675,13 +671,13 @@ pub mod merge_cycle {
                     self.rotate_left(idx_rhs);
                     self.reverse()
                 }
-                (idx_lhs, _) => self.rotate_left(idx_lhs),
+                (_, idx_rhs) => self.rotate_right(idx_rhs),
             }
         }
     }
 }
 
-pub mod check {
+pub mod certify_solution {
     use crate::graph::defs::{Solution, V2d, V3d};
     use itertools::{all, Itertools};
 
@@ -781,6 +777,7 @@ pub mod check {
     }
 }
 
+/// Module for exporting the solution to a .csv file where each row is x, y, z.
 pub mod csv_out {
     use crate::graph::defs::Solution;
     use serde::Serialize;
