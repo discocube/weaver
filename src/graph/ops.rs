@@ -1,11 +1,12 @@
 /// Collection of modules used to build Hamiltonian cycle.
 pub mod prelude {
     pub use super::{
-        color_spun_yarn::*, extend_loom_threads::*, finish_colored_yarn::*, graph_info_from_n::*,
-        mark_thread_ends::*, merge_cycles::*, mirror_loom::*, spin_yarn::*,
+        color_spun_yarn::*, extend_loom_threads::*, prep_yarn::*, graph_info_from_n::*,
+        mark_thread_ends::*, merge_cycles::*, mirror_loom_threads::*, spin_yarn::*,
     };
 }
 
+/// Given n calculate values used for building the solution.
 pub mod graph_info_from_n {
     use crate::graph::types::*;
     use itertools::Itertools;
@@ -82,6 +83,7 @@ pub mod graph_info_from_n {
     }
 }
 
+/// Walk a Hamiltonian chain from the outer to innermost vert where the scalar z value of the points equals -1.
 pub mod spin_yarn {
     use super::graph_info_from_n::InfoN;
     use crate::graph::types::*;
@@ -203,11 +205,13 @@ pub mod spin_yarn {
     }
 }
 
+/// Convert spun yarn to a 2-dimensional ndarray. Assign to blue. Copy, reflect and translate blue, assign to red.
 pub mod color_spun_yarn {
     use ndarray::array;
 
     use crate::graph::types::*;
 
+    /// Convert from Spindle to Yarns.
     pub trait Convert {
         /// 🎨 Color by draining spool into an ndarray & assigning to `blue`. Assign `red` as a mirrored/translated `blue`.
         ///
@@ -232,8 +236,8 @@ pub mod color_spun_yarn {
     }
 }
 
-/// Cuts using pins and affixes the yarn to the current elevation.
-pub mod finish_colored_yarn {
+/// Prepare yarn for extending onto the loom threads. Cut using pins and affix yarn to the current elevation.
+pub mod prep_yarn {
     use crate::graph::types::*;
     use itertools::Itertools;
     use ndarray::s;
@@ -326,6 +330,7 @@ pub mod finish_colored_yarn {
     }
 }
 
+/// Extend each thread in the loom based on the marked ends from the previous level.
 pub mod extend_loom_threads {
     use crate::graph::types::*;
 
@@ -373,6 +378,7 @@ pub mod extend_loom_threads {
     }
 }
 
+/// Mark ends for the next level from which to extend the prepared yarn.
 pub mod mark_thread_ends {
     use crate::graph::types::*;
 
@@ -422,7 +428,8 @@ pub mod mark_thread_ends {
     }
 }
 
-pub mod mirror_loom {
+/// Reflect the half-solution along the z-axis to create the whole.
+pub mod mirror_loom_threads {
     use crate::graph::types::{Loom, LoomThread, Tour, V3d};
     use rayon::prelude::*;
 
@@ -457,19 +464,20 @@ pub mod mirror_loom {
     }
 }
 
+/// Merge subcycles into one Hamiltonian cycle by finding their bridges through set intersection.
 pub mod merge_cycles {
-    use super::graph_info_from_n::InfoN;
-    use crate::graph::types::*;
     use itertools::Itertools;
     use std::collections::HashSet;
+    use super::graph_info_from_n::InfoN;
+    use crate::graph::types::*;
 
     pub trait GetWeftWarps {
         /// Remove the threads from the loom and separate into weft and warps. Prepare for cycle merging. Loop over each warp, join with the weft until the end of the loop where there will only be the weft.
-        fn prepare_merging(self, n: usize) -> (Weft, Warps);
+        fn prepare_cycle_merging(self, n: usize) -> (Weft, Warps);
     }
 
     impl GetWeftWarps for Loom {
-        fn prepare_merging(mut self, n: usize) -> (Weft, Warps) {
+        fn prepare_cycle_merging(mut self, n: usize) -> (Weft, Warps) {
             (
                 Weft::new(self[0].split_off(0), n.get_order_from_n()),
                 Warps::drain_from(self),
@@ -677,6 +685,7 @@ pub mod merge_cycles {
     }
 }
 
+/// Certify if the solution is Hamiltonian.
 pub mod certify_solution {
     use crate::graph::types::{Solution, V2d, V3d};
     use itertools::{all, Itertools};
