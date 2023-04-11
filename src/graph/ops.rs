@@ -7,7 +7,7 @@ pub mod prelude {
 }
 
 pub mod graph_info_from_n {
-    use crate::graph::defs::*;
+    use crate::graph::types::*;
     use itertools::Itertools;
     use std::iter::{repeat, zip};
 
@@ -84,7 +84,7 @@ pub mod graph_info_from_n {
 
 pub mod spin_yarn {
     use super::graph_info_from_n::InfoN;
-    use crate::graph::defs::*;
+    use crate::graph::types::*;
     use std;
 
     pub trait Spin {
@@ -206,7 +206,7 @@ pub mod spin_yarn {
 pub mod color_spun_yarn {
     use ndarray::array;
 
-    use crate::graph::defs::*;
+    use crate::graph::types::*;
 
     pub trait Convert {
         /// 🎨 Color by draining spool into an ndarray & assigning to `blue`. Assign `red` as a mirrored/translated `blue`.
@@ -234,7 +234,7 @@ pub mod color_spun_yarn {
 
 /// Cuts using pins and affixes the yarn to the current elevation.
 pub mod finish_colored_yarn {
-    use crate::graph::defs::*;
+    use crate::graph::types::*;
     use itertools::Itertools;
     use ndarray::s;
 
@@ -327,7 +327,7 @@ pub mod finish_colored_yarn {
 }
 
 pub mod extend_loom_threads {
-    use crate::graph::defs::*;
+    use crate::graph::types::*;
 
     pub trait ExtendThreads {
         /// Extend each end of each thread in the loom with the segmented, colored and finished yarn.
@@ -374,7 +374,7 @@ pub mod extend_loom_threads {
 }
 
 pub mod mark_thread_ends {
-    use crate::graph::defs::*;
+    use crate::graph::types::*;
 
     /// Last z-level elevation.
     pub const LAST_ROW: ScalarXyz = -1;
@@ -423,7 +423,7 @@ pub mod mark_thread_ends {
 }
 
 pub mod mirror_loom {
-    use crate::graph::defs::{Loom, LoomThread, Tour, V3d};
+    use crate::graph::types::{Loom, LoomThread, Tour, V3d};
     use rayon::prelude::*;
 
     pub trait Mirrored {
@@ -459,7 +459,7 @@ pub mod mirror_loom {
 
 pub mod merge_cycles {
     use super::graph_info_from_n::InfoN;
-    use crate::graph::defs::*;
+    use crate::graph::types::*;
     use itertools::Itertools;
     use std::collections::HashSet;
 
@@ -678,7 +678,7 @@ pub mod merge_cycles {
 }
 
 pub mod certify_solution {
-    use crate::graph::defs::{Solution, V2d, V3d};
+    use crate::graph::types::{Solution, V2d, V3d};
     use itertools::{all, Itertools};
 
     use std::fmt;
@@ -779,7 +779,7 @@ pub mod certify_solution {
 
 /// Module for exporting the solution to a .csv file where each row is x, y, z.
 pub mod csv_out {
-    use crate::graph::defs::Solution;
+    use crate::graph::types::Solution;
     use serde::Serialize;
     use std::error::Error;
 
