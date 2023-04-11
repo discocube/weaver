@@ -25,10 +25,7 @@ pub mod make {
     use std::iter::zip;
 
     use super::graph_types::*;
-    use crate::graph::ops::{
-        check::L1Norm,
-        graph_info_from_n::*
-    };
+    use crate::graph::ops::{certify_solution::L1Norm, graph_info_from_n::*};
 
     pub fn make_z_graph(n: usize) -> (usize, ZAdjacency, ZOrder, i16) {
         let order = n.get_order_from_n();
@@ -207,3 +204,25 @@ pub mod debug {
         sizes
     }
 }
+
+use criterion::{criterion_group, criterion_main, Criterion};
+
+fn slow_function() -> u64 {
+    let mut total = 0;
+    for i in 0..100000 {
+        total += i;
+    }
+    total
+}
+
+fn fast_function() -> u64 {
+    (0..100000).sum()
+}
+
+fn criterion_benchmark(c: &mut Criterion) {
+    c.bench_function("slow_function", |b| b.iter(|| slow_function()));
+    c.bench_function("fast_function", |b| b.iter(|| fast_function()));
+}
+
+criterion_group!(benches, criterion_benchmark);
+criterion_main!(benches);
