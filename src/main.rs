@@ -50,7 +50,7 @@ use std::{
 pub mod graph;
 
 use graph::{
-    defs::*,
+    types::*,
     ops::{
         certify_solution::{Certify, SequenceID},
         graph_info_from_n::*,
@@ -96,7 +96,7 @@ pub fn find_solutions(n: usize, _certify: bool) -> Result<Solution, &'static str
             min_dur = dur_solve;
         }
     }
-    if order > 10000000 {
+    if order > 0 {
         println!(
             "| 🇳 {n:>4} | ⭕️ {order:>10} | 🕗 {:.10} |",
             min_dur.as_secs_f32(),
