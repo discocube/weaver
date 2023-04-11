@@ -1,17 +1,15 @@
 [package]
-name = "hamcycle"
+name = "weaver"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-blas-src = { version = "0.8", features = ["openblas"] }
 chrono = "0.4.24"
 common_macros = "0.1.1"
+criterion = "0.4.0"
 csv = "1.2.1"
 itertools = "0.10.5"
-matrixmultiply = "0.3.2"
-ndarray = { version = "0.15.0", features = ["blas", "rayon", "matrixmultiply-threading"] } 
-openblas-src = { version = "0.10", features = ["cblas", "system"] }
+ndarray = "0.15.0"
 rayon = "1.7.0"
 serde = { version = "1", features = ["derive"] }
 
