@@ -1,8 +1,14 @@
 /// Collection of modules used to build Hamiltonian cycle.
 pub mod prelude {
     pub use super::{
-        color_spun_yarn::*, extend_loom_threads::*, prep_yarn::*, graph_info_from_n::*,
-        mark_thread_ends::*, merge_cycles::*, mirror_loom_threads::*, spin_yarn::*,
+        graph_info_from_n::InfoN, 
+        spin_yarn::Spin,
+        color_spun_yarn::Convert, 
+        prep_yarn::PrepareYarn, 
+        extend_loom_threads::ExtendThreads, 
+        mark_thread_ends::MarkThreadEnds, 
+        mirror_loom_threads::Mirrored, 
+        merge_cycles::*, 
     };
 }
 
@@ -268,8 +274,8 @@ pub mod prep_yarn {
                 .map(|row| [row[0], row[1], zpos])
                 .collect_vec()
             {
-                _yarn if pins.is_empty() => vec![_yarn],
-                _yarn => _yarn.cut_using(pins),
+                yarn if pins.is_empty() => vec![yarn],
+                yarn => yarn.cut_using(pins),
             }
         }
     }
@@ -385,7 +391,7 @@ pub mod mark_thread_ends {
     /// Last z-level elevation.
     pub const LAST_ROW: ScalarXyz = -1;
 
-    pub trait MarkEnds {
+    pub trait MarkThreadEnds {
         /// 📌 Pins are used to carry over the values of each end of each thread in the loom from the previous level to the next. For each thread end `[thread[0], thread[thread.len() - 1]]` in the loom make a pin by adding 2 (length of an edge) to the z-scalar value: `[x, y, z + 2]`. Collect the pins in the cushion for cutting later.
         ///
         ///---\
@@ -400,7 +406,7 @@ pub mod mark_thread_ends {
         fn mark_next_ends(&mut self, zrow: ScalarXyz) -> PinCushion;
     }
 
-    impl MarkEnds for Loom {
+    impl MarkThreadEnds for Loom {
         fn mark_next_ends(&mut self, zrow: ScalarXyz) -> PinCushion {
             match zrow == LAST_ROW {
                 false => self
@@ -412,12 +418,12 @@ pub mod mark_thread_ends {
         }
     }
 
-    pub trait MarkThreadEnds {
+    pub trait MarkThreadEnd {
         /// Insert pins into each end of each thread in the loom. A pin is the vertex adjacent to and directly above an end. Collect the a copy of all inserted pins to be used for cutting the finished yarn from the next level up.
         fn mark_end(&mut self) -> [V3d; 2];
     }
 
-    impl MarkThreadEnds for LoomThread {
+    impl MarkThreadEnd for LoomThread {
         fn mark_end(&mut self) -> [V3d; 2] {
             let [[x, y, z], [i, j, k]] = [self[0], self[self.len() - 1]];
             let [front, back] = [[x, y, z + 2], [i, j, k + 2]];
