@@ -37,46 +37,37 @@ pub mod graph_info_from_n {
 
     impl InfoN for Count {
         fn loom_size(self) -> Count {
-            assert_ne!(self, 0_usize, "n must not be zero");
             (self / 2) + 1
         }
         fn get_max_absumv(self) -> ScalarXyz {
-            assert_ne!(self, 0_usize, "n must not be zero");
             (self * 2 + 1) as ScalarXyz
         }
 
         fn get_max_xyz(self) -> ScalarXyz {
-            assert_ne!(self, 0_usize, "n must not be zero");
             (self * 2 - 1) as ScalarXyz
         }
 
         fn get_max_xyz_from_order(self) -> SignedIdx {
-            assert_ne!(self, 0_usize, "n must not be zero");
             (((3 * self) / 4) as f64).powf(1.0 / 3.0) as i32 * 2 - 1
         }
 
         fn get_min_xyz(self) -> ScalarXyz {
-            assert_ne!(self, 0_usize, "n must not be zero");
             (self * 2 - 5) as ScalarXyz
         }
 
         fn get_n_from_order(self) -> Count {
-            assert_ne!(self, 0_usize, "n must not be zero");
             (((3 * self) / 4) as f64).powf(1.0 / 3.0) as Count
         }
 
         fn get_order_from_n(self) -> Count {
-            assert_ne!(self, 0_usize, "n must not be zero");
             (4 * (self + 2) * (self + 1) * self) / 3
         }
 
         fn spool_size(self) -> (Count, Count) {
-            assert_ne!(self, 0_usize, "n must not be zero");
             (self, 2 * self * (self + 1))
         }
 
         fn zrow_color_idx(self) -> ZrowColorSize {
-            assert_ne!(self, 0_usize, "n must not be zero");
             let spool_length = 2 * self * (self + 1);
             zip(
                 zip(
@@ -93,6 +84,7 @@ pub mod graph_info_from_n {
     }
 
     #[cfg(test)]
+    /// Test overflow and expected outputs for n.get().
     mod tests {
         use super::*;
 
@@ -122,51 +114,6 @@ pub mod graph_info_from_n {
             assert_eq!((n - 20).get_n_from_order(), 3);
             assert_eq!(n.get_order_from_n(), 1373600);
             assert_eq!(n.spool_size(), (n, 20200));
-        }
-    }
-}
-
-/// Module responsible for creating the initial containers needed to construct solution and also checking if the input of n is above zero.
-pub mod prepare_weaving {
-    use crate::graph::types::{Loom, PinCushion};
-
-    /// Trait checks if n is greater than zero before creating a container of a specific size by calling container::with_capacity(size).
-    pub trait NewSized<T> {
-        fn new_with_size(n: usize) -> T;
-    }
-
-    impl NewSized<PinCushion> for PinCushion {
-        fn new_with_size(n: usize) -> Self {
-            assert_ne!(n, 0_usize, "n must not be zero");
-            Self::with_capacity(n)
-        }
-    }
-
-    impl NewSized<Loom> for Loom {
-        fn new_with_size(n: usize) -> Self {
-            assert_ne!(n, 0_usize, "n must not be zero");
-            Self::with_capacity(n)
-        }
-    }
-
-    #[cfg(test)]
-    mod tests {
-        use super::*;
-
-        #[test]
-        #[should_panic(expected = "n must not be zero")]
-        /// Test that calling PinCushion::new_with_size(zero) panics.
-        fn test_zero_check_pin() {
-            let zero = 0_usize;
-            PinCushion::new_with_size(zero);
-        }
-
-        #[test]
-        #[should_panic(expected = "n must not be zero")]
-        /// Test that calling Loom::new_with_size(zero) panics.
-        fn test_zero_check_loom() {
-            let zero = 0_usize;
-            Loom::new_with_size(zero);
         }
     }
 }
@@ -295,6 +242,7 @@ pub mod spin_yarn {
     }
 
     #[cfg(test)]
+    /// Test if result from `spin` is same as expected.
     mod tests {
         use super::*;
 
@@ -432,6 +380,7 @@ pub mod color_spun_yarn {
     }
 
     #[cfg(test)]
+    /// Test if colored yarn can be converted by and forth from blue to red and back.
     mod tests {
         use super::*;
 
@@ -547,10 +496,10 @@ pub mod prepare_yarn {
                     if ipin == last_ipin && iyarn != last_iyarn {
                         warps.push(self[iyarn..].to_vec());
                         if let Some(s) = self.get(iprev..iyarn).filter(|s| !s.is_empty()) {
-                            warps.push(s.to_reversed_vec())
+                            warps.push(s.iter().rev().cloned().collect())
                         };
                     } else {
-                        warps.push((&self[iprev..=iyarn]).to_reversed_vec());
+                        warps.push((&self[iprev..=iyarn]).iter().rev().cloned().collect());
                         iprev = iyarn + 1;
                     }
                 });
@@ -558,18 +507,8 @@ pub mod prepare_yarn {
         }
     }
 
-    pub trait ReversedVec {
-        /// Reverse, clone & collect a slice to `Vec`: `self.iter().rev().cloned().collect_vec()`
-        fn to_reversed_vec(&self) -> Warp;
-    }
-
-    impl ReversedVec for LoomSlice<'_> {
-        fn to_reversed_vec(&self) -> Warp {
-            self.iter().rev().cloned().collect()
-        }
-    }
-
     #[cfg(test)]
+    /// Test `prepare_yarn` and `cut_yarn`
     mod tests {
         use super::{
             super::prelude::{Convert, InfoN, Spin},
@@ -701,17 +640,14 @@ pub mod extend_loom_threads {
     #[cfg(test)]
     mod tests {
         use super::{
-            super::{
-                prelude::{Convert, InfoN, PrepareYarn, Spin},
-                prepare_weaving::NewSized,
-            },
+            super::prelude::{Convert, InfoN, PrepareYarn, Spin},
             *,
         };
 
         #[test]
         fn test_extend_threads() {
             let n = 2;
-            let mut loom = Loom::new_with_size(n.loom_size());
+            let mut loom = Loom::with_capacity(n.loom_size());
             let yarns = Yarns::colorized(Spindle::spin(n.spool_size()));
             loom.extend_threads(yarns.prepare(-3, 1, 8, &vec![]));
             assert_eq!(loom, [[[1, 1, -3], [1, -1, -3], [-1, -1, -3], [-1, 1, -3]]]);
@@ -745,6 +681,7 @@ pub mod mark_thread_ends {
     /// Last z-level elevation.
     pub const LAST_ROW: ScalarXyz = -1;
 
+    /// 📌 Pins are used to carry over the values of each end of each thread in the loom from the previous level to the next. For each thread end `[thread[0], thread[thread.len() - 1]]` in the loom make a pin by adding 2 (length of an edge) to the z-scalar value: `[x, y, z + 2]`. Collect the pins in the cushion for cutting later.
     pub trait MarkEnds {
         /// 📌 Pins are used to carry over the values of each end of each thread in the loom from the previous level to the next. For each thread end `[thread[0], thread[thread.len() - 1]]` in the loom make a pin by adding 2 (length of an edge) to the z-scalar value: `[x, y, z + 2]`. Collect the pins in the cushion for cutting later.
         ///
@@ -772,6 +709,7 @@ pub mod mark_thread_ends {
         }
     }
 
+    /// Insert pins into each end of each thread in the loom. A pin is the vertex adjacent to and directly above an end. Collect the a copy of all inserted pins to be used for cutting the finished yarn from the next level up.
     pub trait MarkThreadEnds {
         /// Insert pins into each end of each thread in the loom. A pin is the vertex adjacent to and directly above an end. Collect the a copy of all inserted pins to be used for cutting the finished yarn from the next level up.
         fn mark_end(&mut self) -> [V3d; 2];
@@ -788,13 +726,14 @@ pub mod mark_thread_ends {
     }
 
     #[cfg(test)]
+    /// Test mark ends by marking ends of a thread.
     mod tests {
-        use super::{super::prepare_weaving::NewSized, *};
+        use super::*;
 
         #[test]
         /// Test that the output from mark end where zrow == -1 should give me an empty pin cushion.
         fn test_last_row_empty_cushion() {
-            let mut loom = Loom::new_with_size(2);
+            let mut loom = Loom::with_capacity(2);
             assert_eq!(PinCushion::with_capacity(0), loom.pin_threads_to_extend(-1));
         }
 
@@ -814,9 +753,11 @@ pub mod mark_thread_ends {
 
 /// 🪩 Reflect the half-solution along the z-axis to create the whole.
 pub mod mirror_loom_threads {
-    use crate::graph::types::{Loom, LoomThread, Tour, V3d};
+    use crate::graph::types::{Loom, Tour};
     use rayon::prelude::*;
 
+    /// For each thread in the loom all of whose ends are not adjacent, reflect each thread turning chains into cycles.
+    /// Imagine reflecting a row of arcs to form a row of ovals.
     pub trait Mirrored {
         /// For each thread in the loom all of whose ends are not adjacent, reflect each thread turning chains into cycles.
         /// Imagine reflecting a row of arcs to form a row of ovals.
@@ -825,13 +766,11 @@ pub mod mirror_loom_threads {
 
     impl Mirrored for Loom {
         fn mirror_threads(&mut self) {
-            println!("LOOM {self:?}");
-
             self.par_iter_mut().for_each(|thread| {
-                println!("THREAD {thread:?}");
                 thread.extend(
                     thread
-                        .rev_iter()
+                        .iter()
+                        .rev()
                         .map(|&[x, y, z]| [x, y, -z])
                         .collect::<Tour>(),
                 )
@@ -839,28 +778,18 @@ pub mod mirror_loom_threads {
         }
     }
 
-    pub trait ReverseIterator {
-        /// A convenience reverse iterator for `vec_deque`.
-        fn rev_iter(&self) -> std::iter::Rev<std::collections::vec_deque::Iter<'_, V3d>>;
-    }
-
-    impl ReverseIterator for LoomThread {
-        fn rev_iter(&self) -> std::iter::Rev<std::collections::vec_deque::Iter<'_, V3d>> {
-            self.iter().rev()
-        }
-    }
-
     #[cfg(test)]
+    /// Test if input loom is mirrored.
     mod tests {
         use std::collections::VecDeque;
 
-        use super::{super::prepare_weaving::NewSized, *};
+        use super::*;
 
         #[test]
         /// Create a loom and see if the it one thread is mirrored.
         fn test_mirror_threads() {
-            let mut loom = Loom::new_with_size(1);
-            let mut expected_loom = Loom::new_with_size(1);
+            let mut loom = Loom::with_capacity(1);
+            let mut expected_loom = Loom::with_capacity(1);
             loom.push(VecDeque::from(vec![
                 [1, 1, -1],
                 [1, -1, -1],
@@ -890,6 +819,7 @@ pub mod merge_cycles {
     use itertools::Itertools;
     use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 
+    /// Trait responsible for removing the subloops from the Loom and converting each thread from a VecDeque to a Vec and isolating the Weft and the main cycle into which Warps are incorporated.
     pub trait GetWeftWarps {
         /// Remove the threads from the loom and separate into weft and warps. Prepare for cycle merging. Loop over each warp, join with the weft until the end of the loop where there will only be the weft.
         fn prepare_cycle_merging(self, n: usize) -> (Weft, Warps);
@@ -899,22 +829,11 @@ pub mod merge_cycles {
         fn prepare_cycle_merging(mut self, n: usize) -> (Weft, Warps) {
             (
                 Weft::new(self[0].split_off(0), n.get_order_from_n()),
-                Warps::drain_from(self),
+                self.split_off(1)
+                    .into_iter()
+                    .map(|mut data| data.drain(..).collect())
+                    .collect(),
             )
-        }
-    }
-
-    pub trait DrainFrom<T> {
-        /// Remove the individual subcycles from the loom and convert into a Vec and ready for joining with the weft.
-        fn drain_from(t: T) -> Self;
-    }
-
-    impl DrainFrom<Loom> for Warps {
-        fn drain_from(mut loom: Loom) -> Warps {
-            loom.split_off(1)
-                .into_iter()
-                .map(|mut data| data.drain(..).collect())
-                .collect()
         }
     }
 
@@ -1105,6 +1024,7 @@ pub mod merge_cycles {
     }
 
     #[cfg(test)]
+    /// Test AlignToEdge.
     mod tests {
         use super::*;
 
@@ -1131,12 +1051,14 @@ pub mod certify_solution {
     use std::fmt;
 
     #[derive(Debug, PartialEq)]
+    /// Enum describing possible ids of a solution: Broken, Chain, Cycle.
     pub enum SequenceID {
         Broken,
         HamChain,
         HamCycle,
     }
 
+    /// impl Display to print out SequenceID w/o debug.
     impl fmt::Display for SequenceID {
         fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
             match self {
@@ -1147,6 +1069,12 @@ pub mod certify_solution {
         }
     }
 
+    /// Certify if a sequence is a Hamiltonian cycle by:
+    /// Checking for duplicates
+    /// Check that solution length is equal to the order of the graph.
+    /// The sum of all displacement vectors used to construct the cycle is equal to [0, 0, 0]
+    /// Check that the current node is adjacent to the next node.
+    /// Check that the last node is adjacent to the first. If not is is a HamChain else HamCycle.
     pub trait Certify<SequenceID> {
         /// Certify if a sequence is a Hamiltonian cycle by:
         /// Checking for duplicates
@@ -1210,6 +1138,7 @@ pub mod certify_solution {
         }
     }
 
+    /// Test that input vector is adjacent to self where the points are points in a 3d grid.
     pub trait IsAdjacent {
         /// Check if self is adjacent to another vertex.
         fn is_adj_to(&self, other: V3d) -> bool;
@@ -1278,7 +1207,7 @@ pub mod csv_out {
         pub(crate) z: i16,
     }
 
-    /// Save solution to `file_path` as a `.csv` file with the columns `x`, `y`, `z` for each axis.\
+    /// Save solution to `file_path` as a `.csv` file with the columns `x`, `y`, `z` for each axis.
     pub trait SerializeToCsv<T> {
         /// Save solution to `file_path` as a `.csv` file with the columns `x`, `y`, `z` for each axis.\
         /// A python module using `pandas` and `plotly` to create a 3d line plot is available [here](https://github.com/discocube/plot_solution).
