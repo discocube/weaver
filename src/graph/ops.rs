@@ -7,7 +7,7 @@ pub mod prelude {
     };
 }
 
-/// ℹ️ Given n calculate values used for building the solution.
+/// ℹ️ Given n calculate values used for building the solution. What happens if you shrink the representation of a graph to almost nothing for the sake of saving memory.
 pub mod graph_info_from_n {
     use crate::graph::types::*;
     use itertools::Itertools;
@@ -751,7 +751,7 @@ pub mod mark_thread_ends {
     }
 }
 
-/// 🪩 Reflect the half-solution along the z-axis to create the whole.
+/// 🪞 Reflect the half-solution along the z-axis to create the whole.
 pub mod mirror_loom_threads {
     use crate::graph::types::{Loom, Tour};
     use rayon::prelude::*;
@@ -1192,7 +1192,7 @@ pub mod certify_solution {
     }
 }
 
-/// 📔 Module for exporting the solution to a .csv file where each row is x, y, z.
+/// 🗒️ Module for exporting the solution to a .csv file where each row is x, y, z.
 pub mod csv_out {
     use crate::graph::types::Solution;
     use serde::Serialize;
