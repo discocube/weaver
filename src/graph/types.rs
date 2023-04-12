@@ -1,6 +1,7 @@
 use ndarray::Array2;
 use std::collections::{HashMap, HashSet, VecDeque};
 
+pub type BridgeEdge = Edge;
 pub type ColorIdx = u8;
 pub type Count = usize;
 pub type Counts = Vec<Count>;
@@ -24,6 +25,7 @@ pub type Warp = Vec<V3d>;
 pub type Warps = Vec<Warp>;
 pub type WarpEdges = HashSet<Edge>;
 pub type WeftEdge = (V3d, V3d);
+pub type WeftEdges = HashSet<WeftEdge>;
 pub type Yarn = Array2<ScalarXyz>;
 pub type Yarns = HashMap<ColorIdx, Yarn>;
 pub type ZrowColorSize = Vec<((ScalarXyz, ColorIdx), Count)>;
