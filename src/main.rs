@@ -89,7 +89,7 @@ pub fn find_solutions(n: usize, _certify: bool) -> Result<Solution, &'static str
         println!("{} | SOLVING ORDER ⭕️ {order}", get_current_date_time());
     }
     let mut min_dur = Duration::new(1000000, 0);
-    for _ in 0..100 {
+    for _ in 0..250 {
         let start = Instant::now();
         solution = weave::weave(n);
         let dur_solve = Instant::now() - start;
