@@ -119,7 +119,7 @@ pub mod graph_info_from_n {
 }
 
 /// 🛞 Spin a zigzagging-inward-spiralling Hamiltonian chain from the outer to innermost vert where the scalar z value of the points equals -1.
-pub mod spin_yarn {
+mod spin_yarn {
     use super::graph_info_from_n::InfoN;
     use crate::graph::types::*;
     use std;
@@ -351,7 +351,7 @@ pub mod spin_yarn {
 }
 
 /// 🌈 Convert spun yarn to a 2-dimensional ndarray. Assign to blue. Copy, reflect and translate blue, assign to red.
-pub mod color_spun_yarn {
+mod color_spun_yarn {
     use ndarray::array;
 
     use crate::graph::types::*;
@@ -424,7 +424,7 @@ pub mod color_spun_yarn {
 }
 
 /// 👨‍🍳 Prepare yarn for extending onto the loom threads. Cut using pins and affix yarn to the current elevation.
-pub mod prepare_yarn {
+mod prepare_yarn {
     use crate::graph::types::*;
     use itertools::Itertools;
     use ndarray::s;
@@ -590,7 +590,7 @@ pub mod prepare_yarn {
 }
 
 /// 🧮 Extend each thread in the loom based on the marked ends from the previous level.
-pub mod extend_loom_threads {
+mod extend_loom_threads {
     use crate::graph::types::*;
 
     /// Extend each end of each thread in the loom with the segmented, colored and finished yarn.
@@ -675,7 +675,7 @@ pub mod extend_loom_threads {
 }
 
 /// 📌 Mark ends for the next level from which to extend the prepared yarn.
-pub mod mark_thread_ends {
+mod mark_thread_ends {
     use crate::graph::types::*;
 
     /// Last z-level elevation.
@@ -752,7 +752,7 @@ pub mod mark_thread_ends {
 }
 
 /// 🪞 Reflect the half-solution along the z-axis to create the whole.
-pub mod mirror_loom_threads {
+mod mirror_loom_threads {
     use crate::graph::types::{Loom, Tour};
     use rayon::prelude::*;
 
@@ -813,7 +813,7 @@ pub mod mirror_loom_threads {
 }
 
 /// 🪢 Merge subcycles into one Hamiltonian cycle by finding their bridges through set intersection.
-pub mod merge_cycles {
+mod merge_cycles {
     use super::graph_info_from_n::InfoN;
     use crate::graph::types::*;
     use itertools::Itertools;
