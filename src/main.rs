@@ -59,6 +59,7 @@ use graph::{
     weave,
 };
 
+/// Grab arguments from the cli and run `find_solution()`
 pub fn main() -> Result<(), &'static str> {
     std::env::set_var("RUST_BACKTRACE", "1");
     let args: Vec<String> = env::args().collect();
@@ -88,7 +89,7 @@ pub fn find_solutions(n: usize, _certify: bool) -> Result<Solution, &'static str
         println!("{} | SOLVING ORDER ⭕️ {order}", get_current_date_time());
     }
     let mut min_dur = Duration::new(1000000, 0);
-    for _ in 0..1 {
+    for _ in 0..100 {
         let start = Instant::now();
         solution = weave::weave(n);
         let dur_solve = Instant::now() - start;
