@@ -27,6 +27,7 @@ pub mod make {
     use super::graph_types::*;
     use crate::graph::ops::{certify_solution::L1Norm, graph_info_from_n::*};
 
+    /// make graph with an xs_adjacency for zlevel == =1.
     pub fn make_z_graph(n: usize) -> (usize, ZAdjacency, ZOrder, i16) {
         let order = n.get_order_from_n();
         let max_xyz = order.get_max_xyz_from_order() as i16;
@@ -34,6 +35,7 @@ pub mod make {
         (order, z_adj, z_order, max_xyz - 4)
     }
 
+    /// An even smaller graph without an adjacency.
     pub fn make_xs_graph(n: usize) -> (usize, ZOrder, i16) {
         let order = n.get_order_from_n();
         let max_xyz = n.get_max_xyz_from_order() as i16;
@@ -41,11 +43,13 @@ pub mod make {
         (order, z_order, max_xyz - 4)
     }
 
+    /// An adjacency list of only where the points scalar value for z is -1.
     fn make_xs_adjacency(n: usize, max_xyz: i16) -> (ZAdjacency, ZOrder) {
         let adj = make_z_adjacency_map(max_xyz);
         (adj, get_zlevel_order(n))
     }
 
+    /// Make adjacency map from max_xyz.
     pub fn make_z_adjacency_map(max_xyz: ScalarXyz) -> ZAdjacency {
         let max_xyz_plus_1 = max_xyz + 1;
         let verts = vertices_for_z_adjacency(max_xyz);
@@ -63,6 +67,7 @@ pub mod make {
             .collect()
     }
 
+    /// Make vertices based on max_xyz.
     fn vertices_for_z_adjacency(max_xyz: ScalarXyz) -> Vec<[i16; 2]> {
         let max_xyz_plus_1 = max_xyz + 1;
         iproduct!(
@@ -75,6 +80,7 @@ pub mod make {
         .collect::<Vec<_>>()
     }
 
+    /// Get a list of tuples of zlevel and number of vertices whose z scalar value is zlevel.
     fn get_zlevel_order(n: usize) -> Vec<(i16, usize)> {
         zip(
             (-((n * 2 - 1) as i16)..=-1).step_by(2),
@@ -83,6 +89,7 @@ pub mod make {
         .collect()
     }
 
+    /// Make an adjacency list based on n.
     pub fn make_adjacency(n: usize) -> Adjacency {
         let order = n.get_order_from_n();
         let max_xyz = order.get_max_xyz_from_order() as i16;
@@ -90,6 +97,7 @@ pub mod make {
         adjacency_map(&verts, max_xyz + 2)
     }
 
+    /// Makes vertices based on max_xyz.
     fn vertices(max_xyz: ScalarXyz) -> Vec<[i16; 3]> {
         let max_xyz_plus_4 = max_xyz + 4;
         iproduct!(
@@ -102,6 +110,7 @@ pub mod make {
         .collect::<Vec<_>>()
     }
 
+    /// Make an adjacency map from vertices and the max_xyz_plus_2
     fn adjacency_map(verts: &Verts, max_xyz_plus_2: ScalarXyz) -> Adjacency {
         verts
             .par_iter()
@@ -120,6 +129,7 @@ pub mod make {
             .collect()
     }
 
+    /// Create a set of points of vert shifted in all 6 directions for 3d.
     pub fn shift_xyz(vert: Array2<ScalarXyz>) -> Vec<[i16; 3]> {
         (vert
             + arr2(&[
@@ -135,6 +145,7 @@ pub mod make {
         .collect()
     }
 
+    /// Create a set of points of vert shifted in all 4 directions for 2d.
     pub fn shift_xy(vert: Array2<ScalarXyz>) -> Vec<[i16; 2]> {
         (vert + arr2(&[[2, 0], [-2, 0], [0, 2], [0, -2]]))
             .outer_iter()
@@ -143,7 +154,9 @@ pub mod make {
     }
 }
 
+/// An iterator of the uncentered octahedral numbers.
 pub mod iters {
+    /// An iterator of the uncentered octahedral numbers.
     pub fn uon(start: usize, end: usize) -> impl Iterator<Item = usize> {
         (0..2000 + 2).filter_map(move |i| {
             let _uon = (0..2000 * 2 + 2)
@@ -165,14 +178,17 @@ pub mod debug {
     use chrono::{Datelike, Local, Timelike};
     use std::fmt;
 
-    struct DateTimeString(String);
+    /// Struct for timestamp.
+    struct Timestamp(String);
 
-    impl fmt::Display for DateTimeString {
+    /// impl display for timestamp
+    impl fmt::Display for Timestamp {
         fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
             write!(f, "{}", self.0)
         }
     }
 
+    /// Timestamp of current date and time.
     pub fn get_current_date_time() -> String {
         let now = Local::now();
         format!(
@@ -186,6 +202,7 @@ pub mod debug {
         )
     }
 
+    /// Calculate the size of a solution.
     pub fn calculate_sizes(start: u64, end: u64, step: u64) -> Vec<(u64, f64)> {
         let size_i16x3 = 6;
         let mut order = start;
