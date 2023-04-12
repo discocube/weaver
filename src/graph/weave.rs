@@ -1,7 +1,7 @@
 use super::{ops::prelude::*, types::*};
 
-/// 🕸️ Weave a Hamiltonian cycle by building chains level by level bottom up until subtours of half is formed. Mirror chains to form cycles for subsequent joining of weft with each warp in the loom until only the weft remains.\
-///
+/// 🕸️ Weave a Hamiltonian cycle by building chains level by level bottom up halfway up the graph. Mirror chains to form cycles for subsequent joining of weft with each warp in the loom until only the weft remains.\
+/// A construction algorithm for describing the discocube, a techno-upgrade of the discoball 🪩 that's still a discoball but reflects the intertwined complexity of our connected and networked world.
 ///---\
 /// `🧭 g`: GraphInfo instance used to get information about the graph.\
 /// `🧵 spun`: Spool of yarn to be colored.\
@@ -58,7 +58,7 @@ use super::{ops::prelude::*, types::*};
 ///
 ///    // After weaving there's is only the weft. Retrieve the finished weave.
 ///    weft.get_woven()
-///    }
+///}
 ///```
 /// ---\
 ///
@@ -69,28 +69,29 @@ use super::{ops::prelude::*, types::*};
 /// ---\
 /// I've placed most of the implementations in the ops.rs file to avoid cluttering the structure of the actual algorithm. The ops.rs file is structured so that it follows the order of the weave algorithm, where each function is encapsulated in a separate module and imported using `prelude::*`. Here is a list of the modules with the corresponding call to that module in weave.\
 ///```
-///graph_info_from_n::InfoN ->             n.loom_size()
+///graph_info_from_n::InfoN ⇨              n.loom_size()
 ///                                        n.spool_size()
 ///                                        n.zrow_color_len()
 ///
-///spin_yarn::Spin ->                      Spindle::spin()
+///spin_yarn::Spin ⇨                       Spindle::spin()
 ///
-///color_spun_yarn::Convert ->             Yarns::colorized()
+///color_spun_yarn::Convert ⇨              Yarns::colorized()
 ///
-///prep_yarn::PrepareYarn ->               yarns.prep()
+///prep_yarn::PrepareYarn ⇨                yarns.prep()
 ///
-///extend_loom_threads::ExtendThreads ->   loom.extend_threads()
+///extend_loom_threads::ExtendThreads ⇨    loom.extend_threads()
 ///
-///mark_thread_ends::MarkThreadEnds ->     loom.mark_next_ends()
+///mark_thread_ends::MarkThreadEnds ⇨      loom.mark_next_ends()
 ///
-///mirror_loom_threads::Mirrored ->        loom.mirror_threads()
+///mirror_loom_threads::Mirrored ⇨         loom.mirror_threads()
 ///
-///merge_cycles::* ->                      loom.prepare_cycle_merging()
+///merge_cycles::* ⇨                       loom.prepare_cycle_merging()
 ///                                        warp.edges()
 ///                                        weft.edges().bridge(&warp_edges)
 ///                                        weft.data.align_to(weft_bridge)
 ///                                        warp.align_to(warp_edges.bridge(&weft_bridge))
 ///                                        weft.join(warp)
+///
 ///```
 pub fn weave(n: usize) -> Solution {
     let mut pins = PinCushion::with_capacity(n);
