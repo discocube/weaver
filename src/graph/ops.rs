@@ -1,14 +1,9 @@
 /// 🎶 Collection of modules used to build Hamiltonian cycle.
 pub mod prelude {
     pub use super::{
-        color_spun_yarn::Convert,
-        extend_loom_threads::ExtendThreads,
-        graph_info_from_n::InfoN,
-        mark_thread_ends::MarkEnds,
-        merge_cycles::{AlignToEdge, Bridge, GetWarpEdges, GetWeftWarps, Weft},
-        mirror_loom_threads::Mirrored,
-        prepare_yarn::PrepareYarn,
-        spin_yarn::Spin,
+        color_spun_yarn::Convert, extend_loom_threads::ExtendThreads, graph_info_from_n::InfoN,
+        mark_thread_ends::MarkEnds, merge_cycles::*, mirror_loom_threads::Mirrored,
+        prepare_yarn::PrepareYarn, spin_yarn::Spin,
     };
 }
 
@@ -37,42 +32,51 @@ pub mod graph_info_from_n {
         /// spool size is the number of verts in the graph whose z-scalar value is -1.
         fn spool_size(self) -> (Count, Count);
         /// Get length of the current level.
-        fn zrow_color_len(self) -> ZrowColorSize;
+        fn zrow_color_idx(self) -> ZrowColorSize;
     }
 
     impl InfoN for Count {
         fn loom_size(self) -> Count {
+            assert_ne!(self, 0_usize, "n must not be zero");
             (self / 2) + 1
         }
         fn get_max_absumv(self) -> ScalarXyz {
+            assert_ne!(self, 0_usize, "n must not be zero");
             (self * 2 + 1) as ScalarXyz
         }
 
         fn get_max_xyz(self) -> ScalarXyz {
+            assert_ne!(self, 0_usize, "n must not be zero");
             (self * 2 - 1) as ScalarXyz
         }
 
         fn get_max_xyz_from_order(self) -> SignedIdx {
+            assert_ne!(self, 0_usize, "n must not be zero");
             (((3 * self) / 4) as f64).powf(1.0 / 3.0) as i32 * 2 - 1
         }
 
         fn get_min_xyz(self) -> ScalarXyz {
+            assert_ne!(self, 0_usize, "n must not be zero");
             (self * 2 - 5) as ScalarXyz
         }
 
         fn get_n_from_order(self) -> Count {
+            assert_ne!(self, 0_usize, "n must not be zero");
             (((3 * self) / 4) as f64).powf(1.0 / 3.0) as Count
         }
 
         fn get_order_from_n(self) -> Count {
+            assert_ne!(self, 0_usize, "n must not be zero");
             (4 * (self + 2) * (self + 1) * self) / 3
         }
 
         fn spool_size(self) -> (Count, Count) {
+            assert_ne!(self, 0_usize, "n must not be zero");
             (self, 2 * self * (self + 1))
         }
 
-        fn zrow_color_len(self) -> ZrowColorSize {
+        fn zrow_color_idx(self) -> ZrowColorSize {
+            assert_ne!(self, 0_usize, "n must not be zero");
             let spool_length = 2 * self * (self + 1);
             zip(
                 zip(
@@ -93,7 +97,77 @@ pub mod graph_info_from_n {
         use super::*;
 
         #[test]
-        fn blank() {}
+        /// Test behavior if input is max_i16
+        fn test_info_n_with_max_i16() {
+            let max_i16 = std::i16::MAX as Count;
+            assert_eq!(max_i16.loom_size() as i16, 16384);
+            assert_eq!(max_i16.get_max_absumv() as i16, -1);
+            assert_eq!(max_i16.get_max_xyz(), -3);
+            assert_eq!(max_i16.get_max_xyz_from_order(), 57);
+            assert_eq!(max_i16.get_min_xyz(), max_i16.get_max_xyz() - 4);
+            assert_eq!(max_i16.get_n_from_order(), 29);
+            assert_eq!(max_i16.get_order_from_n(), 46912496074752);
+            assert_eq!(max_i16.spool_size(), (32767, 2147418112));
+        }
+
+        #[test]
+        /// Test behavior if input is max_i16
+        fn test_info_n_pass() {
+            let n = 100;
+            assert_eq!(n.loom_size() as i16, 51);
+            assert_eq!(n.get_max_absumv(), 201);
+            assert_eq!(n.get_max_xyz(), 199);
+            assert_eq!((n + 60).get_max_xyz_from_order(), 7);
+            assert_eq!(n.get_min_xyz(), n.get_max_xyz() - 4);
+            assert_eq!((n - 20).get_n_from_order(), 3);
+            assert_eq!(n.get_order_from_n(), 1373600);
+            assert_eq!(n.spool_size(), (n, 20200));
+        }
+    }
+}
+
+/// Module responsible for creating the initial containers needed to construct solution and also checking if the input of n is above zero.
+pub mod prepare_weaving {
+    use crate::graph::types::{Loom, PinCushion};
+
+    /// Trait checks if n is greater than zero before creating a container of a specific size by calling container::with_capacity(size).
+    pub trait NewSized<T> {
+        fn new_with_size(n: usize) -> T;
+    }
+
+    impl NewSized<PinCushion> for PinCushion {
+        fn new_with_size(n: usize) -> Self {
+            assert_ne!(n, 0_usize, "n must not be zero");
+            Self::with_capacity(n)
+        }
+    }
+
+    impl NewSized<Loom> for Loom {
+        fn new_with_size(n: usize) -> Self {
+            assert_ne!(n, 0_usize, "n must not be zero");
+            Self::with_capacity(n)
+        }
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        #[should_panic(expected = "n must not be zero")]
+        /// Test that calling PinCushion::new_with_size(zero) panics.
+        fn test_zero_check_pin() {
+            let zero = 0_usize;
+            PinCushion::new_with_size(zero);
+        }
+
+        #[test]
+        #[should_panic(expected = "n must not be zero")]
+        /// Test that calling Loom::new_with_size(zero) panics.
+        fn test_zero_check_loom() {
+            let zero = 0_usize;
+            Loom::new_with_size(zero);
+        }
     }
 }
 
@@ -137,7 +211,7 @@ pub mod spin_yarn {
                 if iturn == idx {
                     (iturn, zigzag) = spinner.turn(yx);
                 };
-                spool[idx + 1] = spool[idx].add_vec(zigzag[yx])
+                spool[idx + 1] = spool[idx].add(zigzag[yx])
             });
             spool
         }
@@ -152,7 +226,7 @@ pub mod spin_yarn {
         /// An infinite iterator of displacement vectors.
         pub zigzags: std::iter::Cycle<core::slice::Iter<'static, [V2d; 2]>>,
         /// An infinite iterator of alternating 1 and 0 which indexes to either a y-axis displacement vector or x.
-        pub yxyx: std::iter::Cycle<core::slice::Iter<'a, Count>>,
+        pub yxyx: std::iter::Cycle<core::slice::Iter<'a, usize>>,
     }
 
     impl<'a> Spinner<'a> {
@@ -177,7 +251,7 @@ pub mod spin_yarn {
             )
         }
 
-        pub(crate) fn get_turns(n: usize) -> Counts {
+        fn get_turns(n: Count) -> Counts {
             let mut result = (-(n as i64 * 2)..=-2)
                 .map(|i| -i as usize)
                 .step_by(2)
@@ -191,7 +265,7 @@ pub mod spin_yarn {
             result
         }
 
-        pub(crate) fn get_zigzags() -> std::iter::Cycle<core::slice::Iter<'static, [V2d; 2]>> {
+        fn get_zigzags() -> std::iter::Cycle<core::slice::Iter<'static, [V2d; 2]>> {
             DISP_VECTORS.iter().cycle()
         }
     }
@@ -211,11 +285,11 @@ pub mod spin_yarn {
     /// Add another vector to self.
     pub trait AddVec {
         // add two 2-dimensional vectors together.
-        fn add_vec(&self, other: V2d) -> V2d;
+        fn add(&self, other: V2d) -> V2d;
     }
 
     impl AddVec for V2d {
-        fn add_vec(&self, [a, b]: V2d) -> V2d {
+        fn add(&self, [a, b]: V2d) -> V2d {
             [self[0] + a, self[1] + b]
         }
     }
@@ -225,7 +299,106 @@ pub mod spin_yarn {
         use super::*;
 
         #[test]
-        fn blank() {}
+        /// Test the result of spin whose input is determined by a call to InfoN.
+        /// Results provided are zigzag hamiltonian chains from outer to inner vert.
+        fn test_spin() {
+            // Spin cube.
+            let spun = <Vec<V2d> as Spin>::spin(1_usize.spool_size());
+            let expected = [[1, 1], [1, -1], [-1, -1], [-1, 1]];
+            assert_eq!(spun, expected);
+            // Spin order 32 with 12 verts at zlevel -1.
+            let spun = <Vec<V2d> as Spin>::spin(2_usize.spool_size());
+            let expected = [
+                [3, 1],
+                [3, -1],
+                [1, -1],
+                [1, -3],
+                [-1, -3],
+                [-1, -1],
+                [-3, -1],
+                [-3, 1],
+                [-1, 1],
+                [-1, 3],
+                [1, 3],
+                [1, 1],
+            ];
+            assert_eq!(spun, expected);
+            // Spin order 80 with 24 verts at zlevel -1.
+            let spun = <Vec<V2d> as Spin>::spin(3_usize.spool_size());
+            let expected = [
+                [5, 1],
+                [5, -1],
+                [3, -1],
+                [3, -3],
+                [1, -3],
+                [1, -5],
+                [-1, -5],
+                [-1, -3],
+                [-3, -3],
+                [-3, -1],
+                [-5, -1],
+                [-5, 1],
+                [-3, 1],
+                [-3, 3],
+                [-1, 3],
+                [-1, 5],
+                [1, 5],
+                [1, 3],
+                [3, 3],
+                [3, 1],
+                [1, 1],
+                [1, -1],
+                [-1, -1],
+                [-1, 1],
+            ];
+            assert_eq!(spun, expected);
+        }
+
+        #[test]
+        /// Test that spinner gives the right zigzag that matches the right index.
+        fn test_spinner() {
+            let (n, spool_size) = 2_usize.spool_size();
+            let (mut spinner, (mut iturn, mut zigzag)) = Spinner::start(n);
+            (0..spool_size - 1).for_each(|idx| {
+                let yx = spinner.yxyx.switch();
+                if iturn == idx {
+                    match idx {
+                        3 => assert_eq!(&[[-2, 0], [0, -2]], zigzag),
+                        7 => assert_eq!(&[[-2, 0], [0, 2]], zigzag),
+                        9 => assert_eq!(&[[2, 0], [0, 2]], zigzag),
+                        11 => assert_eq!(&[[2, 0], [0, -2]], zigzag),
+                        _ => panic!("Wrong index"),
+                    }
+                    (iturn, zigzag) = spinner.turn(yx);
+                };
+            });
+        }
+
+        #[test]
+        /// Test that the switch gives alternating outputs of 1 and 0
+        fn test_switch() {
+            let mut to_cycle = [1, 0].iter().cycle();
+            for _ in 0..1000 {
+                assert_eq!(1, to_cycle.switch());
+                assert_eq!(0, to_cycle.switch());
+            }
+            let mut to_cycle = ['a', 'b'].iter().cycle();
+            for _ in 0..1000 {
+                assert_eq!('a', to_cycle.switch());
+                assert_eq!('b', to_cycle.switch());
+            }
+        }
+
+        #[test]
+        /// Test the add vec to self
+        fn test_add_vec() {
+            let result = [0, 1].add([1, 0]);
+            assert_eq!(result, [1, 1]);
+            let result = [-1, -1].add([1, 1]);
+            assert_eq!(result, [0, 0]);
+            let result = [-13, 11].add([100, 12]);
+            assert_eq!(result, [87, 23]);
+        }
     }
 }
 
@@ -263,7 +436,41 @@ pub mod color_spun_yarn {
         use super::*;
 
         #[test]
-        fn blank() {}
+        /// Test that that we can go back to blue from red by reversing the operations resulting in reverting red back to blue.
+        fn test_colorized() {
+            let spool = vec![
+                [5, 1],
+                [5, -1],
+                [3, -1],
+                [3, -3],
+                [1, -3],
+                [1, -5],
+                [-1, -5],
+                [-1, -3],
+                [-3, -3],
+                [-3, -1],
+                [-5, -1],
+                [-5, 1],
+                [-3, 1],
+                [-3, 3],
+                [-1, 3],
+                [-1, 5],
+                [1, 5],
+                [1, 3],
+                [3, 3],
+                [3, 1],
+                [1, 1],
+                [1, -1],
+                [-1, -1],
+                [-1, 1],
+            ];
+            let colored_yarns = <Yarns as Convert>::colorized(spool);
+            let blue = &colored_yarns[&3].clone();
+            let red = &colored_yarns[&1].clone();
+            let new_shifted_blue = red + array![[0, -2]];
+            let expect_blue = new_shifted_blue.dot(&array![[-1, 0], [0, -1]]);
+            assert_eq!(blue, expect_blue);
+        }
     }
 }
 
@@ -293,9 +500,9 @@ pub mod prepare_yarn {
     }
 
     impl PrepareYarn for Yarns {
-        fn prepare(&self, zpos: i16, color: u8, len: usize, pins: &PinCushion) -> Warps {
+        fn prepare(&self, zpos: i16, color: u8, start_idx: usize, pins: &PinCushion) -> Warps {
             match self[&color]
-                .slice(s![len.., ..])
+                .slice(s![start_idx.., ..])
                 .outer_iter()
                 .map(|row| [row[0], row[1], zpos])
                 .collect_vec()
@@ -364,10 +571,82 @@ pub mod prepare_yarn {
 
     #[cfg(test)]
     mod tests {
-        use super::*;
+        use super::{
+            super::prelude::{Convert, InfoN, Spin},
+            *,
+        };
 
         #[test]
-        fn blank() {}
+        /// Test by getting the requested color and slice of that color and if it has mapped it to a Vec<[i16; 3]>.
+        fn test_prepare_yarn() {
+            let n = 3_usize;
+            let pins = PinCushion::with_capacity(n);
+            let yarns = Yarns::colorized(Spindle::spin(n.spool_size()));
+            let prepared = yarns.prepare(-1, 3, 0, &pins);
+            let expected = vec![vec![
+                [5, 1, -1],
+                [5, -1, -1],
+                [3, -1, -1],
+                [3, -3, -1],
+                [1, -3, -1],
+                [1, -5, -1],
+                [-1, -5, -1],
+                [-1, -3, -1],
+                [-3, -3, -1],
+                [-3, -1, -1],
+                [-5, -1, -1],
+                [-5, 1, -1],
+                [-3, 1, -1],
+                [-3, 3, -1],
+                [-1, 3, -1],
+                [-1, 5, -1],
+                [1, 5, -1],
+                [1, 3, -1],
+                [3, 3, -1],
+                [3, 1, -1],
+                [1, 1, -1],
+                [1, -1, -1],
+                [-1, -1, -1],
+                [-1, 1, -1],
+            ]];
+            assert_eq!(prepared, expected);
+        }
+
+        #[test]
+        /// Test by cutting a sequence using pins.
+        fn test_cut_using() {
+            let pins = vec![[1, 1, -1], [-1, 1, -1]];
+            let to_cut: Warp = vec![
+                [3, 1, -1],
+                [3, -1, -1],
+                [1, -1, -1],
+                [1, -3, -1],
+                [-1, -3, -1],
+                [-1, -1, -1],
+                [-3, -1, -1],
+                [-3, 1, -1],
+                [-1, 1, -1],
+                [-1, 3, -1],
+                [1, 3, -1],
+                [1, 1, -1],
+            ];
+            let warps = to_cut.cut_using(&pins);
+            let expected = vec![
+                vec![
+                    [-1, 1, -1],
+                    [-3, 1, -1],
+                    [-3, -1, -1],
+                    [-1, -1, -1],
+                    [-1, -3, -1],
+                    [1, -3, -1],
+                    [1, -1, -1],
+                    [3, -1, -1],
+                    [3, 1, -1],
+                ],
+                vec![[1, 1, -1], [1, 3, -1], [-1, 3, -1]],
+            ];
+            assert_eq!(warps, expected);
+        }
     }
 }
 
@@ -421,10 +700,41 @@ pub mod extend_loom_threads {
 
     #[cfg(test)]
     mod tests {
-        use super::*;
+        use super::{
+            super::{
+                prelude::{Convert, InfoN, PrepareYarn, Spin},
+                prepare_weaving::NewSized,
+            },
+            *,
+        };
 
         #[test]
-        fn blank() {}
+        fn test_extend_threads() {
+            let n = 2;
+            let mut loom = Loom::new_with_size(n.loom_size());
+            let yarns = Yarns::colorized(Spindle::spin(n.spool_size()));
+            loom.extend_threads(yarns.prepare(-3, 1, 8, &vec![]));
+            assert_eq!(loom, [[[1, 1, -3], [1, -1, -3], [-1, -1, -3], [-1, 1, -3]]]);
+            loom.extend_threads(yarns.prepare(-1, 3, 0, &vec![[1, 1, -1], [-1, 1, -1]]));
+            assert_eq!(
+                loom,
+                vec![
+                    vec![[1, 1, -3], [1, -1, -3], [-1, -1, -3], [-1, 1, -3]],
+                    vec![
+                        [-1, 1, -1],
+                        [-3, 1, -1],
+                        [-3, -1, -1],
+                        [-1, -1, -1],
+                        [-1, -3, -1],
+                        [1, -3, -1],
+                        [1, -1, -1],
+                        [3, -1, -1],
+                        [3, 1, -1]
+                    ],
+                    vec![[1, 1, -1], [1, 3, -1], [-1, 3, -1]]
+                ]
+            );
+        }
     }
 }
 
@@ -455,7 +765,7 @@ pub mod mark_thread_ends {
             match zrow == LAST_ROW {
                 false => self
                     .iter_mut()
-                    .flat_map(|thread| thread.mark_end())
+                    .flat_map(|loom_thread| loom_thread.mark_end())
                     .collect(),
                 true => PinCushion::with_capacity(0),
             }
@@ -479,10 +789,26 @@ pub mod mark_thread_ends {
 
     #[cfg(test)]
     mod tests {
-        use super::*;
+        use super::{super::prepare_weaving::NewSized, *};
 
         #[test]
-        fn blank() {}
+        /// Test that the output from mark end where zrow == -1 should give me an empty pin cushion.
+        fn test_last_row_empty_cushion() {
+            let mut loom = Loom::new_with_size(2);
+            assert_eq!(PinCushion::with_capacity(0), loom.pin_threads_to_extend(-1));
+        }
+
+        #[test]
+        /// Test that the output from mark end where zrow == -1 should give me an empty pin cushion.
+        fn test_mark_end() {
+            let mut thread = LoomThread::new();
+            thread.push_back([0, 0, 0]);
+            thread.push_back([2, 0, 0]);
+            // Thread should now be [[0, 0, 0], [2, 0, 0]]
+            let expected = [[0, 0, 2], [2, 0, 2]];
+            let result = thread.mark_end();
+            assert_eq!(expected, result);
+        }
     }
 }
 
@@ -499,7 +825,10 @@ pub mod mirror_loom_threads {
 
     impl Mirrored for Loom {
         fn mirror_threads(&mut self) {
+            println!("LOOM {self:?}");
+
             self.par_iter_mut().for_each(|thread| {
+                println!("THREAD {thread:?}");
                 thread.extend(
                     thread
                         .rev_iter()
@@ -523,10 +852,34 @@ pub mod mirror_loom_threads {
 
     #[cfg(test)]
     mod tests {
-        use super::*;
+        use std::collections::VecDeque;
+
+        use super::{super::prepare_weaving::NewSized, *};
 
         #[test]
-        fn blank() {}
+        /// Create a loom and see if the it one thread is mirrored.
+        fn test_mirror_threads() {
+            let mut loom = Loom::new_with_size(1);
+            let mut expected_loom = Loom::new_with_size(1);
+            loom.push(VecDeque::from(vec![
+                [1, 1, -1],
+                [1, -1, -1],
+                [-1, -1, -1],
+                [-1, 1, -1],
+            ]));
+            expected_loom.push(VecDeque::from(vec![
+                [1, 1, -1],
+                [1, -1, -1],
+                [-1, -1, -1],
+                [-1, 1, -1],
+                [-1, 1, 1],
+                [-1, -1, 1],
+                [1, -1, 1],
+                [1, 1, 1],
+            ]));
+            loom.mirror_threads();
+            assert_eq!(loom, expected_loom);
+        }
     }
 }
 
@@ -729,14 +1082,15 @@ pub mod merge_cycles {
         }
     }
 
-    /// Align self to edge sush that self.lhs == edge.lhs and self.rhs == edge.rhs
-    pub trait AlignToEdge {
+    /// Align self to edge such that self.lhs == edge.lhs and self.rhs == edge.rhs
+    pub trait AlignToEdge<T: PartialEq + Copy> {
         /// Align self to given edge such that the lhs of edge and self match and the rhs of edge and self match.
-        fn align_to(&mut self, edge: (V3d, V3d));
+        /// Only the cases that occur in the code are covered. It is not to be used generally as not all cases are covered.
+        fn align_to(&mut self, edge: (T, T));
     }
 
-    impl AlignToEdge for Warp {
-        fn align_to(&mut self, (lhs, rhs): (V3d, V3d)) {
+    impl<T: PartialEq + Copy> AlignToEdge<T> for Vec<T> {
+        fn align_to(&mut self, (lhs, rhs): (T, T)) {
             match (
                 self.iter().position(|&x| x == lhs).unwrap(),
                 self.iter().position(|&x| x == rhs).unwrap(),
@@ -755,7 +1109,17 @@ pub mod merge_cycles {
         use super::*;
 
         #[test]
-        fn blank() {}
+        fn test_align_to() {
+            let mut v = vec![0, 1, 2, 3, 4, 5];
+            v.align_to((4, 3));
+            assert_eq!(v, vec![4, 5, 0, 1, 2, 3]);
+            v.align_to((0, 1));
+            assert_eq!(v, vec![0, 5, 4, 3, 2, 1]);
+            // Should give a different result as this case was removed as this doesn't occur in this algo.
+            v.align_to((1, 0));
+            assert_ne!(v, vec![1, 2, 3, 4, 5, 0]);
+            assert_eq!(v, vec![1, 0, 5, 4, 3, 2]);
+        }
     }
 }
 
@@ -858,6 +1222,45 @@ pub mod certify_solution {
             n == 2 || n == -2
         }
     }
+
+    #[cfg(test)]
+    /// Test if the given sequences are broken.
+    mod tests {
+        use super::*;
+        #[test]
+        fn test_certify_broken() {
+            // not long enough.
+            let mut sol: Solution = vec![[1, 1, -1], [1, -1, -1], [-1, -1, -1], [-1, 1, -1]];
+            assert_eq!(SequenceID::Broken, sol.certify(8, 3));
+            // too duplicates.
+            sol = vec![[1, 1, -1], [1, -1, -1], [-1, -1, -1], [-1, -1, -1]];
+            assert_eq!(SequenceID::Broken, sol.certify(8, 3));
+            // right length but duplicates.
+            sol = vec![
+                [1, 1, -1],
+                [-1, -1, -1],
+                [-1, -1, -1],
+                [-1, -1, -1],
+                [-1, -1, -1],
+                [-1, -1, -1],
+                [1, -1, -1],
+                [-1, -1, -1],
+            ];
+            assert_eq!(SequenceID::Broken, sol.certify(8, 3));
+            // absumv too much.
+            sol = vec![
+                [1, 1, -7],
+                [-1, -1, -1],
+                [-1, -1, -9],
+                [-7, -1, -1],
+                [-1, -7, -1],
+                [-1, -1, -1],
+                [1, -9, -1],
+                [-9, -1, -1],
+            ];
+            assert_eq!(SequenceID::Broken, sol.certify(8, 3));
+        }
+    }
 }
 
 /// 📔 Module for exporting the solution to a .csv file where each row is x, y, z.
@@ -875,9 +1278,14 @@ pub mod csv_out {
         pub(crate) z: i16,
     }
 
+    /// Save solution to `file_path` as a `.csv` file with the columns `x`, `y`, `z` for each axis.\
     pub trait SerializeToCsv<T> {
         /// Save solution to `file_path` as a `.csv` file with the columns `x`, `y`, `z` for each axis.\
         /// A python module using `pandas` and `plotly` to create a 3d line plot is available [here](https://github.com/discocube/plot_solution).
+        /// ```
+        /// let solution = weave(2);
+        /// solution.serialize_to_csv("documents/solutions/csv/solution_2.csv")
+        /// ```
         fn serialize_to_csv(&self, file_path: &str) -> Result<(), Box<dyn Error>>;
     }
 
@@ -898,6 +1306,26 @@ pub mod csv_out {
             writer.serialize(CsvVector { x, y, z })?;
             writer.flush()?;
             Ok(())
+        }
+    }
+
+    #[cfg(test)]
+    /// Run weave to create solution and convert that solution to csv in root/test.csv, then check if file exists in specified location and the delete it.
+    mod tests {
+        use std::{fs, path::Path};
+
+        use super::*;
+        use crate::graph::weave::weave;
+
+        #[test]
+        fn test_csv_output() {
+            let solution = weave(1);
+            solution.serialize_to_csv("test.csv").unwrap();
+            let path = Path::new("test.csv");
+            assert!(path.exists() && path.is_file());
+            if path.exists() && path.is_file() {
+                fs::remove_file(path).unwrap();
+            }
         }
     }
 }
