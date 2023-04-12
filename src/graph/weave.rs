@@ -117,7 +117,6 @@ pub fn weave(n: usize) -> Solution {
 /// Test to check that the results from the first 50 orders are Hamiltonian cycles.
 mod tests {
     use crate::graph::ops::certify_solution::{Certify, SequenceID};
-
     use super::*;
 
     #[test]
