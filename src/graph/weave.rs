@@ -101,7 +101,6 @@ pub fn weave(n: usize) -> Solution {
         pins = loom.pin_threads_to_extend(zrow);
     });
     loom.mirror_threads();
-    println!("{loom:?}");
     let (mut weft, mut loom) = loom.prepare_cycle_merging(n);
     loom.iter_mut().for_each(|warp| {
         let warp_edges = warp.edges(weft.max_sum_z, weft.joined);
