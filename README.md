@@ -195,9 +195,6 @@ The solution can be plotted using pandas, numpy and plotly. I've put together an
 | 🇳   98 | ⭕️    1293600 | 🕗 SOLVE: 0.0834023729 | 📌 HamCycle | 🕗 CERTIFY: 0.0548647530
 | 🇳   99 | ⭕️    1333200 | 🕗 SOLVE: 0.0863782465 | 📌 HamCycle | 🕗 CERTIFY: 0.0559503771
 | 🇳  100 | ⭕️    1373600 | 🕗 SOLVE: 0.0907897502 | 📌 HamCycle | 🕗 CERTIFY: 0.0571479984
-rommeloyu-uy@Rommelos-Mini weaver-latest % cargo run --release 101 905
-    Finished release [optimized + debuginfo] target(s) in 0.16s
-     Running `target/release/weaver 101 905`
 | 🇳  101 | ⭕️    1414808 | 🕗 SOLVE: 0.0958669633 | 📌 HamCycle | 🕗 CERTIFY: 0.0607737936
 | 🇳  102 | ⭕️    1456832 | 🕗 SOLVE: 0.0980693772 | 📌 HamCycle | 🕗 CERTIFY: 0.0588104166
 | 🇳  103 | ⭕️    1499680 | 🕗 SOLVE: 0.1009650379 | 📌 HamCycle | 🕗 CERTIFY: 0.0594538338
