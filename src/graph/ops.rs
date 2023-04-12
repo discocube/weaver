@@ -1,18 +1,18 @@
-/// Collection of modules used to build Hamiltonian cycle.
+/// 🎶 Collection of modules used to build Hamiltonian cycle.
 pub mod prelude {
     pub use super::{
-        graph_info_from_n::InfoN, 
+        color_spun_yarn::Convert,
+        extend_loom_threads::ExtendThreads,
+        graph_info_from_n::InfoN,
+        mark_thread_ends::MarkEnds,
+        merge_cycles::{AlignToEdge, Bridge, GetWarpEdges, GetWeftWarps, Weft},
+        mirror_loom_threads::Mirrored,
+        prepare_yarn::PrepareYarn,
         spin_yarn::Spin,
-        color_spun_yarn::Convert, 
-        prep_yarn::PrepareYarn, 
-        extend_loom_threads::ExtendThreads, 
-        mark_thread_ends::MarkThreadEnds, 
-        mirror_loom_threads::Mirrored, 
-        merge_cycles::*, 
     };
 }
 
-/// Given n calculate values used for building the solution.
+/// ℹ️ Given n calculate values used for building the solution.
 pub mod graph_info_from_n {
     use crate::graph::types::*;
     use itertools::Itertools;
@@ -87,14 +87,31 @@ pub mod graph_info_from_n {
             .collect()
         }
     }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn blank() {}
+    }
 }
 
-/// Walk a Hamiltonian chain from the outer to innermost vert where the scalar z value of the points equals -1.
+/// 🛞 Spin a zigzagging-inward-spiralling Hamiltonian chain from the outer to innermost vert where the scalar z value of the points equals -1.
 pub mod spin_yarn {
     use super::graph_info_from_n::InfoN;
     use crate::graph::types::*;
     use std;
 
+    /// 2d displacement vectors for walking a zig-zag.
+    pub const DISP_VECTORS: [[V2d; 2]; 4] = [
+        [[-2, 0], [0, -2]],
+        [[-2, 0], [0, 2]],
+        [[2, 0], [0, 2]],
+        [[2, 0], [0, -2]],
+    ];
+
+    /// 🪀 Spin a zigzagging-inward-spiralling Hamiltonian chain.
     pub trait Spin {
         /// 🪀 Spin a zigzagging-inward-spiralling Hamiltonian chain.
         ///
@@ -125,14 +142,6 @@ pub mod spin_yarn {
             spool
         }
     }
-
-    /// 2d displacement vectors for walking a zig-zag.
-    pub const DISP_VECTORS: [[V2d; 2]; 4] = [
-        [[-2, 0], [0, -2]],
-        [[-2, 0], [0, 2]],
-        [[2, 0], [0, 2]],
-        [[2, 0], [0, -2]],
-    ];
 
     /// A struct responsible for providing the right set of displacement vectors so that an inward-turning zigzag is produced from an initial vector.
     pub struct Spinner<'a> {
@@ -199,6 +208,7 @@ pub mod spin_yarn {
         }
     }
 
+    /// Add another vector to self.
     pub trait AddVec {
         // add two 2-dimensional vectors together.
         fn add_vec(&self, other: V2d) -> V2d;
@@ -209,15 +219,22 @@ pub mod spin_yarn {
             [self[0] + a, self[1] + b]
         }
     }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn blank() {}
+    }
 }
 
-/// Convert spun yarn to a 2-dimensional ndarray. Assign to blue. Copy, reflect and translate blue, assign to red.
+/// 🌈 Convert spun yarn to a 2-dimensional ndarray. Assign to blue. Copy, reflect and translate blue, assign to red.
 pub mod color_spun_yarn {
     use ndarray::array;
 
     use crate::graph::types::*;
 
-    /// Convert from Spindle to Yarns.
     pub trait Convert {
         /// 🎨 Color by draining spool into an ndarray & assigning to `blue`. Assign `red` as a mirrored/translated `blue`.
         ///
@@ -240,14 +257,23 @@ pub mod color_spun_yarn {
             Yarns::from([(3, blue), (1, red)])
         }
     }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn blank() {}
+    }
 }
 
-/// Prepare yarn for extending onto the loom threads. Cut using pins and affix yarn to the current elevation.
-pub mod prep_yarn {
+/// 👨‍🍳 Prepare yarn for extending onto the loom threads. Cut using pins and affix yarn to the current elevation.
+pub mod prepare_yarn {
     use crate::graph::types::*;
     use itertools::Itertools;
     use ndarray::s;
 
+    /// 👨‍🍳 Prepare yarn to be extennded onto the individual thread ends.
     pub trait PrepareYarn {
         /// 👨‍🍳 Measure requested color and size as a slice and finish by positioning the yarn to the current elevation by adding a scalar `zpos` to each item in the slice and cutting finished yarn if there are pins in the pins by calling `cut_yarn(_yarn, pins)` or return uncut.
         ///
@@ -263,13 +289,13 @@ pub mod prep_yarn {
         /// Cut finished yarn if `pins` is not empty, `cut_yarn(_yarn, &pins)`. Return the finished (cut or not) yarn.
         ///
         ///
-        fn prep(&self, zpos: i16, color: u8, size: usize, pins: &PinCushion) -> Warps;
+        fn prepare(&self, zpos: i16, color: u8, len: usize, pins: &PinCushion) -> Warps;
     }
 
     impl PrepareYarn for Yarns {
-        fn prep(&self, zpos: i16, color: u8, size: usize, pins: &PinCushion) -> Warps {
+        fn prepare(&self, zpos: i16, color: u8, len: usize, pins: &PinCushion) -> Warps {
             match self[&color]
-                .slice(s![size.., ..])
+                .slice(s![len.., ..])
                 .outer_iter()
                 .map(|row| [row[0], row[1], zpos])
                 .collect_vec()
@@ -280,6 +306,7 @@ pub mod prep_yarn {
         }
     }
 
+    /// ✂️ Cut yarn using pins from the pins as cut markers.
     pub trait CutYarn {
         /// ✂️ Cut yarn using pins from the pins as cut markers.
         ///
@@ -334,12 +361,21 @@ pub mod prep_yarn {
             self.iter().rev().cloned().collect()
         }
     }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn blank() {}
+    }
 }
 
-/// Extend each thread in the loom based on the marked ends from the previous level.
+/// 🧮 Extend each thread in the loom based on the marked ends from the previous level.
 pub mod extend_loom_threads {
     use crate::graph::types::*;
 
+    /// Extend each end of each thread in the loom with the segmented, colored and finished yarn.
     pub trait ExtendThreads {
         /// Extend each end of each thread in the loom with the segmented, colored and finished yarn.
         fn extend_threads(&mut self, warps: Warps);
@@ -362,11 +398,11 @@ pub mod extend_loom_threads {
         }
     }
 
-    /// Extend vec to the front or back of the deque by pushing each element using `push_front` or `push_back` but skipping the first which is similar to removing the marker used to match the ends.
+    /// traits to extend more than one item to the front or back of the deque.
     pub trait ExtendThreadFrontBack {
-        /// Extend vec to the front of the deque by pushing each element using `push_front` but skipping the first.
+        /// Extend vec to the front of the deque by pushing each element using `push_front` but skipping the first. Named ExtendFront to disambiguate with ExtendLeft, which usually involves reversing the sequence before extending.
         fn extend_thread_front(&mut self, pinned: &mut Warp);
-        /// Extend vec to the back of the deque by pushing each element using `push_back` but skipping the first.
+        /// Extend vec to the back of the deque by pushing each element using `push_back` but skipping the first. Named ExtendFront to disambiguate with ExtendLeft, which usually involves reversing the sequence before extending.
         fn extend_thread_back(&mut self, pinned: &mut Warp);
     }
 
@@ -382,16 +418,24 @@ pub mod extend_loom_threads {
             self.extend(pinned.drain(..).skip(1));
         }
     }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn blank() {}
+    }
 }
 
-/// Mark ends for the next level from which to extend the prepared yarn.
+/// 📌 Mark ends for the next level from which to extend the prepared yarn.
 pub mod mark_thread_ends {
     use crate::graph::types::*;
 
     /// Last z-level elevation.
     pub const LAST_ROW: ScalarXyz = -1;
 
-    pub trait MarkThreadEnds {
+    pub trait MarkEnds {
         /// 📌 Pins are used to carry over the values of each end of each thread in the loom from the previous level to the next. For each thread end `[thread[0], thread[thread.len() - 1]]` in the loom make a pin by adding 2 (length of an edge) to the z-scalar value: `[x, y, z + 2]`. Collect the pins in the cushion for cutting later.
         ///
         ///---\
@@ -403,11 +447,11 @@ pub mod mark_thread_ends {
         /// `[0, 1, 2, 3, 4, 5, 6]` and add those pins to the cushion: `[0, 6]` which is later used to cut the sequence from the next level so it can be attached to this thread. let's say we have the yarn for the next level that looks like this: `[0, 10, 20, 30, 40, 6, 16, 26]` we would get the pins from the previous level: `[0, 6]` and cut the finished yarn accordingly such that there is at least two verts in a cut: `[0, 6] ✂️ [0, 10, 20, 30, 40, 6, 16, 26]` would produce `[0, 10, 20, 30, 40] & [6, 16, 26]`: now add that to the thread where the pins match:  `[40, 30, 20, 10, 0][0, 1, 2, 3, 4, 5, 6]+[6, 16, 26]`
         /// resulting in: `[40, 30, 20, 10, 0, 1, 2, 3, 4, 5, 6, 16, 26]`
         ///
-        fn mark_next_ends(&mut self, zrow: ScalarXyz) -> PinCushion;
+        fn pin_threads_to_extend(&mut self, zrow: ScalarXyz) -> PinCushion;
     }
 
-    impl MarkThreadEnds for Loom {
-        fn mark_next_ends(&mut self, zrow: ScalarXyz) -> PinCushion {
+    impl MarkEnds for Loom {
+        fn pin_threads_to_extend(&mut self, zrow: ScalarXyz) -> PinCushion {
             match zrow == LAST_ROW {
                 false => self
                     .iter_mut()
@@ -418,12 +462,12 @@ pub mod mark_thread_ends {
         }
     }
 
-    pub trait MarkThreadEnd {
+    pub trait MarkThreadEnds {
         /// Insert pins into each end of each thread in the loom. A pin is the vertex adjacent to and directly above an end. Collect the a copy of all inserted pins to be used for cutting the finished yarn from the next level up.
         fn mark_end(&mut self) -> [V3d; 2];
     }
 
-    impl MarkThreadEnd for LoomThread {
+    impl MarkThreadEnds for LoomThread {
         fn mark_end(&mut self) -> [V3d; 2] {
             let [[x, y, z], [i, j, k]] = [self[0], self[self.len() - 1]];
             let [front, back] = [[x, y, z + 2], [i, j, k + 2]];
@@ -432,9 +476,17 @@ pub mod mark_thread_ends {
             [front, back]
         }
     }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn blank() {}
+    }
 }
 
-/// Reflect the half-solution along the z-axis to create the whole.
+/// 🪩 Reflect the half-solution along the z-axis to create the whole.
 pub mod mirror_loom_threads {
     use crate::graph::types::{Loom, LoomThread, Tour, V3d};
     use rayon::prelude::*;
@@ -468,14 +520,22 @@ pub mod mirror_loom_threads {
             self.iter().rev()
         }
     }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn blank() {}
+    }
 }
 
-/// Merge subcycles into one Hamiltonian cycle by finding their bridges through set intersection.
+/// 🪢 Merge subcycles into one Hamiltonian cycle by finding their bridges through set intersection.
 pub mod merge_cycles {
-    use itertools::Itertools;
-    use std::collections::HashSet;
     use super::graph_info_from_n::InfoN;
     use crate::graph::types::*;
+    use itertools::Itertools;
+    use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 
     pub trait GetWeftWarps {
         /// Remove the threads from the loom and separate into weft and warps. Prepare for cycle merging. Loop over each warp, join with the weft until the end of the loop where there will only be the weft.
@@ -529,7 +589,7 @@ pub mod merge_cycles {
             }
         }
 
-        /// Convert data into set of edges using `circular_tuple_windows()` and filter using `is_valid_bridge_edge()`.
+        /// Convert data into set of edges using `tuple_windows()` and filter using condition below resulting in only two edges.
         pub fn edges(&mut self) -> Edges {
             self.data
                 .iter()
@@ -559,14 +619,15 @@ pub mod merge_cycles {
         }
     }
 
+    /// Get a tuple_window of self but filtered so that only the required edges are pass through the filter.
     pub trait GetWarpEdges {
         /// Construct edges from the Vec and filter.
         /// 'vec![1, 2, 3]' -> `hash_set![(1, 2), (2, 3), (3, 1)]` which is then filtered further to avoid memory waste.
-        fn edges(&self, min_xyz: i16, joined: bool) -> WarpEdges;
+        fn edges(&self, min_xyz: i16, joined: bool) -> Edges;
     }
 
     impl GetWarpEdges for Warp {
-        fn edges(&self, max_sum_z: i16, joined: bool) -> WarpEdges {
+        fn edges(&self, max_sum_z: i16, joined: bool) -> Edges {
             self.iter()
                 .tuple_windows()
                 .filter(|(&[x, y, z], &[_, b, c])| {
@@ -580,6 +641,7 @@ pub mod merge_cycles {
         }
     }
 
+    /// Get the absolute value of an i16 using bitwise operations.
     pub trait AbsBit<T> {
         /// Get the absolute value of an i16 using bitwise operations.
         fn absbit(self) -> T;
@@ -592,6 +654,7 @@ pub mod merge_cycles {
         }
     }
 
+    /// Orient edge such that LHS < RHS.
     pub trait OrientAscending {
         /// Orient edge such that lhs < rhs.
         fn orient(self) -> Edge;
@@ -607,16 +670,17 @@ pub mod merge_cycles {
         }
     }
 
+    /// Get the bridge edge between self and other.
     pub trait Bridge<T> {
         /// Using the & set operator, find the common bridge i.e., intersection between a set of edges and a set of adjacent edges and return the next() from the set.
         fn bridge(&self, other: &T) -> Edge;
     }
 
-    impl Bridge<Edge> for Edges {
+    impl Bridge<WeftEdge> for WarpEdges {
         /// Using the & set operator, find the common bridge i.e., intersection between a set of edges and a set of adjacent edges and return the next() from the set.
         /// This version automatically reverses the edge as it is always the case (removed the check).
-        fn bridge(&self, (weft_lhs, weft_rhs): &(V3d, V3d)) -> Edge {
-            let (warp_lhs, warp_rhs) = (self & &((*weft_lhs, *weft_rhs).get_eadjs()))
+        fn bridge(&self, (weft_lhs, weft_rhs): &WeftEdge) -> BridgeEdge {
+            let (warp_lhs, warp_rhs) = (self & &((*weft_lhs, *weft_rhs).eadjs()))
                 .into_iter()
                 .next()
                 .unwrap();
@@ -624,31 +688,28 @@ pub mod merge_cycles {
         }
     }
 
-    impl Bridge<Edges> for Edges {
-        fn bridge(&self, other: &Edges) -> Edge {
-            (self & &other.get_eadjs()).into_iter().next().unwrap()
+    impl Bridge<WarpEdges> for WeftEdges {
+        fn bridge(&self, other: &WeftEdges) -> BridgeEdge {
+            (self & &other.eadjs()).into_iter().next().unwrap()
         }
     }
 
-    /// Get the Adjacent edges for either a weft edge or warp edges.
+    /// Get the adjacent/parallel edge of self either for WarpEdges or for WeftEdge
     pub trait GetEadjs {
         /// Get the adjacent/parallel edges of edges.
-        fn get_eadjs(&self) -> Edges;
+        fn eadjs(&self) -> Edges;
     }
 
     impl GetEadjs for WarpEdges {
-        fn get_eadjs(&self) -> Edges {
-            self.iter()
+        fn eadjs(&self) -> Edges {
+            self.par_iter()
                 .filter(|([x, y, _], _)| (x == &3 || x == &1) && (y == &3 || y == &1))
-                .flat_map(|&(q, r)| {
+                .map(|&(q, r)| {
                     let ([a, b, c], [x, y, z]) = (q, r);
                     match (a != x, b != y, c != z) {
-                        (true, false, false) => HashSet::from([([a, b - 2, c], [x, y - 2, z])]),
-                        (false, true, false) => HashSet::from([([a, b, c + 2], [x, y, z + 2])]),
-                        (false, false, true) => HashSet::from([
-                            ([a - 2, b, c], [x - 2, y, z]),
-                            ([a, b + 2, c], [x, y + 2, z]),
-                        ]),
+                        (true, false, false) => ([a, b - 2, c], [x, y - 2, z]),
+                        (false, true, false) => ([a, b, c + 2], [x, y, z + 2]),
+                        (false, false, true) => ([a - 2, b, c], [x - 2, y, z]),
                         _ => panic!("NOT A VALID EDGE"),
                     }
                 })
@@ -657,26 +718,25 @@ pub mod merge_cycles {
     }
 
     impl GetEadjs for WeftEdge {
-        /// Get the adjacent edges for weft
-        fn get_eadjs(&self) -> Edges {
+        fn eadjs(&self) -> Edges {
             let ([a, b, c], [x, y, z]) = *self;
             match (a != x, b != y, c != z) {
-                (true, false, false) => HashSet::from([([a, b + 2, c], [x, y + 2, z])]),
-                (false, true, false) => HashSet::from([([a + 2, b, c], [x + 2, y, z])]),
-                (false, false, true) => HashSet::from([([a + 2, b, c], [x + 2, y, z])]),
+                (true, false, false) => [([a, b + 2, c], [x, y + 2, z])].into(),
+                (false, true, false) => [([a + 2, b, c], [x + 2, y, z])].into(),
+                (false, false, true) => [([a + 2, b, c], [x + 2, y, z])].into(),
                 _ => panic!("NOT A VALID EDGE"),
             }
         }
     }
 
-    /// A trait for warp which the weft struct contains.
+    /// Align self to edge sush that self.lhs == edge.lhs and self.rhs == edge.rhs
     pub trait AlignToEdge {
         /// Align self to given edge such that the lhs of edge and self match and the rhs of edge and self match.
-        fn align_to(&mut self, edge: Edge);
+        fn align_to(&mut self, edge: (V3d, V3d));
     }
 
     impl AlignToEdge for Warp {
-        fn align_to(&mut self, (lhs, rhs): Edge) {
+        fn align_to(&mut self, (lhs, rhs): (V3d, V3d)) {
             match (
                 self.iter().position(|&x| x == lhs).unwrap(),
                 self.iter().position(|&x| x == rhs).unwrap(),
@@ -685,13 +745,21 @@ pub mod merge_cycles {
                     self.rotate_left(idx_rhs);
                     self.reverse()
                 }
-                (_, idx_rhs) => self.rotate_right(idx_rhs),
+                (idx_lhs, _) => self.rotate_left(idx_lhs),
             }
         }
     }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn blank() {}
+    }
 }
 
-/// Certify if the solution is Hamiltonian.
+/// ✅ Certify if the solution is Hamiltonian.
 pub mod certify_solution {
     use crate::graph::types::{Solution, V2d, V3d};
     use itertools::{all, Itertools};
@@ -792,7 +860,7 @@ pub mod certify_solution {
     }
 }
 
-/// Module for exporting the solution to a .csv file where each row is x, y, z.
+/// 📔 Module for exporting the solution to a .csv file where each row is x, y, z.
 pub mod csv_out {
     use crate::graph::types::Solution;
     use serde::Serialize;
