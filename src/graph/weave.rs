@@ -1,4 +1,7 @@
-use super::{ops::prelude::*, types::*};
+use super::{
+    ops::{prelude::*, prepare_weaving::NewSized},
+    types::*,
+};
 
 /// 🕸️ Weave a Hamiltonian cycle by building chains level by level bottom up until subtours of half is formed. Mirror chains to form cycles for subsequent joining of weft with each warp in the loom until only the weft remains.\
 ///
@@ -90,14 +93,15 @@ use super::{ops::prelude::*, types::*};
 ///           });
 ///
 pub fn weave(n: usize) -> Solution {
-    let mut pins = PinCushion::with_capacity(n);
-    let mut loom = Loom::with_capacity(n.loom_size());
+    let mut pins = PinCushion::new_with_size(n);
+    let mut loom = Loom::new_with_size(n.loom_size());
     let yarns = Yarns::colorized(Spindle::spin(n.spool_size()));
-    n.zrow_color_len().iter().for_each(|&((zrow, color), len)| {
-        loom.extend_threads(yarns.prepare(zrow, color, len, &pins));
+    n.zrow_color_idx().iter().for_each(|&((zrow, color), idx)| {
+        loom.extend_threads(yarns.prepare(zrow, color, idx, &pins));
         pins = loom.pin_threads_to_extend(zrow);
     });
     loom.mirror_threads();
+    println!("{loom:?}");
     let (mut weft, mut loom) = loom.prepare_cycle_merging(n);
     loom.iter_mut().for_each(|warp| {
         let warp_edges = warp.edges(weft.max_sum_z, weft.joined);
@@ -107,4 +111,31 @@ pub fn weave(n: usize) -> Solution {
         weft.join(warp);
     });
     weft.get_woven()
+}
+
+#[cfg(test)]
+/// Test to check that the results from the first 50 orders are Hamiltonian cycles.
+mod tests {
+    use crate::graph::ops::certify_solution::{Certify, SequenceID};
+
+    use super::*;
+
+    #[test]
+    /// Run weave on the first 50 instances and test if the results are Hamiltonian cycles.
+    fn test_weave() {
+        for n in 1..=50 {
+            let order = n.get_order_from_n();
+            let max_absumv = n.get_max_absumv();
+            let solution = weave(n);
+            let seq_id = solution.certify(order, max_absumv);
+            assert_eq!(seq_id, SequenceID::HamCycle);
+        }
+    }
+
+    #[test]
+    #[should_panic(expected = "n must not be zero")]
+    /// Test that calling weave with n as zero panics.
+    fn test_zero_n() {
+        weave(0);
+    }
 }
