@@ -367,11 +367,11 @@ mod color_yarn {
         /// The last elevation where the z-value is -1 is always blue and going down, alternates between red, and blue.. Where n = 3, a graph with 80 vertices, there are 3 levels: -5, -3, -1. Each level has a color so in the case of graph_80: -5 ⇒ blue, -3 ⇒ red, -1 ⇒ blue.
         ///
         ///
-        fn colorized(spool: Spindle) -> Yarns;
+        fn color_spun(spool: Spindle) -> Yarns;
     }
 
     impl ColorSpunYarn for Yarns {
-        fn colorized(mut spool: Spindle) -> Yarns {
+        fn color_spun(mut spool: Spindle) -> Yarns {
             let blue = Yarn::from(spool.drain(..).collect::<Spindle>());
             let red = blue.dot(&array![[-1, 0], [0, -1]]) + array![[0, 2]];
             Yarns::from([(3, blue), (1, red)])
@@ -412,7 +412,7 @@ mod color_yarn {
                 [-1, -1],
                 [-1, 1],
             ];
-            let colored_yarns = <Yarns as ColorSpunYarn>::colorized(spool);
+            let colored_yarns = <Yarns as ColorSpunYarn>::color_spun(spool);
             let blue = &colored_yarns[&3].clone();
             let red = &colored_yarns[&1].clone();
             let new_shifted_blue = red + array![[0, -2]];
@@ -587,7 +587,7 @@ mod prepare_yarn {
         fn test_prepare_yarn() {
             let n = 3_usize;
             let pins = PinCushion::with_capacity(n);
-            let yarns = Yarns::colorized(Spindle::spin(n.spool_size()));
+            let yarns = Yarns::color_spun(Spindle::spin(n.spool_size()));
             let prepared = yarns.prep(-1, 3, 0, &pins);
             let expected = vec![vec![
                 [5, 1, -1],
@@ -701,7 +701,7 @@ mod extend_threads {
         fn test_extend_threads() {
             let n = 2;
             let mut loom = Loom::with_capacity(n.loom_size());
-            let yarns = Yarns::colorized(Spindle::spin(n.spool_size()));
+            let yarns = Yarns::color_spun(Spindle::spin(n.spool_size()));
             loom.extend_threads(yarns.prep(-3, 1, 8, &vec![]));
             assert_eq!(loom, [[[1, 1, -3], [1, -1, -3], [-1, -1, -3], [-1, 1, -3]]]);
             loom.extend_threads(yarns.prep(-1, 3, 0, &vec![[1, 1, -1], [-1, 1, -1]]));
