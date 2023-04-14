@@ -273,15 +273,16 @@ pub mod pin_threads {
 
     /// Add two pins, one for each end of the thread. Collect copy of each as a guide for cutting/segmenting and placing the yarn.
     pub trait AddPinsFrontBack {
-        fn add_pins(&mut self, front: [i16; 3], back: [i16; 3]) -> [[i16; 3];2];
+        fn add_pins(&mut self, front: [i16; 3], back: [i16; 3]) -> [[i16; 3]; 2];
     }
 
     impl AddPinsFrontBack for LoomThread {
-        fn add_pins(&mut self, front: [i16; 3], back: [i16; 3])  -> [[i16; 3];2]{
+        fn add_pins(&mut self, front: [i16; 3], back: [i16; 3]) -> [[i16; 3]; 2] {
             self.push_front(front);
             self.push_back(back);
             [front, back]
-    }}
+        }
+    }
 }
 
 /// 👨‍🍳 Prepare yarn for extending onto the loom threads. Cut using pins and affix yarn to the current elevation.
