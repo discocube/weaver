@@ -1,135 +1,118 @@
-use super::{ops::prelude::*, types::*};
+/// see n_order.txt for a list of n and the corresponding order:
+/// n: 100 = 1_373_600 vertices
+/// ```
+/// cargo run --release [N] [N_UPPER_INCLUSIVE] [STEPS]
+/// cargo run --release 1 100 2
+/// cargo run --release [N] [N_UPPER_INCLUSIVE] [STEPS]
+/// cargo run --release 1 100 2
+/// ```
+/// builds binary under hamcycle/target/release/hamcycle
+/// runs binary: ./hamcycle/target/release/hamcycle
+/// starts with the first order in the sequence with 32 vertices,
+/// creates the graph for that order and solves it,
+/// continues to the next orders up to the 100th which is an order with 1,373,600 vertices,
+/// makes graph, solves it
+/// 1 (start with order 8 end at order 1,373,600) 100 in steps of two: [1, 3, 5, 7...]
+/// GOAL IS 8011618152. 8 BILLION FOR EACH PERSON ON THE EARTH. N = 1817.
+///                                                   
+///                                                   
+///                                                   
+///                      ◉―――――――◉                    
+///                     ╱│      ╱│                    
+///                    ◉―――⊖―――◉―│―◉                  
+///                    │ │╱│   │ │╱│                  
+///              ◉―――――│―◉―――――│―◉――――――――◉           
+///             ╱│     │╱│ │   │╱│ │     ╱│           
+///            ◉―――――――◉―――⊖―――◉―――⊖――――◉ │           
+///            │ │    ╱│ │╱   ╱│ │╱     │ │           
+///            │ ◉―――◉―――⊖―――◉―│―◉――――――│―◉           
+///            │╱    │ │╱│   │ │╱│      │╱            
+///            ◉―――――│―◉―――――│―◉――――――――◉             
+///                  │╱│ │   │╱│ │                    
+///                  ◉―――⊖―――◉―│―◉                    
+///                    │╱      │╱                     
+///                    ◉―――――――◉                      
+///                                                   
+///                                                   
+///                                         
+///
+///
+///                                               
+/////////////////////////////////////////////////////////////////////////////
+extern crate rayon;
 
-/// 🪡 Weave a Hamiltonian cycle by building chains level by level bottom up halfway up the graph. Mirror chains to form cycles for subsequent joining of weft with each warp in the loom until only the weft remains. A construction algorithm for describing the discocube, a techno-upgrade of the discoball 🪩 that's still a discoball but reflects the intertwined complexity of our algorithmically connected world. A disco ball fits well in a 1920's ballroom, but what fits well in a techno hall? \
-///
-///---\
-/// `🧭 n`: NInfo instance used to get parameters from the graph.\
-/// `🧵 spun`: Spool of yarn to be spun and colored.\
-/// `🧶 yarns`: Blue and red yarn as an ndarray.\
-/// `📌 pins`: Pins are used cut the finished yarn and as markers to connect the current level to the previous.\
-/// `🪜 loom`: Where threads are woven level by level using pins as markers to connect the prev to the current level.\
-/// `🧣 weft`: Leading loop into which the warps are incorporated. Weft object containing the solution.\
-/// `🧮 warps`: Threads which are built horizontally upwards level by level until half the graph has been built. \
-/// ---\
-///
-///```
-///pub fn weave(n: usize) -> Solution {
-///
-///    // Convert to ndarray & assign to blue. Copy/reflect/translate blue & assign to red.
-///    let yarns = Yarns::colorized(Spindle::spin(n.spool_size()));
-///
-///    // Iterate over the setting for each level: `zrow`, `size`, `color`
-///    n.zrow_color_size().iter().for_each(|&((z, color), size)| {
-///
-///        // Get pins for cutting the yarn to match each thread in the loom.
-///        let pins = loom.pin_thread_ends();
-///
-///        // Extend each thread end w/ segmented yarn using pins for cutting.
-///        loom.extend_threads(yarns.finish(z, color, size, &pins));
-///    });
-///
-///    // Mirror loom's threads to form subcycles from subchains for subsequent merging.
-///    loom.mirror_threads();
-///
-///    // Split weft from the loom leaving only the warps.
-///    let (mut weft, mut loom) = loom.prepare_merging(n);
-///
-///    // Iterate over each warp in the loom and incorporate into the weft.
-///    loom.iter_mut().for_each(|warp| {
-///
-///        // Get edges which are also valid bridges
-///        let warp_edges = warp.edges(weft.max_sum_z, weft.joined);
-///
-///        // Get the bridge edge on the weft to join to with the bridge edge of the warp.
-///        let weft_bridge = weft.edges().bridge(&warp_edges);
-///
-///        // Align/Rotate weft so the ends match weft's bridge.
-///        weft.align_to(weft_bridge);
-///
-///        // Align/Rotate weft so the ends match warp's bridge.
-///        warp.align_to(warp_edges.bridge(&weft_bridge));
-///
-///        // Now that both are aligned weft joins with warp by appending.
-///        weft.join(warp);
-///    });
-///
-///    // After weaving there's is only the weft. Retrieve the finished weave.
-///    weft.get_woven()
-///}
-///```
-/// ---\
-///
-/// Spin and color yarn. From the bottom-up for each level: cut the yarn incorporate into the level using pins if necessary to affix to the previous threads. Prepare pins for the next level. When we've reached the top, reflect the loom. Separate the loom into a main weft and warps. Incorporate the weft into the warps. Return solution.\
-/// For each level, pin each end of each thread in the loom. Get the requested color and cut yarn using pins.
-/// Merge subcycles by first calculating the bridge between warp's and weft's edges: Align each sequence to their respective edge such that the two sequences can be placed next to another. Append the warp to the weaver's weft. Continue to incorporate warps into the weft until only the weft remains.\
-///---\
-/// ---\
-/// I've placed most of the implementations in the ops.rs file to avoid cluttering the structure of the actual algorithm. The ops.rs file is structured so that it follows the order of the weave algorithm, where each function is encapsulated in a separate module and imported using `prelude::*`. Here is a list of the modules with the corresponding call to that module in weave.\
-///```
-///graph_info_from_n::InfoN ────────────➤  n.loom_size()
-///                                        n.spool_size()
-///                                        n.zrow_color_len()
-///
-///spin_yarn::Spin ─────────────────────➤  Spindle::spin()
-///
-///color_yarn::ColorSpunYarn ───────────➤  Yarns::color_spun()
-///
-///pin_threads::PinThreadEnds ──────────➤  loom.pin_thread_ends()
-///
-///prep_yarn::PrepYarnExtensions ───────➤  yarns.prep()
-///
-///extend_threads::ExtendThreads ───────➤  loom.extend_threads()
-///
-///mirror_loom::MirrorLoomThreads ──────➤ loom.mirror_threads()
-///
-///merge_cycles::* ─────────────────────➤  loom.prepare_cycle_merging()
-///                                        warp.edges()
-///                                        weft.edges().bridge(&warp_edges)
-///                                        weft.data.align_to(weft_bridge)
-///                                        warp.align_to(warp_edges.bridge(&weft_bridge))
-///                                        weft.join(warp)
-///
-///```
-pub fn weave(n: usize) -> Solution {
-    let mut loom = Loom::with_capacity(n.loom_size());
-    let yarns = Yarns::color_spun(Spindle::spin(n.spool_size()));
-    n.zrow_color_idx().iter().for_each(|&((zrow, color), idx)| {
-        let pins = loom.pin_thread_ends();
-        loom.extend_threads(yarns.prep(zrow, color, idx, &pins));
-    });
-    loom.mirror_threads();
-    let (mut weft, mut loom) = loom.prepare_cycle_merging(n);
-    loom.iter_mut().for_each(|warp| {
-        let warp_edges = warp.edges(weft.joined);
-        let weft_bridge = weft.edges().bridge(&warp_edges);
-        weft.data.align_to(weft_bridge);
-        warp.align_to(warp_edges.bridge(&weft_bridge));
-        weft.join(warp);
-    });
-    weft.get_woven()
+use std::{
+    env,
+    time::{Duration, Instant},
+};
+
+pub mod graph;
+
+use graph::{
+    ops::{
+        certify_solution::{Certify, SequenceID},
+        graph_info_from_n::*,
+    },
+    types::*,
+    utils::debug::get_current_date_time,
+    weave,
+};
+
+/// Grab arguments from the cli and run `find_solution()`
+pub fn main() -> Result<(), &'static str> {
+    std::env::set_var("RUST_BACKTRACE", "1");
+    println!("{}", get_current_date_time());
+    let args: Vec<String> = env::args().collect();
+    let n_start = args
+        .get(1)
+        .and_then(|arg| arg.parse().ok())
+        .filter(|&parsed| parsed > 0)
+        .unwrap_or(100);
+    let n_end = args
+        .get(2)
+        .and_then(|arg| arg.parse().ok())
+        .filter(|&parsed| parsed >= n_start)
+        .unwrap_or(n_start);
+    let steps = args.get(3).and_then(|arg| arg.parse().ok()).unwrap_or(1);
+    let repeats = args.get(4).and_then(|arg| arg.parse().ok()).unwrap_or(1);
+    for level in (n_start..=n_end).step_by(steps) {
+        find_solutions(level, repeats)?;
+    }
+    Ok(())
 }
 
-/// 🩺
-///
-///
-///
-///
-///
-/// 🩺 Test to check that the results from the first 50 orders are Hamiltonian cycles.
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::graph::ops::certify_solution::{Certify, SequenceID};
-
-    /// 🩺 Run weave on the first 50 instances and test if the results are Hamiltonian cycles.
-    #[test]
-    fn test_weave() {
-        for n in 1..=50 {
-            let order = n.get_order_from_n();
-            let max_absumv = n.get_max_absumv();
-            let solution = weave(n);
-            let seq_id = solution.certify(order, max_absumv);
-            assert_eq!(seq_id, SequenceID::HamCycle);
+// Solve on one or many by step or by steps. Time it and certify.
+pub fn find_solutions(n: usize, repeats: usize) -> Result<Solution, &'static str> {
+    let order = n.get_order_from_n();
+    let mut solution = Solution::new();
+    let mut _start: Instant = Instant::now();
+    if order > 1000000000 {
+        println!("{} | SOLVING ORDER ⭕️ {order}", get_current_date_time());
+    }
+    let mut min_dur = Duration::new(1000000, 0);
+    for _ in 0..repeats {
+        let start = Instant::now();
+        solution = weave::weave(n);
+        let dur_solve = Instant::now() - start;
+        if dur_solve < min_dur {
+            min_dur = dur_solve;
         }
     }
+    if order > 100000000 {
+        println!(
+            "| 🇳 {n:>4} | ⭕️ {order:>10} | 🕗 {:.10} |",
+            min_dur.as_secs_f32(),
+        );
+    } else {
+        _start = Instant::now();
+        let seq_id = solution.certify(order, n.get_max_absumv());
+        let _dur_certify = Instant::now() - _start;
+        println!(
+            "| 🇳 {n:>4} | ⭕️ {order:>10} | 🕗 SOLVE: {:.10} | 📌 {seq_id:?} | 🕗 CERTIFY: {:.10}",
+            min_dur.as_secs_f32(),
+            _dur_certify.as_secs_f32()
+        );
+        assert_eq!(seq_id, SequenceID::HamCycle);
+    }
+    Ok(solution)
 }
