@@ -39,7 +39,6 @@
 ///
 ///                                               
 /////////////////////////////////////////////////////////////////////////////
-extern crate criterion;
 extern crate rayon;
 
 use std::{
@@ -74,14 +73,15 @@ pub fn main() -> Result<(), &'static str> {
         .filter(|&parsed| parsed >= n_start)
         .unwrap_or(n_start);
     let steps = args.get(3).and_then(|arg| arg.parse().ok()).unwrap_or(1);
+    let repeats = args.get(4).and_then(|arg| arg.parse().ok()).unwrap_or(1);
     for level in (n_start..=n_end).step_by(steps) {
-        find_solutions(level, false)?;
+        find_solutions(level, repeats)?;
     }
     Ok(())
 }
 
 // Solve on one or many by step or by steps. Time it and certify.
-pub fn find_solutions(n: usize, _certify: bool) -> Result<Solution, &'static str> {
+pub fn find_solutions(n: usize, repeats: usize) -> Result<Solution, &'static str> {
     let order = n.get_order_from_n();
     let mut solution = Solution::new();
     let mut _start: Instant = Instant::now();
@@ -89,7 +89,7 @@ pub fn find_solutions(n: usize, _certify: bool) -> Result<Solution, &'static str
         println!("{} | SOLVING ORDER ⭕️ {order}", get_current_date_time());
     }
     let mut min_dur = Duration::new(1000000, 0);
-    for _ in 0..250 {
+    for _ in 0..repeats {
         let start = Instant::now();
         solution = weave::weave(n);
         let dur_solve = Instant::now() - start;
