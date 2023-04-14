@@ -257,22 +257,31 @@ pub mod pin_threads {
         /// resulting in: `[40, 30, 20, 10, 0, 1, 2, 3, 4, 5, 6, 16, 26]`
         /// Insert pins into each end of each thread in the loom. A pin is the vertex adjacent to and directly above an end. Collect the a copy of all inserted pins to be used for cutting the finished yarn from the next level up.
         ///
-        fn pin_thread_ends(&mut self) -> PinCushion;
+        fn pin_thread_ends(&mut self, zrow: i16) -> PinCushion;
     }
 
     impl PinThreadEnds for Loom {
-        fn pin_thread_ends(&mut self) -> PinCushion {
+        fn pin_thread_ends(&mut self, zrow: i16) -> PinCushion {
             self.iter_mut()
-                .flat_map(|end| {
-                    let [[x, y, z], [i, j, k]] = [end[0], end[end.len() - 1]];
-                    let [front, back] = [[x, y, z + 2], [i, j, k + 2]];
-                    end.push_front(front);
-                    end.push_back(back);
-                    [front, back]
+                .flat_map(|t| {
+                    let [[x, y, _], [i, j, _]] = [t[0], t[t.len() - 1]];
+                    t.add_pins([x, y, zrow], [i, j, zrow])
                 })
                 .collect()
         }
     }
+
+    /// Add two pins, one for each end of the thread. Collect copy of each as a guide for cutting/segmenting and placing the yarn.
+    pub trait AddPinsFrontBack {
+        fn add_pins(&mut self, front: [i16; 3], back: [i16; 3]) -> [[i16; 3];2];
+    }
+
+    impl AddPinsFrontBack for LoomThread {
+        fn add_pins(&mut self, front: [i16; 3], back: [i16; 3])  -> [[i16; 3];2]{
+            self.push_front(front);
+            self.push_back(back);
+            [front, back]
+    }}
 }
 
 /// 👨‍🍳 Prepare yarn for extending onto the loom threads. Cut using pins and affix yarn to the current elevation.
@@ -395,7 +404,7 @@ mod extend_threads {
     }
 }
 
-/// 🪞 Reflect the half-solution along the z-axis to create the whole.
+/// 🪞 Reflect the half-solution along the z-axis to create the whole: ◡ + ◠ = ◯.
 mod mirror_loom {
     use crate::graph::types::{Loom, Tour};
     use rayon::prelude::*;
@@ -425,7 +434,7 @@ mod mirror_loom {
 
 /// 🪢 Merge subcycles into one Hamiltonian cycle by finding their bridges through set intersection.
 mod merge_cycles {
-    use super::graph_info_from_n::InfoN;
+    use super::{graph_info_from_n::InfoN, serialize_csv::SerializeToCsv};
     use crate::graph::types::*;
     use itertools::Itertools;
     use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
@@ -507,6 +516,12 @@ mod merge_cycles {
         pub fn get_woven(&self) -> Solution {
             self.data.to_vec()
         }
+
+        /// Save the finished solution to a csv file.
+        pub fn export_csv(&self, filepath: &str) -> Result<(), Box<dyn std::error::Error>> {
+            self.data.serialize_to_csv(filepath)?;
+            Ok(())
+        }
     }
 
     /// Get a tuple_window of self but filtered so that only the required edges are pass through the filter.
@@ -539,7 +554,7 @@ mod merge_cycles {
     impl OrientAscending for Edge {
         fn orient(self) -> Edge {
             match (self.0, self.1) {
-                (m, n) if m < n => (m, n),
+                (m, n) if m < n => self,
                 (m, n) => (n, m),
             }
         }
@@ -784,12 +799,13 @@ pub mod serialize_csv {
     }
 }
 
-///! TESTS
+///! 🩺 TEST
 ///!
 ///!
 ///!
 ///!
-/// 🩺 Test overflow and expected outputs for n.get().
+///!
+///! 🩺 Test overflow and expected outputs for n.get_some_info().
 #[cfg(test)]
 mod tests_graph_info_from_n {
     use super::prelude::*;
@@ -1066,7 +1082,7 @@ mod tests_pin_threads {
     /// Test that the output from mark end where zrow == -1 should give me an empty pin cushion.
     fn test_last_row_empty_cushion() {
         let mut loom = Loom::with_capacity(2);
-        assert_eq!(PinCushion::with_capacity(0), loom.pin_thread_ends());
+        assert_eq!(PinCushion::with_capacity(0), loom.pin_thread_ends(-1));
     }
 
     #[test]
