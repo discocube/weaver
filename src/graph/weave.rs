@@ -66,6 +66,9 @@ use super::ops::prelude::*;
 ///
 ///    // After weaving there's is only the weft. Retrieve the finished weave.
 ///    weft.get_woven()
+///
+///    // Output results to a csv file:
+///    weft.export_csv()l
 ///}
 ///```
 /// ---\
@@ -101,11 +104,13 @@ use super::ops::prelude::*;
 ///                                        weft.join(warp)
 ///
 ///```
+///
+///
 pub fn weave(n: usize) -> Solution {
     let mut loom = Loom::with_capacity(n.loom_size());
     let yarns = Yarns::color_spun(Spindle::spin(n.spool_size()));
     n.zrow_color_idx().iter().for_each(|&((zrow, color), idx)| {
-        let pins = loom.pin_thread_ends();
+        let pins = loom.pin_thread_ends(zrow);
         loom.extend_threads(yarns.prep(zrow, color, idx).split(&pins));
     });
     loom.mirror_threads();
@@ -120,13 +125,13 @@ pub fn weave(n: usize) -> Solution {
     weft.get_woven()
 }
 
-/// 🩺
-///
-///
-///
-///
-///
-/// 🩺 Test to check that the results from the first 50 orders are Hamiltonian cycles.
+///! 🩺 TEST
+///!
+///!
+///!
+///!
+///!
+///! 🩺 Test to check that the results from the first 50 orders are Hamiltonian cycles.
 #[cfg(test)]
 mod tests {
     use super::*;
