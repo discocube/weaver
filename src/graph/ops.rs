@@ -1,9 +1,9 @@
 /// 🎶 Collection of modules used to build Hamiltonian cycle.
 pub mod prelude {
     pub use super::{
-        color_spun_yarn::Convert, extend_loom_threads::ExtendThreads, graph_info_from_n::InfoN,
-        mark_thread_ends::MarkEnds, merge_cycles::*, mirror_loom_threads::Mirrored,
-        prepare_yarn::PrepareYarn, spin_yarn::Spin,
+        color_yarn::ColorSpunYarn, extend_threads::ExtendLoomThreads, graph_info_from_n::InfoN,
+        merge_cycles::*, mirror_loom::MirrorLoomThreads, pin_threads::PinThreadEnds,
+        prepare_yarn::PrepYarnExtensions, spin_yarn::Spin,
     };
 }
 
@@ -83,8 +83,8 @@ pub mod graph_info_from_n {
         }
     }
 
+    /// 🩺 Test overflow and expected outputs for n.get().
     #[cfg(test)]
-    /// Test overflow and expected outputs for n.get().
     mod tests {
         use super::*;
 
@@ -164,7 +164,7 @@ mod spin_yarn {
         }
     }
 
-    /// A struct responsible for providing the right set of displacement vectors so that an inward-turning zigzag is produced from an initial vector.
+    /// A struct responsible for providing the right set of displacement vectors so that from an initial vector, an inward-turning zigzag is produced
     pub struct Spinner<'a> {
         /// Value of n.
         pub n: Count,
@@ -200,9 +200,8 @@ mod spin_yarn {
 
         fn get_turns(n: Count) -> Counts {
             let mut result = (-(n as i64 * 2)..=-2)
-                .map(|i| -i as usize)
                 .step_by(2)
-                .flat_map(|cut| [cut, cut])
+                .flat_map(|turn| [-turn as usize; 2])
                 .scan(0, |state, n| {
                     *state += n;
                     Some(*state - 1)
@@ -241,8 +240,8 @@ mod spin_yarn {
         }
     }
 
+    /// 🩺 Test if result from `spin` is same as expected.
     #[cfg(test)]
-    /// Test if result from `spin` is same as expected.
     mod tests {
         use super::*;
 
@@ -351,12 +350,12 @@ mod spin_yarn {
 }
 
 /// 🌈 Convert spun yarn to a 2-dimensional ndarray. Assign to blue. Copy, reflect and translate blue, assign to red.
-mod color_spun_yarn {
+mod color_yarn {
     use ndarray::array;
 
     use crate::graph::types::*;
 
-    pub trait Convert {
+    pub trait ColorSpunYarn {
         /// 🎨 Color by draining spool into an ndarray & assigning to `blue`. Assign `red` as a mirrored/translated `blue`.
         ///
         ///---\
@@ -371,7 +370,7 @@ mod color_spun_yarn {
         fn colorized(spool: Spindle) -> Yarns;
     }
 
-    impl Convert for Yarns {
+    impl ColorSpunYarn for Yarns {
         fn colorized(mut spool: Spindle) -> Yarns {
             let blue = Yarn::from(spool.drain(..).collect::<Spindle>());
             let red = blue.dot(&array![[-1, 0], [0, -1]]) + array![[0, 2]];
@@ -379,8 +378,8 @@ mod color_spun_yarn {
         }
     }
 
+    /// 🩺 Test if colored yarn can be converted by and forth from blue to red and back.
     #[cfg(test)]
-    /// Test if colored yarn can be converted by and forth from blue to red and back.
     mod tests {
         use super::*;
 
@@ -413,12 +412,80 @@ mod color_spun_yarn {
                 [-1, -1],
                 [-1, 1],
             ];
-            let colored_yarns = <Yarns as Convert>::colorized(spool);
+            let colored_yarns = <Yarns as ColorSpunYarn>::colorized(spool);
             let blue = &colored_yarns[&3].clone();
             let red = &colored_yarns[&1].clone();
             let new_shifted_blue = red + array![[0, -2]];
             let expect_blue = new_shifted_blue.dot(&array![[-1, 0], [0, -1]]);
             assert_eq!(blue, expect_blue);
+        }
+    }
+}
+
+/// 📌 Mark ends with a pin from which to extend the prepared yarn. Each pin is a point constructed from each end of each thread in the loom where there an edge length is added to the z-scalar value of each end: thread_end [x, y, z] -> pin [x, y, z + 2]
+pub mod pin_threads {
+    use crate::graph::types::*;
+
+    /// 📌 Pins are used to carry over the values of each end of each thread in the loom from the previous level to the next. For each thread end `[thread[0], thread[thread.len() - 1]]` in the loom make a pin by adding 2 (length of an edge) to the z-scalar value: `[x, y, z + 2]`. Collect the pins in the cushion for cutting later.
+    pub trait PinThreadEnds {
+        /// 📌 Pins are used to carry over the values of each end of each thread in the loom from the previous level to the next. For each thread end `[thread[0], thread[thread.len() - 1]]` in the loom make a pin by adding 2 (length of an edge) to the z-scalar value: `[x, y, z + 2]`. Collect the pins in the cushion for cutting later.
+        ///
+        ///---\
+        /// `🪜 loom`: Container on which the threads are extended level by levels using pins as markers to connect the levels.\
+        /// `🔚 last`: Indicates when we are in the last leg of the loop in which it is no longer required to pin the next level\
+        /// ---\
+        ///
+        /// For each thread end in the loom, add a pin corresponding to the V that is adjacent to that end but one z-level up. Collect the a copy of those inserted pins for cutting the yarn later. The purpose of the pins is to connect the previous level to the next. They are always prepared at the end of level and used for the next. If we have a thread `[1, 2, 3, 4, 5]` and let's say the pin above is 0 for 1 and 6 for 5. We would attach the pins to the ends:
+        /// `[0, 1, 2, 3, 4, 5, 6]` and add those pins to the cushion: `[0, 6]` which is later used to cut the sequence from the next level so it can be attached to this thread. let's say we have the yarn for the next level that looks like this: `[0, 10, 20, 30, 40, 6, 16, 26]` we would get the pins from the previous level: `[0, 6]` and cut the finished yarn accordingly such that there is at least two verts in a cut: `[0, 6] ✂️ [0, 10, 20, 30, 40, 6, 16, 26]` would produce `[0, 10, 20, 30, 40] & [6, 16, 26]`: now add that to the thread where the pins match:  `[40, 30, 20, 10, 0][0, 1, 2, 3, 4, 5, 6]+[6, 16, 26]`
+        /// resulting in: `[40, 30, 20, 10, 0, 1, 2, 3, 4, 5, 6, 16, 26]`
+        /// Insert pins into each end of each thread in the loom. A pin is the vertex adjacent to and directly above an end. Collect the a copy of all inserted pins to be used for cutting the finished yarn from the next level up.
+        ///
+        fn pin_thread_ends(&mut self) -> PinCushion;
+    }
+
+    impl PinThreadEnds for Loom {
+        fn pin_thread_ends(&mut self) -> PinCushion {
+            self.iter_mut()
+                .flat_map(|end| {
+                    let [[x, y, z], [i, j, k]] = [end[0], end[end.len() - 1]];
+                    let [front, back] = [[x, y, z + 2], [i, j, k + 2]];
+                    end.push_front(front);
+                    end.push_back(back);
+                    [front, back]
+                })
+                .collect()
+        }
+    }
+
+    /// 🩺 Test mark ends by marking ends of a thread.
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        /// Test that the output from mark end where zrow == -1 should give me an empty pin cushion.
+        fn test_last_row_empty_cushion() {
+            let mut loom = Loom::with_capacity(2);
+            assert_eq!(PinCushion::with_capacity(0), loom.pin_thread_ends());
+        }
+
+        #[test]
+        /// Test that the output from mark end where zrow == -1 should give me an empty pin cushion.
+        fn test_mark_end() {
+            let mut thread = LoomThread::new();
+            thread.push_back([0, 0, 0]);
+            thread.push_back([2, 0, 0]);
+            // Thread should now be [[0, 0, 0], [2, 0, 0]]
+            let expected = [[0, 0, 2], [2, 0, 2]];
+            let result = {
+                let [[x, y, z], [i, j, k]] = [thread[0], thread[thread.len() - 1]];
+                let [front, back] = [[x, y, z + 2], [i, j, k + 2]];
+                thread.push_front(front);
+                thread.push_back(back);
+                [front, back]
+            };
+
+            assert_eq!(expected, result);
         }
     }
 }
@@ -430,7 +497,7 @@ mod prepare_yarn {
     use ndarray::s;
 
     /// 👨‍🍳 Prepare yarn to be extennded onto the individual thread ends.
-    pub trait PrepareYarn {
+    pub trait PrepYarnExtensions {
         /// 👨‍🍳 Measure requested color and size as a slice and finish by positioning the yarn to the current elevation by adding a scalar `zpos` to each item in the slice and cutting finished yarn if there are pins in the pins by calling `cut_yarn(_yarn, pins)` or return uncut.
         ///
         ///---\
@@ -445,26 +512,26 @@ mod prepare_yarn {
         /// Cut finished yarn if `pins` is not empty, `cut_yarn(_yarn, &pins)`. Return the finished (cut or not) yarn.
         ///
         ///
-        fn prepare(&self, zpos: i16, color: u8, len: usize, pins: &PinCushion) -> Warps;
+        fn prep(&self, zpos: i16, color: u8, len: usize, pins: &PinCushion) -> Warps;
     }
 
-    impl PrepareYarn for Yarns {
-        fn prepare(&self, zpos: i16, color: u8, start_idx: usize, pins: &PinCushion) -> Warps {
+    impl PrepYarnExtensions for Yarns {
+        fn prep(&self, zpos: i16, color: u8, start_idx: usize, pins: &PinCushion) -> Warps {
             match self[&color]
                 .slice(s![start_idx.., ..])
                 .outer_iter()
                 .map(|row| [row[0], row[1], zpos])
                 .collect_vec()
             {
-                yarn if pins.is_empty() => vec![yarn],
-                yarn => yarn.cut_using(pins),
+                yarn if !pins.is_empty() => yarn.cut_using(pins),
+                yarn => vec![yarn],
             }
         }
     }
 
-    /// ✂️ Cut yarn using pins from the pins as cut markers.
-    pub trait CutYarn {
-        /// ✂️ Cut yarn using pins from the pins as cut markers.
+    /// 🔪 Cut yarn using pins from the pins as cut markers so it can be extended upon the individual threads in the loom.
+    pub trait SegmentYarn {
+        /// 🔪 Cut yarn using pins from the pins as cut markers.
         ///
         /// ---\
         /// `🎉 warps`: yarn that is cut and prepared to be incorporated.\
@@ -482,7 +549,7 @@ mod prepare_yarn {
         fn cut_using(self, pins: &PinCushion) -> Warps;
     }
 
-    impl CutYarn for Warp {
+    impl SegmentYarn for Warp {
         fn cut_using(self, pins: &PinCushion) -> Warps {
             let mut warps = Warps::with_capacity(pins.len() + 1);
             let last_iyarn = self.len() - 1;
@@ -499,7 +566,7 @@ mod prepare_yarn {
                             warps.push(s.iter().rev().cloned().collect())
                         };
                     } else {
-                        warps.push((&self[iprev..=iyarn]).iter().rev().cloned().collect());
+                        warps.push((self[iprev..=iyarn]).iter().rev().cloned().collect());
                         iprev = iyarn + 1;
                     }
                 });
@@ -507,11 +574,11 @@ mod prepare_yarn {
         }
     }
 
+    /// 🩺 Test `prepare_yarn` and `cut_yarn`
     #[cfg(test)]
-    /// Test `prepare_yarn` and `cut_yarn`
     mod tests {
         use super::{
-            super::prelude::{Convert, InfoN, Spin},
+            super::prelude::{ColorSpunYarn, InfoN, Spin},
             *,
         };
 
@@ -521,7 +588,7 @@ mod prepare_yarn {
             let n = 3_usize;
             let pins = PinCushion::with_capacity(n);
             let yarns = Yarns::colorized(Spindle::spin(n.spool_size()));
-            let prepared = yarns.prepare(-1, 3, 0, &pins);
+            let prepared = yarns.prep(-1, 3, 0, &pins);
             let expected = vec![vec![
                 [5, 1, -1],
                 [5, -1, -1],
@@ -590,22 +657,28 @@ mod prepare_yarn {
 }
 
 /// 🧮 Extend each thread in the loom based on the marked ends from the previous level.
-mod extend_loom_threads {
+mod extend_threads {
     use crate::graph::types::*;
 
     /// Extend each end of each thread in the loom with the segmented, colored and finished yarn.
-    pub trait ExtendThreads {
+    pub trait ExtendLoomThreads {
         /// Extend each end of each thread in the loom with the segmented, colored and finished yarn.
         fn extend_threads(&mut self, warps: Warps);
     }
 
-    impl ExtendThreads for Loom {
+    impl ExtendLoomThreads for Loom {
         fn extend_threads(&mut self, mut warps: Warps) {
             self.iter_mut().for_each(|thread: &mut LoomThread| {
                 for warp in warps.iter_mut().filter(|w| !w.is_empty()) {
                     match (thread[0] == warp[0], thread[thread.len() - 1] == warp[0]) {
-                        (true, _) => thread.extend_thread_front(warp),
-                        (_, true) => thread.extend_thread_back(warp),
+                        (true, _) => {
+                            thread.pop_front();
+                            warp.drain(..).for_each(|item| thread.push_front(item));
+                        }
+                        (_, true) => {
+                            thread.pop_back();
+                            thread.extend(warp.drain(..));
+                        }
                         _ => continue,
                     }
                 }
@@ -616,31 +689,11 @@ mod extend_loom_threads {
         }
     }
 
-    /// traits to extend more than one item to the front or back of the deque.
-    pub trait ExtendThreadFrontBack {
-        /// Extend vec to the front of the deque by pushing each element using `push_front` but skipping the first. Named ExtendFront to disambiguate with ExtendLeft, which usually involves reversing the sequence before extending.
-        fn extend_thread_front(&mut self, pinned: &mut Warp);
-        /// Extend vec to the back of the deque by pushing each element using `push_back` but skipping the first. Named ExtendFront to disambiguate with ExtendLeft, which usually involves reversing the sequence before extending.
-        fn extend_thread_back(&mut self, pinned: &mut Warp);
-    }
-
-    impl ExtendThreadFrontBack for LoomThread {
-        fn extend_thread_front(&mut self, pinned: &mut Warp) {
-            pinned
-                .drain(..)
-                .skip(1)
-                .for_each(|item| self.push_front(item));
-        }
-
-        fn extend_thread_back(&mut self, pinned: &mut Warp) {
-            self.extend(pinned.drain(..).skip(1));
-        }
-    }
-
+    /// 🩺 Test extend threads by constructing a loom extending its threads and checking if the result matches the expected output.
     #[cfg(test)]
     mod tests {
         use super::{
-            super::prelude::{Convert, InfoN, PrepareYarn, Spin},
+            super::prelude::{ColorSpunYarn, InfoN, PrepYarnExtensions, Spin},
             *,
         };
 
@@ -649,9 +702,9 @@ mod extend_loom_threads {
             let n = 2;
             let mut loom = Loom::with_capacity(n.loom_size());
             let yarns = Yarns::colorized(Spindle::spin(n.spool_size()));
-            loom.extend_threads(yarns.prepare(-3, 1, 8, &vec![]));
+            loom.extend_threads(yarns.prep(-3, 1, 8, &vec![]));
             assert_eq!(loom, [[[1, 1, -3], [1, -1, -3], [-1, -1, -3], [-1, 1, -3]]]);
-            loom.extend_threads(yarns.prepare(-1, 3, 0, &vec![[1, 1, -1], [-1, 1, -1]]));
+            loom.extend_threads(yarns.prep(-1, 3, 0, &vec![[1, 1, -1], [-1, 1, -1]]));
             assert_eq!(
                 loom,
                 vec![
@@ -674,97 +727,20 @@ mod extend_loom_threads {
     }
 }
 
-/// 📌 Mark ends for the next level from which to extend the prepared yarn.
-mod mark_thread_ends {
-    use crate::graph::types::*;
-
-    /// Last z-level elevation.
-    pub const LAST_ROW: ScalarXyz = -1;
-
-    /// 📌 Pins are used to carry over the values of each end of each thread in the loom from the previous level to the next. For each thread end `[thread[0], thread[thread.len() - 1]]` in the loom make a pin by adding 2 (length of an edge) to the z-scalar value: `[x, y, z + 2]`. Collect the pins in the cushion for cutting later.
-    pub trait MarkEnds {
-        /// 📌 Pins are used to carry over the values of each end of each thread in the loom from the previous level to the next. For each thread end `[thread[0], thread[thread.len() - 1]]` in the loom make a pin by adding 2 (length of an edge) to the z-scalar value: `[x, y, z + 2]`. Collect the pins in the cushion for cutting later.
-        ///
-        ///---\
-        /// `🪜 loom`: Container on which the threads are extended level by levels using pins as markers to connect the levels.\
-        /// `🔚 last`: Indicates when we are in the last leg of the loop in which it is no longer required to pin the next level\
-        /// ---\
-        ///
-        /// For each thread end in the loom, add a pin corresponding to the V that is adjacent to that end but one z-level up. Collect the a copy of those inserted pins for cutting the yarn later. The purpose of the pins is to connect the previous level to the next. They are always prepared at the end of level and used for the next. If we have a thread `[1, 2, 3, 4, 5]` and let's say the pin above is 0 for 1 and 6 for 5. We would attach the pins to the ends:
-        /// `[0, 1, 2, 3, 4, 5, 6]` and add those pins to the cushion: `[0, 6]` which is later used to cut the sequence from the next level so it can be attached to this thread. let's say we have the yarn for the next level that looks like this: `[0, 10, 20, 30, 40, 6, 16, 26]` we would get the pins from the previous level: `[0, 6]` and cut the finished yarn accordingly such that there is at least two verts in a cut: `[0, 6] ✂️ [0, 10, 20, 30, 40, 6, 16, 26]` would produce `[0, 10, 20, 30, 40] & [6, 16, 26]`: now add that to the thread where the pins match:  `[40, 30, 20, 10, 0][0, 1, 2, 3, 4, 5, 6]+[6, 16, 26]`
-        /// resulting in: `[40, 30, 20, 10, 0, 1, 2, 3, 4, 5, 6, 16, 26]`
-        ///
-        fn pin_threads_to_extend(&mut self, zrow: ScalarXyz) -> PinCushion;
-    }
-
-    impl MarkEnds for Loom {
-        fn pin_threads_to_extend(&mut self, zrow: ScalarXyz) -> PinCushion {
-            match zrow == LAST_ROW {
-                false => self
-                    .iter_mut()
-                    .flat_map(|loom_thread| loom_thread.mark_end())
-                    .collect(),
-                true => PinCushion::with_capacity(0),
-            }
-        }
-    }
-
-    /// Insert pins into each end of each thread in the loom. A pin is the vertex adjacent to and directly above an end. Collect the a copy of all inserted pins to be used for cutting the finished yarn from the next level up.
-    pub trait MarkThreadEnds {
-        /// Insert pins into each end of each thread in the loom. A pin is the vertex adjacent to and directly above an end. Collect the a copy of all inserted pins to be used for cutting the finished yarn from the next level up.
-        fn mark_end(&mut self) -> [V3d; 2];
-    }
-
-    impl MarkThreadEnds for LoomThread {
-        fn mark_end(&mut self) -> [V3d; 2] {
-            let [[x, y, z], [i, j, k]] = [self[0], self[self.len() - 1]];
-            let [front, back] = [[x, y, z + 2], [i, j, k + 2]];
-            self.push_front(front);
-            self.push_back(back);
-            [front, back]
-        }
-    }
-
-    #[cfg(test)]
-    /// Test mark ends by marking ends of a thread.
-    mod tests {
-        use super::*;
-
-        #[test]
-        /// Test that the output from mark end where zrow == -1 should give me an empty pin cushion.
-        fn test_last_row_empty_cushion() {
-            let mut loom = Loom::with_capacity(2);
-            assert_eq!(PinCushion::with_capacity(0), loom.pin_threads_to_extend(-1));
-        }
-
-        #[test]
-        /// Test that the output from mark end where zrow == -1 should give me an empty pin cushion.
-        fn test_mark_end() {
-            let mut thread = LoomThread::new();
-            thread.push_back([0, 0, 0]);
-            thread.push_back([2, 0, 0]);
-            // Thread should now be [[0, 0, 0], [2, 0, 0]]
-            let expected = [[0, 0, 2], [2, 0, 2]];
-            let result = thread.mark_end();
-            assert_eq!(expected, result);
-        }
-    }
-}
-
 /// 🪞 Reflect the half-solution along the z-axis to create the whole.
-mod mirror_loom_threads {
+mod mirror_loom {
     use crate::graph::types::{Loom, Tour};
     use rayon::prelude::*;
 
     /// For each thread in the loom all of whose ends are not adjacent, reflect each thread turning chains into cycles.
     /// Imagine reflecting a row of arcs to form a row of ovals.
-    pub trait Mirrored {
+    pub trait MirrorLoomThreads {
         /// For each thread in the loom all of whose ends are not adjacent, reflect each thread turning chains into cycles.
         /// Imagine reflecting a row of arcs to form a row of ovals.
         fn mirror_threads(&mut self);
     }
 
-    impl Mirrored for Loom {
+    impl MirrorLoomThreads for Loom {
         fn mirror_threads(&mut self) {
             self.par_iter_mut().for_each(|thread| {
                 thread.extend(
@@ -778,8 +754,8 @@ mod mirror_loom_threads {
         }
     }
 
+    /// 🩺 Test if input loom is properly mirrored.
     #[cfg(test)]
-    /// Test if input loom is mirrored.
     mod tests {
         use std::collections::VecDeque;
 
@@ -861,16 +837,17 @@ mod merge_cycles {
             }
         }
 
-        /// Convert data into set of edges using `tuple_windows()` and filter using condition below resulting in only two edges.
+        /// Convert data into set of edges using `tuple_windows()` and filter using condition below resulting at most two edges.
         pub fn edges(&mut self) -> Edges {
             self.data
                 .iter()
                 .tuple_windows()
-                .filter(|(&[_, _, z], &[a, _, c])| {
-                    a == (if self.joined { 1 } else { 3 }) && (z + c).absbit() == self.max_sum_z
+                .find(|(&[x, _, z], &[a, _, c])| {
+                    [x, a] == (if self.joined { [1, 1] } else { [1, 3] })
+                        && (z + c).abs() == self.max_sum_z
                 })
-                .map(|(a, b)| (*a, *b).orient())
-                .collect()
+                .map(|(m, n)| Edges::from([(*m, *n).orient()]))
+                .unwrap()
         }
 
         /// Join the warp with the weft. The bridges change once the warp has been joined once.
@@ -895,34 +872,19 @@ mod merge_cycles {
     pub trait GetWarpEdges {
         /// Construct edges from the Vec and filter.
         /// 'vec![1, 2, 3]' -> `hash_set![(1, 2), (2, 3), (3, 1)]` which is then filtered further to avoid memory waste.
-        fn edges(&self, min_xyz: i16, joined: bool) -> Edges;
+        fn edges(&self, joined: bool) -> Edges;
     }
 
     impl GetWarpEdges for Warp {
-        fn edges(&self, max_sum_z: i16, joined: bool) -> Edges {
-            self.iter()
+        fn edges(&self, joined: bool) -> Edges {
+            self[(self.len() / 3)..]
+                .iter()
                 .tuple_windows()
-                .filter(|(&[x, y, z], &[_, b, c])| {
-                    (x == 3 || x == 1)
-                        && (y == 3 || y == 1)
-                        && b == (if joined { 1 } else { 3 })
-                        && (z + c).absbit() == max_sum_z
+                .filter_map(|(&[x, y, z], &[a, b, c])| {
+                    ([b, x, y] == (if joined { [1, 3, 1] } else { [3, 1, 3] }))
+                        .then_some(([x, y, z], [a, b, c]).orient())
                 })
-                .map(|(a, b)| (*a, *b).orient())
                 .collect()
-        }
-    }
-
-    /// Get the absolute value of an i16 using bitwise operations.
-    pub trait AbsBit<T> {
-        /// Get the absolute value of an i16 using bitwise operations.
-        fn absbit(self) -> T;
-    }
-
-    impl AbsBit<i16> for i16 {
-        fn absbit(self) -> i16 {
-            let mask = self >> 15;
-            (self ^ mask) - mask
         }
     }
 
@@ -934,10 +896,9 @@ mod merge_cycles {
 
     impl OrientAscending for Edge {
         fn orient(self) -> Edge {
-            let (m, n) = self;
-            match m < n {
-                true => (m, n),
-                false => (n, m),
+            match (self.0, self.1) {
+                (m, n) if m < n => (m, n),
+                (m, n) => (n, m),
             }
         }
     }
@@ -952,7 +913,7 @@ mod merge_cycles {
         /// Using the & set operator, find the common bridge i.e., intersection between a set of edges and a set of adjacent edges and return the next() from the set.
         /// This version automatically reverses the edge as it is always the case (removed the check).
         fn bridge(&self, (weft_lhs, weft_rhs): &WeftEdge) -> BridgeEdge {
-            let (warp_lhs, warp_rhs) = (self & &((*weft_lhs, *weft_rhs).eadjs()))
+            let (warp_lhs, warp_rhs) = (&((*weft_lhs, *weft_rhs).eadjs()) & self)
                 .into_iter()
                 .next()
                 .unwrap();
@@ -961,7 +922,7 @@ mod merge_cycles {
     }
 
     impl Bridge<WarpEdges> for WeftEdges {
-        fn bridge(&self, other: &WeftEdges) -> BridgeEdge {
+        fn bridge(&self, other: &WarpEdges) -> BridgeEdge {
             (self & &other.eadjs()).into_iter().next().unwrap()
         }
     }
@@ -975,15 +936,15 @@ mod merge_cycles {
     impl GetEadjs for WarpEdges {
         fn eadjs(&self) -> Edges {
             self.par_iter()
-                .filter(|([x, y, _], _)| (x == &3 || x == &1) && (y == &3 || y == &1))
-                .map(|&(q, r)| {
-                    let ([a, b, c], [x, y, z]) = (q, r);
-                    match (a != x, b != y, c != z) {
-                        (true, false, false) => ([a, b - 2, c], [x, y - 2, z]),
-                        (false, true, false) => ([a, b, c + 2], [x, y, z + 2]),
-                        (false, false, true) => ([a - 2, b, c], [x - 2, y, z]),
-                        _ => panic!("NOT A VALID EDGE"),
-                    }
+                .filter_map(|&([a, b, c], [x, y, z])| {
+                    ((x == 3 || x == 1) && (y == 3 || y == 1)).then_some(
+                        match (a != x, b != y, c != z) {
+                            (true, false, false) => ([a, b - 2, c], [x, y - 2, z]),
+                            (false, true, false) => ([a, b, c + 2], [x, y, z + 2]),
+                            (false, false, true) => ([a - 2, b, c], [x - 2, y, z]),
+                            _ => panic!("NOT A VALID EDGE"),
+                        },
+                    )
                 })
                 .collect()
         }
@@ -1023,8 +984,8 @@ mod merge_cycles {
         }
     }
 
+    /// 🩺 Test AlignToEdge.
     #[cfg(test)]
-    /// Test AlignToEdge.
     mod tests {
         use super::*;
 
@@ -1152,8 +1113,8 @@ pub mod certify_solution {
         }
     }
 
+    /// 🩺 Test if the given sequences are broken.
     #[cfg(test)]
-    /// Test if the given sequences are broken.
     mod tests {
         use super::*;
         #[test]
@@ -1192,7 +1153,7 @@ pub mod certify_solution {
     }
 }
 
-/// 🗒️ Module for exporting the solution to a .csv file where each row is x, y, z.
+/// 📤 Module for exporting the solution to a .csv file where each row is x, y, z.
 pub mod csv_out {
     use crate::graph::types::Solution;
     use serde::Serialize;
@@ -1207,7 +1168,7 @@ pub mod csv_out {
         pub(crate) z: i16,
     }
 
-    /// Save solution to `file_path` as a `.csv` file with the columns `x`, `y`, `z` for each axis.
+    /// Save solution to `file_path` as a `.csv` file with the columns headers `x`, `y`, `z` representing the scalar value for each axis.
     pub trait SerializeToCsv<T> {
         /// Save solution to `file_path` as a `.csv` file with the columns `x`, `y`, `z` for each axis.\
         /// A python module using `pandas` and `plotly` to create a 3d line plot is available [here](https://github.com/discocube/plot_solution).
@@ -1238,8 +1199,8 @@ pub mod csv_out {
         }
     }
 
+    /// 🩺 Run weave to create solution and convert that solution to csv in root/test.csv, then check if file exists in specified location and then delete it.
     #[cfg(test)]
-    /// Run weave to create solution and convert that solution to csv in root/test.csv, then check if file exists in specified location and the delete it.
     mod tests {
         use std::{fs, path::Path};
 
