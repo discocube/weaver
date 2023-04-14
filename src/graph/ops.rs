@@ -1,9 +1,11 @@
 /// 🎶 Collection of modules used to build Hamiltonian cycle.
 pub mod prelude {
+    pub use super::super::types::*;
     pub use super::{
-        color_yarn::ColorSpunYarn, extend_threads::ExtendLoomThreads, graph_info_from_n::InfoN,
-        merge_cycles::*, mirror_loom::MirrorLoomThreads, pin_threads::PinThreadEnds,
-        prepare_yarn::PrepYarnExtensions, spin_yarn::Spin,
+        certify_solution::*, color_yarn::ColorSpunYarn, extend_threads::ExtendLoomThreads,
+        graph_info_from_n::InfoN, merge_cycles::*, mirror_loom::MirrorLoomThreads,
+        pin_threads::PinThreadEnds, prepare_yarn::PrepYarnExtensions, prepare_yarn::SegmentYarn,
+        spin_yarn::Spin,
     };
 }
 
@@ -80,40 +82,6 @@ pub mod graph_info_from_n {
                 (1..=self).map(|_n| spool_length - (2 * _n * (_n + 1))),
             )
             .collect()
-        }
-    }
-
-    /// 🩺 Test overflow and expected outputs for n.get().
-    #[cfg(test)]
-    mod tests {
-        use super::*;
-
-        #[test]
-        /// Test behavior if input is max_i16
-        fn test_info_n_with_max_i16() {
-            let max_i16 = std::i16::MAX as Count;
-            assert_eq!(max_i16.loom_size() as i16, 16384);
-            assert_eq!(max_i16.get_max_absumv() as i16, -1);
-            assert_eq!(max_i16.get_max_xyz(), -3);
-            assert_eq!(max_i16.get_max_xyz_from_order(), 57);
-            assert_eq!(max_i16.get_min_xyz(), max_i16.get_max_xyz() - 4);
-            assert_eq!(max_i16.get_n_from_order(), 29);
-            assert_eq!(max_i16.get_order_from_n(), 46912496074752);
-            assert_eq!(max_i16.spool_size(), (32767, 2147418112));
-        }
-
-        #[test]
-        /// Test behavior if input is max_i16
-        fn test_info_n_pass() {
-            let n = 100;
-            assert_eq!(n.loom_size() as i16, 51);
-            assert_eq!(n.get_max_absumv(), 201);
-            assert_eq!(n.get_max_xyz(), 199);
-            assert_eq!((n + 60).get_max_xyz_from_order(), 7);
-            assert_eq!(n.get_min_xyz(), n.get_max_xyz() - 4);
-            assert_eq!((n - 20).get_n_from_order(), 3);
-            assert_eq!(n.get_order_from_n(), 1373600);
-            assert_eq!(n.spool_size(), (n, 20200));
         }
     }
 }
@@ -239,114 +207,6 @@ mod spin_yarn {
             [self[0] + a, self[1] + b]
         }
     }
-
-    /// 🩺 Test if result from `spin` is same as expected.
-    #[cfg(test)]
-    mod tests {
-        use super::*;
-
-        #[test]
-        /// Test the result of spin whose input is determined by a call to InfoN.
-        /// Results provided are zigzag hamiltonian chains from outer to inner vert.
-        fn test_spin() {
-            // Spin cube.
-            let spun = <Vec<V2d> as Spin>::spin(1_usize.spool_size());
-            let expected = [[1, 1], [1, -1], [-1, -1], [-1, 1]];
-            assert_eq!(spun, expected);
-            // Spin order 32 with 12 verts at zlevel -1.
-            let spun = <Vec<V2d> as Spin>::spin(2_usize.spool_size());
-            let expected = [
-                [3, 1],
-                [3, -1],
-                [1, -1],
-                [1, -3],
-                [-1, -3],
-                [-1, -1],
-                [-3, -1],
-                [-3, 1],
-                [-1, 1],
-                [-1, 3],
-                [1, 3],
-                [1, 1],
-            ];
-            assert_eq!(spun, expected);
-            // Spin order 80 with 24 verts at zlevel -1.
-            let spun = <Vec<V2d> as Spin>::spin(3_usize.spool_size());
-            let expected = [
-                [5, 1],
-                [5, -1],
-                [3, -1],
-                [3, -3],
-                [1, -3],
-                [1, -5],
-                [-1, -5],
-                [-1, -3],
-                [-3, -3],
-                [-3, -1],
-                [-5, -1],
-                [-5, 1],
-                [-3, 1],
-                [-3, 3],
-                [-1, 3],
-                [-1, 5],
-                [1, 5],
-                [1, 3],
-                [3, 3],
-                [3, 1],
-                [1, 1],
-                [1, -1],
-                [-1, -1],
-                [-1, 1],
-            ];
-            assert_eq!(spun, expected);
-        }
-
-        #[test]
-        /// Test that spinner gives the right zigzag that matches the right index.
-        fn test_spinner() {
-            let (n, spool_size) = 2_usize.spool_size();
-            let (mut spinner, (mut iturn, mut zigzag)) = Spinner::start(n);
-            (0..spool_size - 1).for_each(|idx| {
-                let yx = spinner.yxyx.switch();
-                if iturn == idx {
-                    match idx {
-                        3 => assert_eq!(&[[-2, 0], [0, -2]], zigzag),
-                        7 => assert_eq!(&[[-2, 0], [0, 2]], zigzag),
-                        9 => assert_eq!(&[[2, 0], [0, 2]], zigzag),
-                        11 => assert_eq!(&[[2, 0], [0, -2]], zigzag),
-                        _ => panic!("Wrong index"),
-                    }
-                    (iturn, zigzag) = spinner.turn(yx);
-                };
-            });
-        }
-
-        #[test]
-        /// Test that the switch gives alternating outputs of 1 and 0
-        fn test_switch() {
-            let mut to_cycle = [1, 0].iter().cycle();
-            for _ in 0..1000 {
-                assert_eq!(1, to_cycle.switch());
-                assert_eq!(0, to_cycle.switch());
-            }
-            let mut to_cycle = ['a', 'b'].iter().cycle();
-            for _ in 0..1000 {
-                assert_eq!('a', to_cycle.switch());
-                assert_eq!('b', to_cycle.switch());
-            }
-        }
-
-        #[test]
-        /// Test the add vec to self
-        fn test_add_vec() {
-            let result = [0, 1].add([1, 0]);
-            assert_eq!(result, [1, 1]);
-            let result = [-1, -1].add([1, 1]);
-            assert_eq!(result, [0, 0]);
-            let result = [-13, 11].add([100, 12]);
-            assert_eq!(result, [87, 23]);
-        }
-    }
 }
 
 /// 🌈 Convert spun yarn to a 2-dimensional ndarray. Assign to blue. Copy, reflect and translate blue, assign to red.
@@ -375,49 +235,6 @@ mod color_yarn {
             let blue = Yarn::from(spool.drain(..).collect::<Spindle>());
             let red = blue.dot(&array![[-1, 0], [0, -1]]) + array![[0, 2]];
             Yarns::from([(3, blue), (1, red)])
-        }
-    }
-
-    /// 🩺 Test if colored yarn can be converted by and forth from blue to red and back.
-    #[cfg(test)]
-    mod tests {
-        use super::*;
-
-        #[test]
-        /// Test that that we can go back to blue from red by reversing the operations resulting in reverting red back to blue.
-        fn test_colorized() {
-            let spool = vec![
-                [5, 1],
-                [5, -1],
-                [3, -1],
-                [3, -3],
-                [1, -3],
-                [1, -5],
-                [-1, -5],
-                [-1, -3],
-                [-3, -3],
-                [-3, -1],
-                [-5, -1],
-                [-5, 1],
-                [-3, 1],
-                [-3, 3],
-                [-1, 3],
-                [-1, 5],
-                [1, 5],
-                [1, 3],
-                [3, 3],
-                [3, 1],
-                [1, 1],
-                [1, -1],
-                [-1, -1],
-                [-1, 1],
-            ];
-            let colored_yarns = <Yarns as ColorSpunYarn>::color_spun(spool);
-            let blue = &colored_yarns[&3].clone();
-            let red = &colored_yarns[&1].clone();
-            let new_shifted_blue = red + array![[0, -2]];
-            let expect_blue = new_shifted_blue.dot(&array![[-1, 0], [0, -1]]);
-            assert_eq!(blue, expect_blue);
         }
     }
 }
@@ -456,42 +273,10 @@ pub mod pin_threads {
                 .collect()
         }
     }
-
-    /// 🩺 Test mark ends by marking ends of a thread.
-    #[cfg(test)]
-    mod tests {
-        use super::*;
-
-        #[test]
-        /// Test that the output from mark end where zrow == -1 should give me an empty pin cushion.
-        fn test_last_row_empty_cushion() {
-            let mut loom = Loom::with_capacity(2);
-            assert_eq!(PinCushion::with_capacity(0), loom.pin_thread_ends());
-        }
-
-        #[test]
-        /// Test that the output from mark end where zrow == -1 should give me an empty pin cushion.
-        fn test_mark_end() {
-            let mut thread = LoomThread::new();
-            thread.push_back([0, 0, 0]);
-            thread.push_back([2, 0, 0]);
-            // Thread should now be [[0, 0, 0], [2, 0, 0]]
-            let expected = [[0, 0, 2], [2, 0, 2]];
-            let result = {
-                let [[x, y, z], [i, j, k]] = [thread[0], thread[thread.len() - 1]];
-                let [front, back] = [[x, y, z + 2], [i, j, k + 2]];
-                thread.push_front(front);
-                thread.push_back(back);
-                [front, back]
-            };
-
-            assert_eq!(expected, result);
-        }
-    }
 }
 
 /// 👨‍🍳 Prepare yarn for extending onto the loom threads. Cut using pins and affix yarn to the current elevation.
-mod prepare_yarn {
+pub mod prepare_yarn {
     use crate::graph::types::*;
     use itertools::Itertools;
     use ndarray::s;
@@ -512,20 +297,16 @@ mod prepare_yarn {
         /// Cut finished yarn if `pins` is not empty, `cut_yarn(_yarn, &pins)`. Return the finished (cut or not) yarn.
         ///
         ///
-        fn prep(&self, zpos: i16, color: u8, len: usize, pins: &PinCushion) -> Warps;
+        fn prep(&self, zpos: i16, color: u8, len: usize) -> Warp;
     }
 
     impl PrepYarnExtensions for Yarns {
-        fn prep(&self, zpos: i16, color: u8, start_idx: usize, pins: &PinCushion) -> Warps {
-            match self[&color]
+        fn prep(&self, zpos: i16, color: u8, start_idx: usize) -> Warp {
+            self[&color]
                 .slice(s![start_idx.., ..])
                 .outer_iter()
                 .map(|row| [row[0], row[1], zpos])
                 .collect_vec()
-            {
-                yarn if !pins.is_empty() => yarn.cut_using(pins),
-                yarn => vec![yarn],
-            }
         }
     }
 
@@ -546,112 +327,36 @@ mod prepare_yarn {
         /// Before cutting add the z-value to the 2-dimensional vector, thereby making it 3d and positioning the yarn to the current level on the z-axis.
         ///
         ///
-        fn cut_using(self, pins: &PinCushion) -> Warps;
+        fn split(self, pins: &PinCushion) -> Warps;
     }
 
     impl SegmentYarn for Warp {
-        fn cut_using(self, pins: &PinCushion) -> Warps {
-            let mut warps = Warps::with_capacity(pins.len() + 1);
-            let last_iyarn = self.len() - 1;
-            let last_ipin = pins.len() - 1;
-            let mut iprev = 0_usize;
-            self.iter()
-                .enumerate()
-                .filter_map(|(idx, point)| (pins.contains(point)).then_some(idx))
-                .enumerate()
-                .for_each(|(ipin, iyarn)| {
-                    if ipin == last_ipin && iyarn != last_iyarn {
-                        warps.push(self[iyarn..].to_vec());
-                        if let Some(s) = self.get(iprev..iyarn).filter(|s| !s.is_empty()) {
-                            warps.push(s.iter().rev().cloned().collect())
-                        };
-                    } else {
-                        warps.push((self[iprev..=iyarn]).iter().rev().cloned().collect());
-                        iprev = iyarn + 1;
-                    }
-                });
-            warps
-        }
-    }
-
-    /// 🩺 Test `prepare_yarn` and `cut_yarn`
-    #[cfg(test)]
-    mod tests {
-        use super::{
-            super::prelude::{ColorSpunYarn, InfoN, Spin},
-            *,
-        };
-
-        #[test]
-        /// Test by getting the requested color and slice of that color and if it has mapped it to a Vec<[i16; 3]>.
-        fn test_prepare_yarn() {
-            let n = 3_usize;
-            let pins = PinCushion::with_capacity(n);
-            let yarns = Yarns::color_spun(Spindle::spin(n.spool_size()));
-            let prepared = yarns.prep(-1, 3, 0, &pins);
-            let expected = vec![vec![
-                [5, 1, -1],
-                [5, -1, -1],
-                [3, -1, -1],
-                [3, -3, -1],
-                [1, -3, -1],
-                [1, -5, -1],
-                [-1, -5, -1],
-                [-1, -3, -1],
-                [-3, -3, -1],
-                [-3, -1, -1],
-                [-5, -1, -1],
-                [-5, 1, -1],
-                [-3, 1, -1],
-                [-3, 3, -1],
-                [-1, 3, -1],
-                [-1, 5, -1],
-                [1, 5, -1],
-                [1, 3, -1],
-                [3, 3, -1],
-                [3, 1, -1],
-                [1, 1, -1],
-                [1, -1, -1],
-                [-1, -1, -1],
-                [-1, 1, -1],
-            ]];
-            assert_eq!(prepared, expected);
-        }
-
-        #[test]
-        /// Test by cutting a sequence using pins.
-        fn test_cut_using() {
-            let pins = vec![[1, 1, -1], [-1, 1, -1]];
-            let to_cut: Warp = vec![
-                [3, 1, -1],
-                [3, -1, -1],
-                [1, -1, -1],
-                [1, -3, -1],
-                [-1, -3, -1],
-                [-1, -1, -1],
-                [-3, -1, -1],
-                [-3, 1, -1],
-                [-1, 1, -1],
-                [-1, 3, -1],
-                [1, 3, -1],
-                [1, 1, -1],
-            ];
-            let warps = to_cut.cut_using(&pins);
-            let expected = vec![
-                vec![
-                    [-1, 1, -1],
-                    [-3, 1, -1],
-                    [-3, -1, -1],
-                    [-1, -1, -1],
-                    [-1, -3, -1],
-                    [1, -3, -1],
-                    [1, -1, -1],
-                    [3, -1, -1],
-                    [3, 1, -1],
-                ],
-                vec![[1, 1, -1], [1, 3, -1], [-1, 3, -1]],
-            ];
-            assert_eq!(warps, expected);
+        fn split(self, pins: &PinCushion) -> Warps {
+            match !pins.is_empty() {
+                true => {
+                    let mut warps = Warps::with_capacity(pins.len() + 1);
+                    let last_iyarn = self.len() - 1;
+                    let last_ipin = pins.len() - 1;
+                    let mut iprev = 0_usize;
+                    self.iter()
+                        .enumerate()
+                        .filter_map(|(idx, point)| (pins.contains(point)).then_some(idx))
+                        .enumerate()
+                        .for_each(|(ipin, iyarn)| {
+                            if ipin == last_ipin && iyarn != last_iyarn {
+                                warps.push(self[iyarn..].to_vec());
+                                if let Some(s) = self.get(iprev..iyarn).filter(|s| !s.is_empty()) {
+                                    warps.push(s.iter().rev().cloned().collect())
+                                };
+                            } else {
+                                warps.push((self[iprev..=iyarn]).iter().rev().cloned().collect());
+                                iprev = iyarn + 1;
+                            }
+                        });
+                    warps
+                }
+                false => vec![self],
+            }
         }
     }
 }
@@ -688,43 +393,6 @@ mod extend_threads {
             });
         }
     }
-
-    /// 🩺 Test extend threads by constructing a loom extending its threads and checking if the result matches the expected output.
-    #[cfg(test)]
-    mod tests {
-        use super::{
-            super::prelude::{ColorSpunYarn, InfoN, PrepYarnExtensions, Spin},
-            *,
-        };
-
-        #[test]
-        fn test_extend_threads() {
-            let n = 2;
-            let mut loom = Loom::with_capacity(n.loom_size());
-            let yarns = Yarns::color_spun(Spindle::spin(n.spool_size()));
-            loom.extend_threads(yarns.prep(-3, 1, 8, &vec![]));
-            assert_eq!(loom, [[[1, 1, -3], [1, -1, -3], [-1, -1, -3], [-1, 1, -3]]]);
-            loom.extend_threads(yarns.prep(-1, 3, 0, &vec![[1, 1, -1], [-1, 1, -1]]));
-            assert_eq!(
-                loom,
-                vec![
-                    vec![[1, 1, -3], [1, -1, -3], [-1, -1, -3], [-1, 1, -3]],
-                    vec![
-                        [-1, 1, -1],
-                        [-3, 1, -1],
-                        [-3, -1, -1],
-                        [-1, -1, -1],
-                        [-1, -3, -1],
-                        [1, -3, -1],
-                        [1, -1, -1],
-                        [3, -1, -1],
-                        [3, 1, -1]
-                    ],
-                    vec![[1, 1, -1], [1, 3, -1], [-1, 3, -1]]
-                ]
-            );
-        }
-    }
 }
 
 /// 🪞 Reflect the half-solution along the z-axis to create the whole.
@@ -751,39 +419,6 @@ mod mirror_loom {
                         .collect::<Tour>(),
                 )
             });
-        }
-    }
-
-    /// 🩺 Test if input loom is properly mirrored.
-    #[cfg(test)]
-    mod tests {
-        use std::collections::VecDeque;
-
-        use super::*;
-
-        #[test]
-        /// Create a loom and see if the it one thread is mirrored.
-        fn test_mirror_threads() {
-            let mut loom = Loom::with_capacity(1);
-            let mut expected_loom = Loom::with_capacity(1);
-            loom.push(VecDeque::from(vec![
-                [1, 1, -1],
-                [1, -1, -1],
-                [-1, -1, -1],
-                [-1, 1, -1],
-            ]));
-            expected_loom.push(VecDeque::from(vec![
-                [1, 1, -1],
-                [1, -1, -1],
-                [-1, -1, -1],
-                [-1, 1, -1],
-                [-1, 1, 1],
-                [-1, -1, 1],
-                [1, -1, 1],
-                [1, 1, 1],
-            ]));
-            loom.mirror_threads();
-            assert_eq!(loom, expected_loom);
         }
     }
 }
@@ -838,6 +473,7 @@ mod merge_cycles {
         }
 
         /// Convert data into set of edges using `tuple_windows()` and filter using condition below resulting at most two edges.
+        /// We are looking for only one edge so we use find to stop iterating over self.data once that one edge has been found.
         pub fn edges(&mut self) -> Edges {
             self.data
                 .iter()
@@ -851,13 +487,18 @@ mod merge_cycles {
         }
 
         /// Join the warp with the weft. The bridges change once the warp has been joined once.
+        /// Append the warp to the end of the rotated weft.
+        /// Once joined a different set of edges to used as bridges is valid.
+        /// As cycles are joined level by level we can calculate the predicted location/elevation of the bridge edge
+        /// using self.max_sum_z which is incremented each time a sequence is joined.
         pub fn join(&mut self, warp: &mut Warp) {
             self.data.append(warp);
-            if !self.joined {
-                self.joined = true;
-                self.max_abs_z -= 2;
-            } else {
-                self.max_abs_z -= 4;
+            match self.joined {
+                true => self.max_abs_z -= 4,
+                false => {
+                    self.joined = true;
+                    self.max_abs_z -= 2;
+                }
             }
             self.max_sum_z = self.max_abs_z * 2 - 2;
         }
@@ -877,6 +518,7 @@ mod merge_cycles {
 
     impl GetWarpEdges for Warp {
         fn edges(&self, joined: bool) -> Edges {
+            // The needed edge is located after the first third so let's start there.
             self[(self.len() / 3)..]
                 .iter()
                 .tuple_windows()
@@ -981,25 +623,6 @@ mod merge_cycles {
                 }
                 (idx_lhs, _) => self.rotate_left(idx_lhs),
             }
-        }
-    }
-
-    /// 🩺 Test AlignToEdge.
-    #[cfg(test)]
-    mod tests {
-        use super::*;
-
-        #[test]
-        fn test_align_to() {
-            let mut v = vec![0, 1, 2, 3, 4, 5];
-            v.align_to((4, 3));
-            assert_eq!(v, vec![4, 5, 0, 1, 2, 3]);
-            v.align_to((0, 1));
-            assert_eq!(v, vec![0, 5, 4, 3, 2, 1]);
-            // Should give a different result as this case was removed as this doesn't occur in this algo.
-            v.align_to((1, 0));
-            assert_ne!(v, vec![1, 2, 3, 4, 5, 0]);
-            assert_eq!(v, vec![1, 0, 5, 4, 3, 2]);
         }
     }
 }
@@ -1112,49 +735,10 @@ pub mod certify_solution {
             n == 2 || n == -2
         }
     }
-
-    /// 🩺 Test if the given sequences are broken.
-    #[cfg(test)]
-    mod tests {
-        use super::*;
-        #[test]
-        fn test_certify_broken() {
-            // not long enough.
-            let mut sol: Solution = vec![[1, 1, -1], [1, -1, -1], [-1, -1, -1], [-1, 1, -1]];
-            assert_eq!(SequenceID::Broken, sol.certify(8, 3));
-            // too duplicates.
-            sol = vec![[1, 1, -1], [1, -1, -1], [-1, -1, -1], [-1, -1, -1]];
-            assert_eq!(SequenceID::Broken, sol.certify(8, 3));
-            // right length but duplicates.
-            sol = vec![
-                [1, 1, -1],
-                [-1, -1, -1],
-                [-1, -1, -1],
-                [-1, -1, -1],
-                [-1, -1, -1],
-                [-1, -1, -1],
-                [1, -1, -1],
-                [-1, -1, -1],
-            ];
-            assert_eq!(SequenceID::Broken, sol.certify(8, 3));
-            // absumv too much.
-            sol = vec![
-                [1, 1, -7],
-                [-1, -1, -1],
-                [-1, -1, -9],
-                [-7, -1, -1],
-                [-1, -7, -1],
-                [-1, -1, -1],
-                [1, -9, -1],
-                [-9, -1, -1],
-            ];
-            assert_eq!(SequenceID::Broken, sol.certify(8, 3));
-        }
-    }
 }
 
 /// 📤 Module for exporting the solution to a .csv file where each row is x, y, z.
-pub mod csv_out {
+pub mod serialize_csv {
     use crate::graph::types::Solution;
     use serde::Serialize;
     use std::error::Error;
@@ -1198,24 +782,452 @@ pub mod csv_out {
             Ok(())
         }
     }
+}
 
-    /// 🩺 Run weave to create solution and convert that solution to csv in root/test.csv, then check if file exists in specified location and then delete it.
-    #[cfg(test)]
-    mod tests {
-        use std::{fs, path::Path};
+///!
+///! TESTS
+///!
+///!
+///!
+///!
+/// 🩺 Test overflow and expected outputs for n.get().
+#[cfg(test)]
+mod tests_graph_info_from_n {
+    use super::prelude::*;
 
-        use super::*;
-        use crate::graph::weave::weave;
+    #[test]
+    /// Test behavior if input is max_i16
+    fn test_info_n_with_max_i16() {
+        let max_i16 = std::i16::MAX as Count;
+        assert_eq!(max_i16.loom_size() as i16, 16384);
+        assert_eq!(max_i16.get_max_absumv() as i16, -1);
+        assert_eq!(max_i16.get_max_xyz(), -3);
+        assert_eq!(max_i16.get_max_xyz_from_order(), 57);
+        assert_eq!(max_i16.get_min_xyz(), max_i16.get_max_xyz() - 4);
+        assert_eq!(max_i16.get_n_from_order(), 29);
+        assert_eq!(max_i16.get_order_from_n(), 46912496074752);
+        assert_eq!(max_i16.spool_size(), (32767, 2147418112));
+    }
 
-        #[test]
-        fn test_csv_output() {
-            let solution = weave(1);
-            solution.serialize_to_csv("test.csv").unwrap();
-            let path = Path::new("test.csv");
-            assert!(path.exists() && path.is_file());
-            if path.exists() && path.is_file() {
-                fs::remove_file(path).unwrap();
-            }
+    #[test]
+    /// Test behavior if input is max_i16
+    fn test_info_n_pass() {
+        let n = 100;
+        assert_eq!(n.loom_size() as i16, 51);
+        assert_eq!(n.get_max_absumv(), 201);
+        assert_eq!(n.get_max_xyz(), 199);
+        assert_eq!((n + 60).get_max_xyz_from_order(), 7);
+        assert_eq!(n.get_min_xyz(), n.get_max_xyz() - 4);
+        assert_eq!((n - 20).get_n_from_order(), 3);
+        assert_eq!(n.get_order_from_n(), 1373600);
+        assert_eq!(n.spool_size(), (n, 20200));
+    }
+}
+
+/// 🩺 Test if result from `spin` is same as expected.
+#[cfg(test)]
+mod tests_spin_yarn {
+    use super::{
+        prelude::{InfoN, Spin, V2d},
+        spin_yarn::{AddVec, Spinner, Switch},
+    };
+
+    #[test]
+    /// Test the result of spin whose input is determined by a call to InfoN.
+    /// Results provided are zigzag hamiltonian chains from outer to inner vert.
+    fn test_spin() {
+        // Spin cube.
+        let spun = <Vec<V2d> as Spin>::spin(1_usize.spool_size());
+        let expected = [[1, 1], [1, -1], [-1, -1], [-1, 1]];
+        assert_eq!(spun, expected);
+        // Spin order 32 with 12 verts at zlevel -1.
+        let spun = <Vec<V2d> as Spin>::spin(2_usize.spool_size());
+        let expected = [
+            [3, 1],
+            [3, -1],
+            [1, -1],
+            [1, -3],
+            [-1, -3],
+            [-1, -1],
+            [-3, -1],
+            [-3, 1],
+            [-1, 1],
+            [-1, 3],
+            [1, 3],
+            [1, 1],
+        ];
+        assert_eq!(spun, expected);
+        // Spin order 80 with 24 verts at zlevel -1.
+        let spun = <Vec<V2d> as Spin>::spin(3_usize.spool_size());
+        let expected = [
+            [5, 1],
+            [5, -1],
+            [3, -1],
+            [3, -3],
+            [1, -3],
+            [1, -5],
+            [-1, -5],
+            [-1, -3],
+            [-3, -3],
+            [-3, -1],
+            [-5, -1],
+            [-5, 1],
+            [-3, 1],
+            [-3, 3],
+            [-1, 3],
+            [-1, 5],
+            [1, 5],
+            [1, 3],
+            [3, 3],
+            [3, 1],
+            [1, 1],
+            [1, -1],
+            [-1, -1],
+            [-1, 1],
+        ];
+        assert_eq!(spun, expected);
+    }
+
+    #[test]
+    /// Test that spinner gives the right zigzag that matches the right index.
+    fn test_spinner() {
+        let (n, spool_size) = 2_usize.spool_size();
+        let (mut spinner, (mut iturn, mut zigzag)) = Spinner::start(n);
+        (0..spool_size - 1).for_each(|idx| {
+            let yx = spinner.yxyx.switch();
+            if iturn == idx {
+                match idx {
+                    3 => assert_eq!(&[[-2, 0], [0, -2]], zigzag),
+                    7 => assert_eq!(&[[-2, 0], [0, 2]], zigzag),
+                    9 => assert_eq!(&[[2, 0], [0, 2]], zigzag),
+                    11 => assert_eq!(&[[2, 0], [0, -2]], zigzag),
+                    _ => panic!("Wrong index"),
+                }
+                (iturn, zigzag) = spinner.turn(yx);
+            };
+        });
+    }
+
+    #[test]
+    /// Test that the switch gives alternating outputs of 1 and 0
+    fn test_switch() {
+        let mut to_cycle = [1, 0].iter().cycle();
+        for _ in 0..1000 {
+            assert_eq!(1, to_cycle.switch());
+            assert_eq!(0, to_cycle.switch());
+        }
+        let mut to_cycle = ['a', 'b'].iter().cycle();
+        for _ in 0..1000 {
+            assert_eq!('a', to_cycle.switch());
+            assert_eq!('b', to_cycle.switch());
+        }
+    }
+
+    #[test]
+    /// Test the add vec to self
+    fn test_add_vec() {
+        let result = [0, 1].add([1, 0]);
+        assert_eq!(result, [1, 1]);
+        let result = [-1, -1].add([1, 1]);
+        assert_eq!(result, [0, 0]);
+        let result = [-13, 11].add([100, 12]);
+        assert_eq!(result, [87, 23]);
+    }
+}
+
+/// 🩺 Test if colored yarn can be converted by and forth from blue to red and back.
+#[cfg(test)]
+mod tests_color_yarn {
+    use super::color_yarn::ColorSpunYarn;
+    use super::prelude::Yarns;
+    use ndarray::array;
+
+    #[test]
+    /// Test that that we can go back to blue from red by reversing the operations resulting in reverting red back to blue.
+    fn test_colorized() {
+        let spool = vec![
+            [5, 1],
+            [5, -1],
+            [3, -1],
+            [3, -3],
+            [1, -3],
+            [1, -5],
+            [-1, -5],
+            [-1, -3],
+            [-3, -3],
+            [-3, -1],
+            [-5, -1],
+            [-5, 1],
+            [-3, 1],
+            [-3, 3],
+            [-1, 3],
+            [-1, 5],
+            [1, 5],
+            [1, 3],
+            [3, 3],
+            [3, 1],
+            [1, 1],
+            [1, -1],
+            [-1, -1],
+            [-1, 1],
+        ];
+        let colored_yarns = <Yarns as ColorSpunYarn>::color_spun(spool);
+        let blue = &colored_yarns[&3].clone();
+        let red = &colored_yarns[&1].clone();
+        let new_shifted_blue = red + array![[0, -2]];
+        let expect_blue = new_shifted_blue.dot(&array![[-1, 0], [0, -1]]);
+        assert_eq!(blue, expect_blue);
+    }
+}
+
+/// 🩺 Test `prepare_yarn` and `cut_yarn`
+#[cfg(test)]
+mod tests_prepare_yarn {
+    use super::prelude::*;
+
+    #[test]
+    /// Test by getting the requested color and slice of that color and if it has mapped it to a Vec<[i16; 3]>.
+    fn test_prepare_yarn() {
+        let n = 3_usize;
+        let pins = PinCushion::with_capacity(n);
+        let yarns = Yarns::color_spun(Spindle::spin(n.spool_size()));
+        let prepared = yarns.prep(-1, 3, 0).split(&pins);
+        let expected = vec![vec![
+            [5, 1, -1],
+            [5, -1, -1],
+            [3, -1, -1],
+            [3, -3, -1],
+            [1, -3, -1],
+            [1, -5, -1],
+            [-1, -5, -1],
+            [-1, -3, -1],
+            [-3, -3, -1],
+            [-3, -1, -1],
+            [-5, -1, -1],
+            [-5, 1, -1],
+            [-3, 1, -1],
+            [-3, 3, -1],
+            [-1, 3, -1],
+            [-1, 5, -1],
+            [1, 5, -1],
+            [1, 3, -1],
+            [3, 3, -1],
+            [3, 1, -1],
+            [1, 1, -1],
+            [1, -1, -1],
+            [-1, -1, -1],
+            [-1, 1, -1],
+        ]];
+        assert_eq!(prepared, expected);
+    }
+
+    #[test]
+    /// Test by cutting a sequence using pins.
+    fn test_cut_using() {
+        let pins = vec![[1, 1, -1], [-1, 1, -1]];
+        let to_cut: Warp = vec![
+            [3, 1, -1],
+            [3, -1, -1],
+            [1, -1, -1],
+            [1, -3, -1],
+            [-1, -3, -1],
+            [-1, -1, -1],
+            [-3, -1, -1],
+            [-3, 1, -1],
+            [-1, 1, -1],
+            [-1, 3, -1],
+            [1, 3, -1],
+            [1, 1, -1],
+        ];
+        let warps = to_cut.split(&pins);
+        let expected = vec![
+            vec![
+                [-1, 1, -1],
+                [-3, 1, -1],
+                [-3, -1, -1],
+                [-1, -1, -1],
+                [-1, -3, -1],
+                [1, -3, -1],
+                [1, -1, -1],
+                [3, -1, -1],
+                [3, 1, -1],
+            ],
+            vec![[1, 1, -1], [1, 3, -1], [-1, 3, -1]],
+        ];
+        assert_eq!(warps, expected);
+    }
+}
+
+/// 🩺 Test mark ends by marking ends of a thread.
+#[cfg(test)]
+mod tests_pin_threads {
+    use super::prelude::*;
+
+    #[test]
+    /// Test that the output from mark end where zrow == -1 should give me an empty pin cushion.
+    fn test_last_row_empty_cushion() {
+        let mut loom = Loom::with_capacity(2);
+        assert_eq!(PinCushion::with_capacity(0), loom.pin_thread_ends());
+    }
+
+    #[test]
+    /// Test that the output from mark end where zrow == -1 should give me an empty pin cushion.
+    fn test_mark_end() {
+        let mut thread = LoomThread::new();
+        thread.push_back([0, 0, 0]);
+        thread.push_back([2, 0, 0]);
+        // Thread should now be [[0, 0, 0], [2, 0, 0]]
+        let expected = [[0, 0, 2], [2, 0, 2]];
+        let result = {
+            let [[x, y, z], [i, j, k]] = [thread[0], thread[thread.len() - 1]];
+            let [front, back] = [[x, y, z + 2], [i, j, k + 2]];
+            thread.push_front(front);
+            thread.push_back(back);
+            [front, back]
+        };
+
+        assert_eq!(expected, result);
+    }
+}
+
+/// 🩺 Test extend threads by constructing a loom extending its threads and checking if the result matches the expected output.
+#[cfg(test)]
+mod tests_extend_threads {
+    use super::prelude::*;
+
+    #[test]
+    fn test_extend_threads() {
+        let n = 2;
+        let mut loom = Loom::with_capacity(n.loom_size());
+        let yarns = Yarns::color_spun(Spindle::spin(n.spool_size()));
+        loom.extend_threads(yarns.prep(-3, 1, 8).split(&vec![]));
+        assert_eq!(loom, [[[1, 1, -3], [1, -1, -3], [-1, -1, -3], [-1, 1, -3]]]);
+        loom.extend_threads(yarns.prep(-1, 3, 0).split(&vec![[1, 1, -1], [-1, 1, -1]]));
+        assert_eq!(
+            loom,
+            vec![
+                vec![[1, 1, -3], [1, -1, -3], [-1, -1, -3], [-1, 1, -3]],
+                vec![
+                    [-1, 1, -1],
+                    [-3, 1, -1],
+                    [-3, -1, -1],
+                    [-1, -1, -1],
+                    [-1, -3, -1],
+                    [1, -3, -1],
+                    [1, -1, -1],
+                    [3, -1, -1],
+                    [3, 1, -1]
+                ],
+                vec![[1, 1, -1], [1, 3, -1], [-1, 3, -1]]
+            ]
+        );
+    }
+}
+
+/// 🩺 Test if input loom is properly mirrored.
+#[cfg(test)]
+mod tests_mirror_loom {
+    use super::prelude::*;
+    use std::collections::VecDeque;
+
+    #[test]
+    /// Create a loom and see if the it one thread is mirrored.
+    fn test_mirror_threads() {
+        let mut loom = Loom::with_capacity(1);
+        let mut expected_loom = Loom::with_capacity(1);
+        loom.push(VecDeque::from(vec![
+            [1, 1, -1],
+            [1, -1, -1],
+            [-1, -1, -1],
+            [-1, 1, -1],
+        ]));
+        expected_loom.push(VecDeque::from(vec![
+            [1, 1, -1],
+            [1, -1, -1],
+            [-1, -1, -1],
+            [-1, 1, -1],
+            [-1, 1, 1],
+            [-1, -1, 1],
+            [1, -1, 1],
+            [1, 1, 1],
+        ]));
+        loom.mirror_threads();
+        assert_eq!(loom, expected_loom);
+    }
+}
+
+/// 🩺 Test AlignToEdge.
+#[cfg(test)]
+mod tests_merge_cycles {
+    use super::prelude::AlignToEdge;
+
+    #[test]
+    fn test_align_to() {
+        let mut v = vec![0, 1, 2, 3, 4, 5];
+        v.align_to((4, 3));
+        assert_eq!(v, vec![4, 5, 0, 1, 2, 3]);
+        v.align_to((0, 1));
+        assert_eq!(v, vec![0, 5, 4, 3, 2, 1]);
+        // Should give a different result as this case was removed as this doesn't occur in this algo.
+        v.align_to((1, 0));
+        assert_ne!(v, vec![1, 2, 3, 4, 5, 0]);
+        assert_eq!(v, vec![1, 0, 5, 4, 3, 2]);
+    }
+}
+
+/// 🩺 Test if the given sequences are broken.
+#[cfg(test)]
+mod tests_certify_solution {
+    use super::prelude::*;
+    #[test]
+    fn test_certify_broken() {
+        // not long enough.
+        let mut sol: Solution = vec![[1, 1, -1], [1, -1, -1], [-1, -1, -1], [-1, 1, -1]];
+        assert_eq!(SequenceID::Broken, sol.certify(8, 3));
+        // too duplicates.
+        sol = vec![[1, 1, -1], [1, -1, -1], [-1, -1, -1], [-1, -1, -1]];
+        assert_eq!(SequenceID::Broken, sol.certify(8, 3));
+        // right length but duplicates.
+        sol = vec![
+            [1, 1, -1],
+            [-1, -1, -1],
+            [-1, -1, -1],
+            [-1, -1, -1],
+            [-1, -1, -1],
+            [-1, -1, -1],
+            [1, -1, -1],
+            [-1, -1, -1],
+        ];
+        assert_eq!(SequenceID::Broken, sol.certify(8, 3));
+        // absumv too much.
+        sol = vec![
+            [1, 1, -7],
+            [-1, -1, -1],
+            [-1, -1, -9],
+            [-7, -1, -1],
+            [-1, -7, -1],
+            [-1, -1, -1],
+            [1, -9, -1],
+            [-9, -1, -1],
+        ];
+        assert_eq!(SequenceID::Broken, sol.certify(8, 3));
+    }
+}
+
+/// 🩺 Run weave to create solution and convert that solution to csv in root/test.csv, then check if file exists in specified location and then delete it.
+#[cfg(test)]
+mod tests_serialize_csv {
+    use crate::graph::{ops::serialize_csv::SerializeToCsv, weave::weave};
+    use std::{fs, path::Path};
+
+    #[test]
+    fn test_serialize_csvput() {
+        let solution = weave(1);
+        solution.serialize_to_csv("test.csv").unwrap();
+        let path = Path::new("test.csv");
+        assert!(path.exists() && path.is_file());
+        if path.exists() && path.is_file() {
+            fs::remove_file(path).unwrap();
         }
     }
 }
