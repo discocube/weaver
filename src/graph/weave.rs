@@ -1,4 +1,4 @@
-use super::{ops::prelude::*, types::*};
+use super::ops::prelude::*;
 
 /// 🪡 Weave a Hamiltonian cycle by building chains level by level bottom up halfway up the graph. Mirror chains to form cycles for subsequent joining of weft with each warp in the loom until only the weft remains. A construction algorithm for describing the discocube, a techno-upgrade of the discoball 🪩 that's still a discoball but reflects the intertwined complexity of our algorithmically connected world. A disco ball fits well in a 1920's ballroom, but what fits well in a techno hall? \
 ///
@@ -15,6 +15,9 @@ use super::{ops::prelude::*, types::*};
 ///```
 ///pub fn weave(n: usize) -> Solution {
 ///
+///    //  Create a loom instance with a specific size from InfoN.
+///    let mut loom = Loom::with_capacity(n.loom_size());
+///
 ///    // Convert to ndarray & assign to blue. Copy/reflect/translate blue & assign to red.
 ///    let yarns = Yarns::colorized(Spindle::spin(n.spool_size()));
 ///
@@ -25,13 +28,19 @@ use super::{ops::prelude::*, types::*};
 ///        let pins = loom.pin_thread_ends();
 ///
 ///        // Extend each thread end w/ segmented yarn using pins for cutting.
-///        loom.extend_threads(yarns.finish(z, color, size, &pins));
+///        // prep: get requested color and cut from yarns from idx. Add the zrow to the 2d vector to position the yarn to the elevation.
+///        // split: using pins, split the finished yarn so that the lhs of each sequence matches to a thread end in the loom.
+///        loom.extend_threads(yarns.prep(zrow, color, idx).split(&pins));
 ///    });
 ///
-///    // Mirror loom's threads to form subcycles from subchains for subsequent merging.
+///    // Mirror each thread in loom to form cycles from chains for subsequent cycle merging.
+///    // ◡ + ◠ = ◯
+///    // Loom before:  ◡ ◡ ◡ ◡ ◡ ◡ ◡ ◡ + ◠ ◠ ◠ ◠ ◠ ◠ ◠ ◠
+///    // Loom after:   ◯ ◯ ◯ ◯ ◯ ◯ ◯ ◯
 ///    loom.mirror_threads();
 ///
 ///    // Split weft from the loom leaving only the warps.
+///    // solution = ((((weft + warp) + warp) + warp) + warp)
 ///    let (mut weft, mut loom) = loom.prepare_merging(n);
 ///
 ///    // Iterate over each warp in the loom and incorporate into the weft.
@@ -40,6 +49,8 @@ use super::{ops::prelude::*, types::*};
 ///        // Get edges which are also valid bridges
 ///        let warp_edges = warp.edges(weft.max_sum_z, weft.joined);
 ///
+///        // A bridge is an edge that shares an adjacent edge with another sequence and used
+///        // as a bridge to join two cycles.
 ///        // Get the bridge edge on the weft to join to with the bridge edge of the warp.
 ///        let weft_bridge = weft.edges().bridge(&warp_edges);
 ///
@@ -72,7 +83,7 @@ use super::{ops::prelude::*, types::*};
 ///
 ///spin_yarn::Spin ─────────────────────➤  Spindle::spin()
 ///
-///color_yarn::ColorSpunYarn ───────────➤  Yarns::colorized()
+///color_yarn::ColorSpunYarn ───────────➤  Yarns::color_spun()
 ///
 ///pin_threads::PinThreadEnds ──────────➤  loom.pin_thread_ends()
 ///
@@ -92,10 +103,10 @@ use super::{ops::prelude::*, types::*};
 ///```
 pub fn weave(n: usize) -> Solution {
     let mut loom = Loom::with_capacity(n.loom_size());
-    let yarns = Yarns::colorized(Spindle::spin(n.spool_size()));
+    let yarns = Yarns::color_spun(Spindle::spin(n.spool_size()));
     n.zrow_color_idx().iter().for_each(|&((zrow, color), idx)| {
         let pins = loom.pin_thread_ends();
-        loom.extend_threads(yarns.prep(zrow, color, idx, &pins));
+        loom.extend_threads(yarns.prep(zrow, color, idx).split(&pins));
     });
     loom.mirror_threads();
     let (mut weft, mut loom) = loom.prepare_cycle_merging(n);
