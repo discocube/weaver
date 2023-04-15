@@ -100,7 +100,7 @@ mod spin_yarn {
         [[2, 0], [0, -2]],
     ];
 
-    /// 🪀 Spin a zigzagging-inward-spiralling Hamiltonian chain.
+    /// 🪀 Spin a zigzagging-inward-spiralling Hamiltonian chain using displacement vectors to determine the next step. No backtracking, just a switching of displacement vectors at specific indices to assure the path form is turning always inwards.
     pub trait Spin {
         /// 🪀 Spin a zigzagging-inward-spiralling Hamiltonian chain.
         ///
@@ -388,7 +388,7 @@ mod extend_threads {
                     match (thread[0] == warp[0], thread[thread.len() - 1] == warp[0]) {
                         (true, _) => {
                             thread.pop_front();
-                            warp.drain(..).for_each(|item| thread.push_front(item));
+                            warp.drain(..).for_each(|item| thread.push_front(item));    // Using warp.drain(..).skip(1) is shorter but slower. 
                         }
                         (_, true) => {
                             thread.pop_back();
@@ -423,7 +423,7 @@ mod mirror_loom {
             self.par_iter_mut().for_each(|thread| {
                 thread.extend(
                     thread
-                        .iter()
+                        .par_iter()
                         .rev()
                         .map(|&[x, y, z]| [x, y, -z])
                         .collect::<Tour>(),
@@ -438,7 +438,7 @@ mod merge_cycles {
     use super::{graph_info_from_n::InfoN, serialize_csv::SerializeToCsv};
     use crate::graph::types::*;
     use itertools::Itertools;
-    use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
+    use rayon::prelude::*;
 
     /// Trait responsible for removing the subloops from the Loom and converting each thread from a VecDeque to a Vec and isolating the Weft and the main cycle into which Warps are incorporated.
     pub trait GetWeftWarps {
@@ -448,11 +448,11 @@ mod merge_cycles {
 
     impl GetWeftWarps for Loom {
         fn prepare_cycle_merging(mut self, n: usize) -> (Weft, Warps) {
-            (
+            (   // into_iter() + par_drain() faster than into_par_iter() + par_drain() and into_iter() + drain().
                 Weft::new(self[0].split_off(0), n.get_order_from_n()),
                 self.split_off(1)
                     .into_iter()
-                    .map(|mut data| data.drain(..).collect())
+                    .map(|mut data| data.par_drain(..).collect()) 
                     .collect(),
             )
         }
@@ -461,15 +461,20 @@ mod merge_cycles {
     /// Weft is the main loop into which warps are incorporated.
     #[derive(Clone, Debug)]
     pub struct Weft {
+        // Lead subcycle with which others are joined.
         pub data: Tour,
+        // Indicates whether weft has joined which changes the conditions for valid bridge edges.
         pub joined: bool,
+        // The maximum l1-norm value for this graph. The absolute sum of the furthest vert from origin.
         pub max_abs_z: i16,
+        // Max_abs_z * 2 to represent two z scalar values of an edge which is added together and then the absolute value compared to this value to determine current elevation.
         pub max_sum_z: i16,
     }
 
     impl Weft {
         /// Create a new instance of weft which contains methods that are slightly different from the methods of warps.
         /// Weft is the main loop into which the warps are joined.
+        /// The final size of the solution is preallocated to the weft to avoid reallocations.
         pub fn new(mut data: LoomThread, order: Count) -> Weft {
             let mut preallocated = Warp::with_capacity(order);
             preallocated.extend(data.drain(..));
@@ -488,8 +493,10 @@ mod merge_cycles {
             self.data
                 .iter()
                 .tuple_windows()
+                // find just one edge matching condition use find instead of iterating over entire tupled windows.
                 .find(|(&[x, _, z], &[a, _, c])| {
-                    [x, a] == (if self.joined { [1, 1] } else { [1, 3] })
+                    [x, a] == if self.joined { [1, 1] } else { [1, 3] }
+                        // Matching to the current merge elevation which always increases. 
                         && (z + c).abs() == self.max_sum_z
                 })
                 .map(|(m, n)| Edges::from([(*m, *n).orient()]))
@@ -539,7 +546,7 @@ mod merge_cycles {
                 .iter()
                 .tuple_windows()
                 .filter_map(|(&[x, y, z], &[a, b, c])| {
-                    ([b, x, y] == (if joined { [1, 3, 1] } else { [3, 1, 3] }))
+                    ([b, x, y] == if joined { [1, 3, 1] } else { [3, 1, 3] })
                         .then_some(([x, y, z], [a, b, c]).orient())
                 })
                 .collect()
@@ -596,6 +603,7 @@ mod merge_cycles {
             self.par_iter()
                 .filter_map(|&([a, b, c], [x, y, z])| {
                     ((x == 3 || x == 1) && (y == 3 || y == 1)).then_some(
+                        // Determine along which axis this edge lies to get parallel edge.
                         match (a != x, b != y, c != z) {
                             (true, false, false) => ([a, b - 2, c], [x, y - 2, z]),
                             (false, true, false) => ([a, b, c + 2], [x, y, z + 2]),
@@ -611,6 +619,7 @@ mod merge_cycles {
     impl GetEadjs for WeftEdge {
         fn eadjs(&self) -> Edges {
             let ([a, b, c], [x, y, z]) = *self;
+            // Determine along which axis this edge lies to get parallel edge.
             match (a != x, b != y, c != z) {
                 (true, false, false) => [([a, b + 2, c], [x, y + 2, z])].into(),
                 (false, true, false) => [([a + 2, b, c], [x + 2, y, z])].into(),
