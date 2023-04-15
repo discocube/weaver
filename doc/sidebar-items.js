@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":[["find_solutions",""],["main",""]],"mod":[["graph",""]]};

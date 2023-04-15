@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"mod":[["defs",""],["utils",""],["weave",""]]};

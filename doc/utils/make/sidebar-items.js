@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":[["adjacency_map",""],["get_zlevel_order",""],["make_adjacency",""],["make_xs_adjacency",""],["make_xs_graph",""],["make_z_adjacency_map",""],["make_z_graph",""],["shift_xy",""],["shift_xyz",""],["vertices",""],["vertices_for_z_adjacency",""]]};
