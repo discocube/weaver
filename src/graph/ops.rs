@@ -41,6 +41,7 @@ pub mod graph_info_from_n {
         fn loom_size(self) -> Count {
             (self / 2) + 1
         }
+
         fn get_max_absumv(self) -> ScalarXyz {
             (self * 2 + 1) as ScalarXyz
         }
@@ -122,7 +123,7 @@ mod spin_yarn {
             let mut spool = vec![[n.get_max_xyz(), 1]; spool_size];
             let (mut spinner, (mut iturn, mut zigzag)) = Spinner::start(n);
             (0..spool_size - 1).for_each(|idx| {
-                let yx = spinner.yxyx.switch();
+                let yx = *spinner.yxyx.next().unwrap();
                 if iturn == idx {
                     (iturn, zigzag) = spinner.turn(yx);
                 };
@@ -132,7 +133,7 @@ mod spin_yarn {
         }
     }
 
-    /// A struct responsible for providing the right set of displacement vectors so that from an initial vector, an inward-turning zigzag is produced
+    /// A struct responsible for providing the right set of displacement vectors to add to the current step to produce the next so that from an initial vector, an inward-turning zigzag is produced
     pub struct Spinner<'a> {
         /// Value of n.
         pub n: Count,
@@ -181,18 +182,6 @@ mod spin_yarn {
 
         fn get_zigzags() -> std::iter::Cycle<core::slice::Iter<'static, [V2d; 2]>> {
             DISP_VECTORS.iter().cycle()
-        }
-    }
-
-    /// Conveniece trait for an infinite iterator that doesn't actually need unwrapping, so we'll hide it.
-    pub trait Switch<T> {
-        /// Convenience fn to avoid the verbosity of self.next().unwrap() at least for an infinite iterator, where it shouldn't be necessary, so we'll hide it.
-        fn switch(&mut self) -> T;
-    }
-
-    impl<'a, T: Clone + Copy> Switch<T> for std::iter::Cycle<std::slice::Iter<'a, T>> {
-        fn switch(&mut self) -> T {
-            *self.next().unwrap()
         }
     }
 
@@ -388,7 +377,8 @@ mod extend_threads {
                     match (thread[0] == warp[0], thread[thread.len() - 1] == warp[0]) {
                         (true, _) => {
                             thread.pop_front();
-                            warp.drain(..).for_each(|item| thread.push_front(item));    // Using warp.drain(..).skip(1) is shorter but slower. 
+                            warp.drain(..).for_each(|item| thread.push_front(item));
+                            // Using warp.drain(..).skip(1) is shorter but slower.
                         }
                         (_, true) => {
                             thread.pop_back();
@@ -448,11 +438,12 @@ mod merge_cycles {
 
     impl GetWeftWarps for Loom {
         fn prepare_cycle_merging(mut self, n: usize) -> (Weft, Warps) {
-            (   // into_iter() + par_drain() faster than into_par_iter() + par_drain() and into_iter() + drain().
+            (
+                // into_iter() + par_drain() faster than into_par_iter() + par_drain() and into_iter() + drain().
                 Weft::new(self[0].split_off(0), n.get_order_from_n()),
                 self.split_off(1)
                     .into_iter()
-                    .map(|mut data| data.par_drain(..).collect()) 
+                    .map(|mut data| data.par_drain(..).collect())
                     .collect(),
             )
         }
@@ -465,7 +456,7 @@ mod merge_cycles {
         pub data: Tour,
         // Indicates whether weft has joined which changes the conditions for valid bridge edges.
         pub joined: bool,
-        // The maximum l1-norm value for this graph. The absolute sum of the furthest vert from origin.
+        // The maximum absolute scalar value for z.
         pub max_abs_z: i16,
         // Max_abs_z * 2 to represent two z scalar values of an edge which is added together and then the absolute value compared to this value to determine current elevation.
         pub max_sum_z: i16,
@@ -854,7 +845,7 @@ mod tests_graph_info_from_n {
 mod tests_spin_yarn {
     use super::{
         prelude::{InfoN, Spin, V2d},
-        spin_yarn::{AddVec, Spinner, Switch},
+        spin_yarn::{AddVec, Spinner},
     };
 
     #[test]
@@ -919,7 +910,7 @@ mod tests_spin_yarn {
         let (n, spool_size) = 2_usize.spool_size();
         let (mut spinner, (mut iturn, mut zigzag)) = Spinner::start(n);
         (0..spool_size - 1).for_each(|idx| {
-            let yx = spinner.yxyx.switch();
+            let yx = *spinner.yxyx.next().unwrap();
             if iturn == idx {
                 match idx {
                     3 => assert_eq!(&[[-2, 0], [0, -2]], zigzag),
@@ -931,21 +922,6 @@ mod tests_spin_yarn {
                 (iturn, zigzag) = spinner.turn(yx);
             };
         });
-    }
-
-    #[test]
-    /// Test that the switch gives alternating outputs of 1 and 0
-    fn test_switch() {
-        let mut to_cycle = [1, 0].iter().cycle();
-        for _ in 0..1000 {
-            assert_eq!(1, to_cycle.switch());
-            assert_eq!(0, to_cycle.switch());
-        }
-        let mut to_cycle = ['a', 'b'].iter().cycle();
-        for _ in 0..1000 {
-            assert_eq!('a', to_cycle.switch());
-            assert_eq!('b', to_cycle.switch());
-        }
     }
 
     #[test]
