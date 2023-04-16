@@ -19,6 +19,7 @@ pub mod graph_types {
 
 /// Make Graph from n. No longer used to construct cycle owing to heavy memory use.
 /// Helpful for knowing how the graph is actually constructed and can also be used to verify the solution apart from the methods provided.
+/// Might be removed later.
 pub mod make {
     use itertools::{iproduct, Itertools};
     use ndarray::{arr2, Array2};

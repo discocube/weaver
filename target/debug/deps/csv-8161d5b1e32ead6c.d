@@ -1,0 +1,15 @@
+/home/rommelo/Repos/weaver_final/weaver/target/debug/deps/csv-8161d5b1e32ead6c.rmeta: /home/rommelo/.cargo/registry/src/github.com-1ecc6299db9ec823/csv-1.2.1/src/lib.rs /home/rommelo/.cargo/registry/src/github.com-1ecc6299db9ec823/csv-1.2.1/src/byte_record.rs /home/rommelo/.cargo/registry/src/github.com-1ecc6299db9ec823/csv-1.2.1/src/cookbook.rs /home/rommelo/.cargo/registry/src/github.com-1ecc6299db9ec823/csv-1.2.1/src/debug.rs /home/rommelo/.cargo/registry/src/github.com-1ecc6299db9ec823/csv-1.2.1/src/deserializer.rs /home/rommelo/.cargo/registry/src/github.com-1ecc6299db9ec823/csv-1.2.1/src/error.rs /home/rommelo/.cargo/registry/src/github.com-1ecc6299db9ec823/csv-1.2.1/src/reader.rs /home/rommelo/.cargo/registry/src/github.com-1ecc6299db9ec823/csv-1.2.1/src/serializer.rs /home/rommelo/.cargo/registry/src/github.com-1ecc6299db9ec823/csv-1.2.1/src/string_record.rs /home/rommelo/.cargo/registry/src/github.com-1ecc6299db9ec823/csv-1.2.1/src/tutorial.rs /home/rommelo/.cargo/registry/src/github.com-1ecc6299db9ec823/csv-1.2.1/src/writer.rs
+
+/home/rommelo/Repos/weaver_final/weaver/target/debug/deps/csv-8161d5b1e32ead6c.d: /home/rommelo/.cargo/registry/src/github.com-1ecc6299db9ec823/csv-1.2.1/src/lib.rs /home/rommelo/.cargo/registry/src/github.com-1ecc6299db9ec823/csv-1.2.1/src/byte_record.rs /home/rommelo/.cargo/registry/src/github.com-1ecc6299db9ec823/csv-1.2.1/src/cookbook.rs /home/rommelo/.cargo/registry/src/github.com-1ecc6299db9ec823/csv-1.2.1/src/debug.rs /home/rommelo/.cargo/registry/src/github.com-1ecc6299db9ec823/csv-1.2.1/src/deserializer.rs /home/rommelo/.cargo/registry/src/github.com-1ecc6299db9ec823/csv-1.2.1/src/error.rs /home/rommelo/.cargo/registry/src/github.com-1ecc6299db9ec823/csv-1.2.1/src/reader.rs /home/rommelo/.cargo/registry/src/github.com-1ecc6299db9ec823/csv-1.2.1/src/serializer.rs /home/rommelo/.cargo/registry/src/github.com-1ecc6299db9ec823/csv-1.2.1/src/string_record.rs /home/rommelo/.cargo/registry/src/github.com-1ecc6299db9ec823/csv-1.2.1/src/tutorial.rs /home/rommelo/.cargo/registry/src/github.com-1ecc6299db9ec823/csv-1.2.1/src/writer.rs
+
+/home/rommelo/.cargo/registry/src/github.com-1ecc6299db9ec823/csv-1.2.1/src/lib.rs:
+/home/rommelo/.cargo/registry/src/github.com-1ecc6299db9ec823/csv-1.2.1/src/byte_record.rs:
+/home/rommelo/.cargo/registry/src/github.com-1ecc6299db9ec823/csv-1.2.1/src/cookbook.rs:
+/home/rommelo/.cargo/registry/src/github.com-1ecc6299db9ec823/csv-1.2.1/src/debug.rs:
+/home/rommelo/.cargo/registry/src/github.com-1ecc6299db9ec823/csv-1.2.1/src/deserializer.rs:
+/home/rommelo/.cargo/registry/src/github.com-1ecc6299db9ec823/csv-1.2.1/src/error.rs:
+/home/rommelo/.cargo/registry/src/github.com-1ecc6299db9ec823/csv-1.2.1/src/reader.rs:
+/home/rommelo/.cargo/registry/src/github.com-1ecc6299db9ec823/csv-1.2.1/src/serializer.rs:
+/home/rommelo/.cargo/registry/src/github.com-1ecc6299db9ec823/csv-1.2.1/src/string_record.rs:
+/home/rommelo/.cargo/registry/src/github.com-1ecc6299db9ec823/csv-1.2.1/src/tutorial.rs:
+/home/rommelo/.cargo/registry/src/github.com-1ecc6299db9ec823/csv-1.2.1/src/writer.rs:
