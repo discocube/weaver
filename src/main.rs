@@ -49,12 +49,12 @@ use std::{
 pub mod graph;
 
 use graph::{
+    extras::debug::get_current_date_time,
     ops::{
         certify_solution::{Certify, SequenceID},
         graph_info_from_n::*,
     },
     types::*,
-    extras::debug::get_current_date_time,
     weave,
 };
 
@@ -98,6 +98,7 @@ pub fn find_solutions(n: usize, repeats: usize) -> Result<Solution, &'static str
             min_dur = dur_solve;
         }
     }
+    // After a billion the amount of data required to certify sequence gets so large... printing to csv and validating is better.
     if order > 100000000 {
         println!(
             "| 🇳 {n:>4} | ⭕️ {order:>10} | 🕗 {:.10} |",
