@@ -463,7 +463,7 @@ mod merge_cycles {
     }
 
     impl Weft {
-        /// Create a new instance of weft which contains methods that are slightly different from the methods of warps.
+        /// Create a new instance of weft which contains methods that are slightly different from those of warps.
         /// Weft is the main loop into which the warps are joined.
         /// The final size of the solution is preallocated to the weft to avoid reallocations.
         pub fn new(mut data: LoomThread, order: Count) -> Weft {
