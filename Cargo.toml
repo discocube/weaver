@@ -5,8 +5,6 @@ edition = "2021"
 
 [dependencies]
 chrono = "0.4.24"
-common_macros = "0.1.1"
-criterion = "0.4.0"
 csv = "1.2.1"
 itertools = "0.10.5"
 ndarray = "0.15.0"
@@ -16,4 +14,4 @@ serde = { version = "1", features = ["derive"] }
 [profile.release]
 debug = true
 lto = true
-opt-level = 3
+opt-level = 2
