@@ -14,7 +14,7 @@
 - [Running Times up to 8 billion](#section-f)
 - [Licensing](#section-g)
 <br>
-
+<br>
 ![Very first discocube in Berghain](imgs/ako.png)
 <sup><sub><em>Me and Discocube in Berghain</em></sup></sub>
 
@@ -73,7 +73,7 @@ The algorithm presented in this repository is the least complex, making it the f
 This algorithm has no while loops and will terminate after a definitive set of steps. The strength of this algorithm is knowing exactly when, where, and what is to happen, thereby reducing the amount of calculations needed (which is surprising as the creative process in creating this was anything but deterministic). It is a construction algorithm, constructing the path layer by layer until loops are produced, which are then joined using cycle merging. Further optimizations of the algorithm have also discarded the memory-heavy adjacency list, choosing instead to perform individual calculations where needed. Making and solving a graph with over a billion vertices, where n = 1000, won't require a distributed graph engine on the cloud anymore, and it takes a little over ten minutes.
 <br>
 <br>
-
+<br>
 ### Links [↰](#toc)
 ![NP-Completeness explained](https://youtu.be/ctwX--JEzSA)
 
@@ -84,7 +84,7 @@ This algorithm has no while loops and will terminate after a definitive set of s
 *Hexprism Honeycomb Diamond*
 <br>
 <br>
-
+<br>
 <a name="section-b"></a>
 ## digital discocubes  [↰](#toc)
 As each solution is as unique as a fingerprint, or a diamond it allows one to have their own digital version of a discocube, which is also an instruction for building your own.
@@ -96,7 +96,7 @@ As each solution is as unique as a fingerprint, or a diamond it allows one to ha
 The always turning hamiltonian cycle digital discocubes are not produced by the algorithm in this repository, but by another polynomial-time algorithm.
 <br>
 <br>
-
+<br>
 <a name="section-c"></a>
 
 ## Command line usage  [↰](#toc)
@@ -110,12 +110,12 @@ cargo run --release 1 100 1 100
 build > run > make > solve > certify > for each graph starting from 32 to 1.373 million vertices in steps of 1 and run each order 100x.
 <br>
 <br>
-
+<br>
 ## Plotting the solution  [↰](#toc)
 The solution can be plotted using pandas, numpy and plotly. I've put together an easy to use python module: https://github.com/discocube/plot_solution to plot and very the solution visually instead of only programmatically.
 <br>
 <br>
-
+<br>
 <a name="section-e"></a>
 ## Dependencies  [↰](#toc)
 
@@ -132,7 +132,7 @@ This repository is grateful for the availability of the following crates (ordere
 
 <em>For timestamping:</em>
 - [chrono](https://docs.rs/chrono/latest/chrono/): It aims to be a feature-complete superset of the time library.
-
+<br>
 <br>
 <br>
 
@@ -685,7 +685,7 @@ NEW TIMES ABOVE UPDATE WHEN FINISHED.
 ```
 <br>
 <br>
-
+<br>
 ESTIMATED SIZE OF SOLUTION  [↰](#toc):
 
 | ORDER (Billions) | SIZE (GB) |
@@ -709,17 +709,12 @@ ESTIMATED SIZE OF SOLUTION  [↰](#toc):
 | 9                | 52.94     |
 | 9.5              | 55.88     |
 | 10               | 58.82     |
-
 <br>
 <br>
-
+<br>
 <a name="section-g"></a>
 ## Licensing:  [↰](#toc)
 
 This package is licensed under the MIT license.
  
 Thanks for making it this far!
-
-<br>
-<br>
-
