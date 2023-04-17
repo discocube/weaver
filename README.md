@@ -117,7 +117,7 @@ This repository is grateful for the availability of the following crates (ordere
 
 <em>For iterator traits, ndarrays, matrix operations on ndarrays, and parallelizing sequential computations:</em>
 - [itertools](https://docs.rs/itertools/latest/itertools/): Extra iterator adaptors, functions and macros.
-- [rayon](https://docs.rs/rayon/latest/rayon/): An data-parallelism library to parallelize sequential computations whilst guarateeing data-race freedom. 
+- [rayon](https://docs.rs/rayon/latest/rayon/): An data-parallelism library for parallelizing sequential computations whilst guarateeing data-race freedom. 
 - [ndarray](https://docs.rs/ndarray/latest/ndarray/): The ndarray crate provides an n-dimensional container for general elements and for numerics.
 
 <em>For serializing and writing to</em> `.csv` <em>file:</em>
