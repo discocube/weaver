@@ -1,4 +1,9 @@
 <a name="toc"></a>
+
+![Solution to a 79040 node graph](imgs/solution.png)
+*Detail for a Hamiltonian cycle for a graph with 79,040 nodes.*
+
+
 ## Table of Contents
 
 - [About](#section-a)
@@ -88,9 +93,6 @@ As each solution is as unique as a fingerprint, or a diamond it allows one to ha
 *Discocubes as glb, using different mirrored texture yields personalized results and unique reflections meaning each discocube has its own reflection/shadow fingerprint! With millions of combinations available (glass texture/image/color, mirror texture/image/color, edge texture/image/color), the possibilities are endless!*
 
 The always turning hamiltonian cycle digital discocubes are not produced by the algorithm in this repository, but by another polynomial-time algorithm.
-
-![Solution to a 79040 node graph](imgs/solution.png)
-*Detail for a Hamiltonian cycle for a graph with 79,040 nodes.*
 
 [Go back up](#toc)
 <a name="section-c"></a>
