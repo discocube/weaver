@@ -98,14 +98,14 @@ cargo run --release 1 100 1 100
 ```
 build > run > make > solve > certify > for each graph starting from 32 to 1.373 million vertices in steps of 1 and run each order 100x.
 
-<a name="section-c"></a>
+<a name="section-d"></a>
 ## Plotting the solution
 The solution can be plotted using pandas, numpy and plotly. I've put together an easy to use python module: https://github.com/discocube/plot_solution to plot and very the solution visually instead of only programmatically.
 
 ![Very first discocube in Berghain](imgs/ako.png)
 *Me and Discocube in Berghain*
 
-<a name="section-d"></a>
+<a name="section-e"></a>
 ## Dependencies
 
 This repository uses the following crates (ordered by most used) for increasing the speed of the algorithm for which it is grateful:
@@ -122,7 +122,7 @@ This repository uses the following crates (ordered by most used) for increasing 
 <em>For timestamping:</em>
 - [chrono](https://docs.rs/chrono/latest/chrono/): It aims to be a feature-complete superset of the time library.
 
-<a name="section-e"></a>
+<a name="section-f"></a>
 ## Running times
 ![Running times from 8 to over 8 billion vertices](imgs/8_to_8billion.png?raw=true "Runtimes 8 to over 8 billion")
 <small>Running times from 8 to over 8 billion vertices</small>
@@ -692,6 +692,8 @@ ESTIMATED SIZE OF SOLUTION
 | 9                | 52.94     |
 | 9.5              | 55.88     |
 | 10               | 58.82     |
+
+<a name="section-g"></a>
 ## Licensing:
 
 This package is licensed under the MIT license.
