@@ -81,7 +81,7 @@ This algorithm has no while loops and will terminate after a definitive set of s
 <br>
 <br>
 
-### Links:
+### Links [↰](#toc):
 ![NP-Completeness explained](https://youtu.be/ctwX--JEzSA)
 
 ![Discocubes](imgs/dcviews.png?raw=true "Discocubes")
