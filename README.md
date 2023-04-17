@@ -61,6 +61,9 @@ To paraphrase Hauy:
 
 What started as a hack-your-own version of a depth-first search with shortcuts for the discocube graph (solving up to 960 vertices) metastasized into pages of overgrown mixin classes mysteriously coupled to each other like overgrown vines, pushing me deeper and deeper into the underbelly of its mutant tentacles. Although able to solve instances with over a million vertices, the algorithm had the clarity of primordial soup. So, as a sadistic gardener, I painstakingly pruned my own pubicity (my unescapable web of thorny vines) into presentable tiny bonsai trees. So what is a bonsai if not a tree in intimate scope?
 
+![Very first discocube in Berghain](imgs/ako.png)
+*Me and Discocube in Berghain*
+
 The result of this creative process is a family of algorithms developed specifically to solve various graph problems on dodecahedron graphs, 3D grid graphs, and hexprism honeycomb diamond graphs.
 The algorithm presented in this repository is the least complex, making it the fastest. It does the job, solving the Hamiltonian cycle problem for over millions of vertices in seconds and graphing with over a billion vertices in less than an hour and a graph with over 8 billion vertices in less than 5 hours, while other algorithms in the family take longer but also have other objectives, like forming an always-turning cycle with even edge distribution across all axes. But that's beyond the scope of this repository.
 
@@ -106,9 +109,6 @@ build > run > make > solve > certify > for each graph starting from 32 to 1.373 
 <a name="section-d"></a>
 ## Plotting the solution
 The solution can be plotted using pandas, numpy and plotly. I've put together an easy to use python module: https://github.com/discocube/plot_solution to plot and very the solution visually instead of only programmatically.
-
-![Very first discocube in Berghain](imgs/ako.png)
-*Me and Discocube in Berghain*
 
 [Go back to table of contents](#toc)
 <a name="section-e"></a>
