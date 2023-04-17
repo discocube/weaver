@@ -133,8 +133,6 @@ This repository is grateful for the availability of the following crates (ordere
 <em>For timestamping:</em>
 - [chrono](https://docs.rs/chrono/latest/chrono/): It aims to be a feature-complete superset of the time library.
 <br>
-<br>
-<br>
 
 <a name="section-f"></a>
 ## Running times  [↰](#toc)
