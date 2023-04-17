@@ -77,7 +77,7 @@ This algorithm has no while loops and will terminate after a definitive set of s
 ![Hexprism Honeycomb Diamond](imgs/hexhoneydiamond.png?raw=true "Hexprism Honeycomb Diamond")
 *Hexprism Honeycomb Diamond*
 
-[Go back to table of contents](#toc)
+[Go back up](#toc)
 
 <a name="section-b"></a>
 ## digital discocubes
@@ -92,7 +92,7 @@ The always turning hamiltonian cycle digital discocubes are not produced by the 
 ![Solution to a 79040 node graph](imgs/solution.png)
 *Detail for a Hamiltonian cycle for a graph with 79,040 nodes.*
 
-[Go back to table of contents](#toc)
+[Go back up](#toc)
 <a name="section-c"></a>
 
 ## Command line usage
@@ -109,7 +109,7 @@ build > run > make > solve > certify > for each graph starting from 32 to 1.373 
 ## Plotting the solution
 The solution can be plotted using pandas, numpy and plotly. I've put together an easy to use python module: https://github.com/discocube/plot_solution to plot and very the solution visually instead of only programmatically.
 
-[Go back to table of contents](#toc)
+[Go back up](#toc)
 <a name="section-e"></a>
 ## Dependencies
 
@@ -127,7 +127,7 @@ This repository is grateful for the availability of the following crates (ordere
 <em>For timestamping:</em>
 - [chrono](https://docs.rs/chrono/latest/chrono/): It aims to be a feature-complete superset of the time library.
 
-[Go back to table of contents](#toc)
+[Go back up](#toc)
 
 <a name="section-f"></a>
 ## Running times
@@ -701,7 +701,7 @@ ESTIMATED SIZE OF SOLUTION
 | 9.5              | 55.88     |
 | 10               | 58.82     |
 
-[Go back to table of contents](#toc)
+[Go back up](#toc)
 <a name="section-g"></a>
 ## Licensing:
 
