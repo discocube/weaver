@@ -133,10 +133,10 @@ This repository is grateful for the availability of the following crates (ordere
 
 <em>For serializing and writing to</em> `.csv` <em>file:</em>
 - [`csv`](https://docs.rs/csv/latest/csv/)    Fast and flexible CSV reader and writer, with support for Serde.
-- [`serde`](https://docs.rs/serde/latest/serde/)    Framework for serializing and deserializing Rust data structures efficiently and generically. Used by `csv`
+- [`serde`](https://docs.rs/serde/latest/serde/)    Framework for serializing and deserializing Rust data structures efficiently and generically. Used by [`csv`](https://docs.rs/csv/latest/csv/).
 
 <em>For timestamping:</em>
-- [`chrono`](https://docs.rs/chrono/latest/chrono/):    A feature-complete superset of the time library.
+- [`chrono`](https://docs.rs/chrono/latest/chrono/)    A feature-complete superset of the time library.
 <br>
 <br>
 <a name="section-f"></a>
