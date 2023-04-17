@@ -158,7 +158,10 @@ This repository is grateful for the availability of the following crates (ordere
 
 ![Running times from 8 to over 8 billion vertices](https://user-images.githubusercontent.com/93198518/232534045-b193abdf-c32f-469f-9992-6ef0cfab3cfa.png)
 <small>Running times from 8 to over 8 billion vertices</small>
-
+<br>
+[Go back up](#toc)
+<br>
+<br>
 #### Running times for graphs with 8 to over 9 billion vertices (solved in under 2 hours):
 ```
 | 🇳    1 | ⭕️          8 | 🕗 SOLVE: 0.0000097090
@@ -699,7 +702,9 @@ NEW TIMES ABOVE UPDATE WHEN FINISHED.
 | 🇳 1900 | ⭕️ 9159778400 | 🕗 6484.3529332790 |
 
 ```
-
+[Go back up](#toc)
+<br>
+<br>
 
 ESTIMATED SIZE OF SOLUTION
 
