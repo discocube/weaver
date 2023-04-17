@@ -132,7 +132,8 @@ This repository uses the following crates (ordered by most used) for increasing 
 
 <a name="section-f"></a>
 ## Running times
-![Running times from 8 to over 8 billion vertices](imgs/8_to_8billion.png)
+
+![Running times from 8 to over 8 billion vertices](https://user-images.githubusercontent.com/93198518/232534045-b193abdf-c32f-469f-9992-6ef0cfab3cfa.png)
 <small>Running times from 8 to over 8 billion vertices</small>
 
 #### Running times for graphs with 8 to over 9 billion vertices (solved in under 2 hours):
