@@ -1,7 +1,7 @@
 <a name="toc"></a>
 ## Table of Contents
 
-- [Motivation](#section-a)
+- [About](#section-a)
 - [Digital Discocubes](#section-b)
 - [Command Line Usage](#section-c)
 - [Plotting the Solution](#section-d)
