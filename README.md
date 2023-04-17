@@ -76,18 +76,41 @@ The always turning hamiltonian cycle digital discocubes are not produced by the 
 ## Command line usage
 To use the package via the command line, navigate to the root directory of the project in your terminal and run the following command:
 ```
-cargo run --release [Graph start instance] [Graph end instance]
+cargo run --release [Graph start instance] [Graph end instance] [steps] [repeats]
 ```
 ```
-cargo run --release 1 100
+cargo run --release 1 100 1 100
 ```
-build > run > make > solve > certify > for each graph starting from 32 to 1.373 million vertices.
+build > run > make > solve > certify > for each graph starting from 32 to 1.373 million vertices in steps of 1 and run each order 100x.
 
 ## Plotting the solution
 The solution can be plotted using pandas, numpy and plotly. I've put together an easy to use python module: https://github.com/discocube/plot_solution to plot and very the solution visually instead of only programmatically.
 
 ![Very first discocube in Berghain](imgs/ako.png)
 *Me and Discocube in Berghain*
+
+## Dependencies
+
+This repository uses the following crates (ordered by most used) for increasing the speed of the algorithm for which it is grateful:
+
+<em>For iterator traits, ndarrays, matrix operations on ndarrays, and parallelizing sequential computations:</em>
+- [itertools](https://docs.rs/itertools/latest/itertools/): Extra iterator adaptors, functions and macros.
+
+- [rayon](https://docs.rs/rayon/latest/rayon/): An extremely lightweight data-parallelism library making to parallelize sequential computations whilst guarateeing data-race freedom. 
+
+- [ndarray](https://docs.rs/ndarray/latest/ndarray/): The ndarray crate provides an n-dimensional container for general elements and for numerics.
+
+
+<em>For serializing and writing to</em> `.csv` <em>file:</em>
+    
+- [csv](https://docs.rs/csv/latest/csv/): The csv crate provides a fast and flexible CSV reader and writer, with support for Serde.
+
+- [serde](https://docs.rs/serde/latest/serde/): Serde is a framework for serializing and deserializing Rust data structures efficiently and generically.
+
+<em>For timestamping:</em>
+
+- [chrono](https://docs.rs/chrono/latest/chrono/): It aims to be a feature-complete superset of the time library.
+
 
 ## Running times
 ![Running times from 8 to over 8 billion vertices](imgs/8_to_8billion.png?raw=true "Runtimes 8 to over 8 billion")
