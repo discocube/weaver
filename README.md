@@ -18,11 +18,6 @@
 ![Very first discocube in Berghain](imgs/ako.png)
 <sup><sub><em>Me and Discocube in Berghain</em></sup></sub>
 
-
-[☝️ UP](#toc)
-<br>
-<br>
-
 <a name="section-a"></a>
 <small><em>“A great discovery solves a great problem, but there is a grain of discovery in the solution of any problem. Your problem may be modest, but if it challenges your curiosity and brings into play your inventive faculties, and if you solve it by your own means, you may experience the tension and enjoy the triumph of discovery.”</em>
 
@@ -89,13 +84,11 @@ This algorithm has no while loops and will terminate after a definitive set of s
 
 ![Hexprism Honeycomb Diamond](imgs/hexhoneydiamond.png?raw=true "Hexprism Honeycomb Diamond")
 *Hexprism Honeycomb Diamond*
-
-[☝️ UP](#toc)
 <br>
 <br>
 
 <a name="section-b"></a>
-## digital discocubes
+## digital discocubes  [↰](#toc):
 As each solution is as unique as a fingerprint, or a diamond it allows one to have their own digital version of a discocube, which is also an instruction for building your own.
 
 ![Discocube 3640 view](imgs/icy_cube.png?raw=true "icy cube") 
@@ -103,15 +96,12 @@ As each solution is as unique as a fingerprint, or a diamond it allows one to ha
 *Discocubes as glb, using different mirrored texture yields personalized results and unique reflections meaning each discocube has its own reflection/shadow fingerprint! With millions of combinations available (glass texture/image/color, mirror texture/image/color, edge texture/image/color), the possibilities are endless!*
 
 The always turning hamiltonian cycle digital discocubes are not produced by the algorithm in this repository, but by another polynomial-time algorithm.
-
-
-[☝️ UP](#toc)
 <br>
 <br>
 
 <a name="section-c"></a>
 
-## Command line usage
+## Command line usage  [↰](#toc):
 To use the package via the command line, navigate to the root directory of the project in your terminal and run the following command:
 ```
 cargo run --release [Graph start instance] [Graph end instance] [steps] [repeats]
@@ -120,23 +110,16 @@ cargo run --release [Graph start instance] [Graph end instance] [steps] [repeats
 cargo run --release 1 100 1 100
 ```
 build > run > make > solve > certify > for each graph starting from 32 to 1.373 million vertices in steps of 1 and run each order 100x.
-
-[☝️ UP](#toc)
 <br>
 <br>
 
-<a name="section-d"></a>
-
-
-## Plotting the solution
+## Plotting the solution  [↰](#toc):
 The solution can be plotted using pandas, numpy and plotly. I've put together an easy to use python module: https://github.com/discocube/plot_solution to plot and very the solution visually instead of only programmatically.
-
-[☝️ UP](#toc)
 <br>
 <br>
 
 <a name="section-e"></a>
-## Dependencies
+## Dependencies  [↰](#toc):
 
 This repository is grateful for the availability of the following crates (ordered by most to least used).
 
@@ -152,21 +135,17 @@ This repository is grateful for the availability of the following crates (ordere
 <em>For timestamping:</em>
 - [chrono](https://docs.rs/chrono/latest/chrono/): It aims to be a feature-complete superset of the time library.
 
-
-[☝️ UP](#toc)
 <br>
 <br>
 
 <a name="section-f"></a>
-## Running times
+## Running times  [↰](#toc):
 
 ![Running times from 8 to over 8 billion vertices](https://user-images.githubusercontent.com/93198518/232534045-b193abdf-c32f-469f-9992-6ef0cfab3cfa.png)
-<small>Running times from 8 to over 8 billion vertices</small>
-<br>
-[☝️ UP](#toc)
+<small>Running times from 8 to over 8 billion vertices</small> 
 <br>
 <br>
-#### Running times for graphs with 8 to over 9 billion vertices (solved in under 2 hours):
+#### Running times for graphs with 8 to over 9 billion vertices (solved in under 2 hours):  [↰](#toc):
 ```
 | 🇳    1 | ⭕️          8 | 🕗 SOLVE: 0.0000097090
 | 🇳    2 | ⭕️         32 | 🕗 SOLVE: 0.0000107500
@@ -706,11 +685,10 @@ NEW TIMES ABOVE UPDATE WHEN FINISHED.
 | 🇳 1900 | ⭕️ 9159778400 | 🕗 6484.3529332790 |
 
 ```
-[☝️ UP](#toc)
 <br>
 <br>
 
-ESTIMATED SIZE OF SOLUTION
+ESTIMATED SIZE OF SOLUTION  [↰](#toc):
 
 | ORDER (Billions) | SIZE (GB) |
 |:-----------------|:----------|
@@ -734,19 +712,16 @@ ESTIMATED SIZE OF SOLUTION
 | 9.5              | 55.88     |
 | 10               | 58.82     |
 
-
-[☝️ UP](#toc)
 <br>
 <br>
 
 <a name="section-g"></a>
-## Licensing:
+## Licensing:  [↰](#toc):
 
 This package is licensed under the MIT license.
  
 Thanks for making it this far!
 
-[☝️ UP](#toc)
 <br>
 <br>
 
