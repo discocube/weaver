@@ -681,11 +681,12 @@ NEW TIMES ABOVE UPDATE WHEN FINISHED.
 | 🇳 1900 | ⭕️ 9159778400 | 🕗 6484.3529332790 |
 
 ```
-```
+
 <br>
 <br>
 <br>
-ESTIMATED SIZE OF SOLUTION  [↰](#toc):
+
+ESTIMATED SIZE OF SOLUTION
 
 | ORDER (Billions) | SIZE (GB) |
 |:-----------------|:----------|
@@ -712,6 +713,7 @@ ESTIMATED SIZE OF SOLUTION  [↰](#toc):
 <br>
 <br>
 <a name="section-g"></a>
+
 ## Licensing  [↰](#toc)
 
 This package is licensed under the MIT license.
