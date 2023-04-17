@@ -136,10 +136,11 @@ This repository is grateful for the availability of the following crates (ordere
 - [`serde`](https://docs.rs/serde/latest/serde/)    Serde is a framework for serializing and deserializing Rust data structures efficiently and generically.
 
 <em>For timestamping:</em>
-- ['chrono'](https://docs.rs/chrono/latest/chrono/):    It aims to be a feature-complete superset of the time library.
+- [`chrono`](https://docs.rs/chrono/latest/chrono/):    It aims to be a feature-complete superset of the time library.
 <br>
 <br>
 <a name="section-f"></a>
+
 ## Running times  [⇪](#toc)
 
 ![Running times from 8 to over 8 billion vertices](https://user-images.githubusercontent.com/93198518/232534045-b193abdf-c32f-469f-9992-6ef0cfab3cfa.png)
