@@ -1,7 +1,7 @@
 <a name="toc"></a>
 
 ![Solution to a 79040 node graph](imgs/solution.png)
-<p style="font-size: .5em;"><caption><em>Detail for a Hamiltonian cycle for a graph with 79,040 nodes.</em></caption></p>
+<sup><sub><em>Detail for a Hamiltonian cycle for a graph with 79,040 nodes.</em></sup></sub>
 
 
 ## Table of Contents
@@ -16,7 +16,7 @@
 <br>
 
 ![Very first discocube in Berghain](imgs/ako.png)
-<caption><em>Me and Discocube in Berghain</small></caption>
+<sup><sub><em>Me and Discocube in Berghain</em></sup></sub>
 
 <a name="section-a"></a>
 *“A great discovery solves a great problem, but there is a grain of discovery in the solution of any problem. Your problem may be modest, but if it challenges your curiosity and brings into play your inventive faculties, and if you solve it by your own means, you may experience the tension and enjoy the triumph of discovery.”*
