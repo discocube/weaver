@@ -92,25 +92,15 @@ The solution can be plotted using pandas, numpy and plotly. I've put together an
 ## Dependencies
 
 This repository uses the following crates (ordered by most used) for increasing the speed of the algorithm for which it is grateful:
-
 <em>For iterator traits, ndarrays, matrix operations on ndarrays, and parallelizing sequential computations:</em>
 - [itertools](https://docs.rs/itertools/latest/itertools/): Extra iterator adaptors, functions and macros.
-
-- [rayon](https://docs.rs/rayon/latest/rayon/): An extremely lightweight data-parallelism library making to parallelize sequential computations whilst guarateeing data-race freedom. 
-
+- [rayon](https://docs.rs/rayon/latest/rayon/): An data-parallelism library to parallelize sequential computations whilst guarateeing data-race freedom. 
 - [ndarray](https://docs.rs/ndarray/latest/ndarray/): The ndarray crate provides an n-dimensional container for general elements and for numerics.
-
-
 <em>For serializing and writing to</em> `.csv` <em>file:</em>
-    
 - [csv](https://docs.rs/csv/latest/csv/): The csv crate provides a fast and flexible CSV reader and writer, with support for Serde.
-
 - [serde](https://docs.rs/serde/latest/serde/): Serde is a framework for serializing and deserializing Rust data structures efficiently and generically.
-
 <em>For timestamping:</em>
-
 - [chrono](https://docs.rs/chrono/latest/chrono/): It aims to be a feature-complete superset of the time library.
-
 
 ## Running times
 ![Running times from 8 to over 8 billion vertices](imgs/8_to_8billion.png?raw=true "Runtimes 8 to over 8 billion")
