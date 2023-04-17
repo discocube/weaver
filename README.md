@@ -74,7 +74,7 @@ This algorithm has no while loops and will terminate after a definitive set of s
 <br>
 <br>
 
-### Links [↰](#toc):
+### Links [↰](#toc)
 ![NP-Completeness explained](https://youtu.be/ctwX--JEzSA)
 
 ![Discocubes](imgs/dcviews.png?raw=true "Discocubes")
@@ -86,7 +86,7 @@ This algorithm has no while loops and will terminate after a definitive set of s
 <br>
 
 <a name="section-b"></a>
-## digital discocubes  [↰](#toc):
+## digital discocubes  [↰](#toc)
 As each solution is as unique as a fingerprint, or a diamond it allows one to have their own digital version of a discocube, which is also an instruction for building your own.
 
 ![Discocube 3640 view](imgs/icy_cube.png?raw=true "icy cube") 
@@ -99,7 +99,7 @@ The always turning hamiltonian cycle digital discocubes are not produced by the 
 
 <a name="section-c"></a>
 
-## Command line usage  [↰](#toc):
+## Command line usage  [↰](#toc)
 To use the package via the command line, navigate to the root directory of the project in your terminal and run the following command:
 ```
 cargo run --release [Graph start instance] [Graph end instance] [steps] [repeats]
@@ -111,13 +111,13 @@ build > run > make > solve > certify > for each graph starting from 32 to 1.373 
 <br>
 <br>
 
-## Plotting the solution  [↰](#toc):
+## Plotting the solution  [↰](#toc)
 The solution can be plotted using pandas, numpy and plotly. I've put together an easy to use python module: https://github.com/discocube/plot_solution to plot and very the solution visually instead of only programmatically.
 <br>
 <br>
 
 <a name="section-e"></a>
-## Dependencies  [↰](#toc):
+## Dependencies  [↰](#toc)
 
 This repository is grateful for the availability of the following crates (ordered by most to least used).
 
@@ -137,7 +137,7 @@ This repository is grateful for the availability of the following crates (ordere
 <br>
 
 <a name="section-f"></a>
-## Running times  [↰](#toc):
+## Running times  [↰](#toc)
 
 ![Running times from 8 to over 8 billion vertices](https://user-images.githubusercontent.com/93198518/232534045-b193abdf-c32f-469f-9992-6ef0cfab3cfa.png)
 <small>Running times from 8 to over 8 billion vertices</small> 
@@ -714,7 +714,7 @@ ESTIMATED SIZE OF SOLUTION  [↰](#toc):
 <br>
 
 <a name="section-g"></a>
-## Licensing:  [↰](#toc):
+## Licensing:  [↰](#toc)
 
 This package is licensed under the MIT license.
  
