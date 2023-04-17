@@ -141,7 +141,7 @@ This repository is grateful for the availability of the following crates (ordere
 <small>Running times from 8 to over 8 billion vertices</small> 
 <br>
 <br>
-#### Running times for graphs with 8 to over 9 billion vertices (solved in under 2 hours):  [↰](#toc):
+#### Running times for graphs with 8 to over 9 billion vertices (solved in under 2 hours)
 ```
 | 🇳    1 | ⭕️          8 | 🕗 SOLVE: 0.0000097090
 | 🇳    2 | ⭕️         32 | 🕗 SOLVE: 0.0000107500
@@ -681,6 +681,7 @@ NEW TIMES ABOVE UPDATE WHEN FINISHED.
 | 🇳 1900 | ⭕️ 9159778400 | 🕗 6484.3529332790 |
 
 ```
+```
 <br>
 <br>
 <br>
@@ -711,7 +712,7 @@ ESTIMATED SIZE OF SOLUTION  [↰](#toc):
 <br>
 <br>
 <a name="section-g"></a>
-## Licensing:  [↰](#toc)
+## Licensing  [↰](#toc)
 
 This package is licensed under the MIT license.
  
