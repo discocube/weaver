@@ -7,6 +7,8 @@
 - [Dependencies](#section-e)
 - [Running Times up to 9 billion](#section-f)
 - [Licensing](#section-g)
+---
+<br>
 
 *“A great discovery solves a great problem, but there is a grain of discovery in the solution of any problem. Your problem may be modest, but if it challenges your curiosity and brings into play your inventive faculties, and if you solve it by your own means, you may experience the tension and enjoy the triumph of discovery.”*
 
