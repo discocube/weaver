@@ -19,7 +19,7 @@
 <sup><sub><em>Me and Discocube in Berghain</em></sup></sub>
 
 
-[☝️](#toc)
+[☝️ UP](#toc)
 <br>
 <br>
 
@@ -77,7 +77,7 @@ The algorithm presented in this repository is the least complex, making it the f
 
 This algorithm has no while loops and will terminate after a definitive set of steps. The strength of this algorithm is knowing exactly when, where, and what is to happen, thereby reducing the amount of calculations needed (which is surprising as the creative process in creating this was anything but deterministic). It is a construction algorithm, constructing the path layer by layer until loops are produced, which are then joined using cycle merging. Further optimizations of the algorithm have also discarded the memory-heavy adjacency list, choosing instead to perform individual calculations where needed. Making and solving a graph with over a billion vertices, where n = 1000, won't require a distributed graph engine on the cloud anymore, and it takes a little over ten minutes.
 
-[☝️](#toc)
+[☝️ UP](#toc)
 <br>
 <br>
 
@@ -90,7 +90,7 @@ This algorithm has no while loops and will terminate after a definitive set of s
 ![Hexprism Honeycomb Diamond](imgs/hexhoneydiamond.png?raw=true "Hexprism Honeycomb Diamond")
 *Hexprism Honeycomb Diamond*
 
-[☝️](#toc)
+[☝️ UP](#toc)
 <br>
 <br>
 
@@ -105,7 +105,7 @@ As each solution is as unique as a fingerprint, or a diamond it allows one to ha
 The always turning hamiltonian cycle digital discocubes are not produced by the algorithm in this repository, but by another polynomial-time algorithm.
 
 
-[☝️](#toc)
+[☝️ UP](#toc)
 <br>
 <br>
 
@@ -121,7 +121,7 @@ cargo run --release 1 100 1 100
 ```
 build > run > make > solve > certify > for each graph starting from 32 to 1.373 million vertices in steps of 1 and run each order 100x.
 
-[☝️](#toc)
+[☝️ UP](#toc)
 <br>
 <br>
 
@@ -131,7 +131,7 @@ build > run > make > solve > certify > for each graph starting from 32 to 1.373 
 ## Plotting the solution
 The solution can be plotted using pandas, numpy and plotly. I've put together an easy to use python module: https://github.com/discocube/plot_solution to plot and very the solution visually instead of only programmatically.
 
-[☝️](#toc)
+[☝️ UP](#toc)
 <br>
 <br>
 
@@ -153,7 +153,7 @@ This repository is grateful for the availability of the following crates (ordere
 - [chrono](https://docs.rs/chrono/latest/chrono/): It aims to be a feature-complete superset of the time library.
 
 
-[☝️](#toc)
+[☝️ UP](#toc)
 <br>
 <br>
 
@@ -163,7 +163,7 @@ This repository is grateful for the availability of the following crates (ordere
 ![Running times from 8 to over 8 billion vertices](https://user-images.githubusercontent.com/93198518/232534045-b193abdf-c32f-469f-9992-6ef0cfab3cfa.png)
 <small>Running times from 8 to over 8 billion vertices</small>
 <br>
-[☝️](#toc)
+[☝️ UP](#toc)
 <br>
 <br>
 #### Running times for graphs with 8 to over 9 billion vertices (solved in under 2 hours):
@@ -706,7 +706,7 @@ NEW TIMES ABOVE UPDATE WHEN FINISHED.
 | 🇳 1900 | ⭕️ 9159778400 | 🕗 6484.3529332790 |
 
 ```
-[☝️](#toc)
+[☝️ UP](#toc)
 <br>
 <br>
 
@@ -735,7 +735,7 @@ ESTIMATED SIZE OF SOLUTION
 | 10               | 58.82     |
 
 
-[☝️](#toc)
+[☝️ UP](#toc)
 <br>
 <br>
 
@@ -746,7 +746,7 @@ This package is licensed under the MIT license.
  
 Thanks for making it this far!
 
-[☝️](#toc)
+[☝️ UP](#toc)
 <br>
 <br>
 
