@@ -6,7 +6,7 @@
 - [Command Line Usage](#section-c)
 - [Plotting the Solution](#section-d)
 - [Dependencies](#section-e)
-- [Running Times up to 9 billion](#section-f)
+- [Running Times up to 8 billion](#section-f)
 - [Licensing](#section-g)
 ---
 <br>
