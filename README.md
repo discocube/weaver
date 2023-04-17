@@ -113,7 +113,7 @@ The solution can be plotted using pandas, numpy and plotly. I've put together an
 <a name="section-e"></a>
 ## Dependencies
 
-This repository uses the following crates (ordered by most used) for increasing the speed of the algorithm for which it is grateful:
+This repository is grateful for the availability of the following crates (ordered by most to least used).
 
 <em>For iterator traits, ndarrays, matrix operations on ndarrays, and parallelizing sequential computations:</em>
 - [itertools](https://docs.rs/itertools/latest/itertools/): Extra iterator adaptors, functions and macros.
