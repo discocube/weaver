@@ -128,15 +128,15 @@ This repository is grateful for the availability of the following crates (ordere
 
 <em>For iterator traits, ndarrays, matrix operations on ndarrays, and parallelizing sequential computations:</em>
 - [`itertools`](https://docs.rs/itertools/latest/itertools/)    Extra iterator adaptors, functions and macros.
-- [`rayon`](https://docs.rs/rayon/latest/rayon/)    An data-parallelism library for parallelizing sequential computations whilst guarateeing data-race freedom. 
-- [`ndarray`](https://docs.rs/ndarray/latest/ndarray/)    The ndarray crate provides an n-dimensional container for general elements and for numerics.
+- [`rayon`](https://docs.rs/rayon/latest/rayon/)    Data-parallelism library for parallelizing sequential computations whilst guarateeing data-race freedom. 
+- [`ndarray`](https://docs.rs/ndarray/latest/ndarray/)    Provides an n-dimensional container for general elements and for numerics.
 
 <em>For serializing and writing to</em> `.csv` <em>file:</em>
-- [`csv`](https://docs.rs/csv/latest/csv/)    The csv crate provides a fast and flexible CSV reader and writer, with support for Serde.
-- [`serde`](https://docs.rs/serde/latest/serde/)    Serde is a framework for serializing and deserializing Rust data structures efficiently and generically.
+- [`csv`](https://docs.rs/csv/latest/csv/)    Fast and flexible CSV reader and writer, with support for Serde.
+- [`serde`](https://docs.rs/serde/latest/serde/)    Framework for serializing and deserializing Rust data structures efficiently and generically. Used by `csv`
 
 <em>For timestamping:</em>
-- [`chrono`](https://docs.rs/chrono/latest/chrono/):    It aims to be a feature-complete superset of the time library.
+- [`chrono`](https://docs.rs/chrono/latest/chrono/):    A feature-complete superset of the time library.
 <br>
 <br>
 <a name="section-f"></a>
