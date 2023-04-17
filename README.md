@@ -1,7 +1,7 @@
 <a name="toc"></a>
 
 ![Solution to a 79040 node graph](imgs/solution.png)
-<small><em>Detail for a Hamiltonian cycle for a graph with 79,040 nodes.</small>
+<caption><em>Detail for a Hamiltonian cycle for a graph with 79,040 nodes.</em></caption>
 
 
 ## Table of Contents
