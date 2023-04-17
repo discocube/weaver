@@ -1,3 +1,4 @@
+<a name="toc"></a>
 ## Table of Contents
 
 - [Motivation](#section-a)
@@ -73,6 +74,8 @@ This algorithm has no while loops and will terminate after a definitive set of s
 
 ![Hexprism Honeycomb Diamond](imgs/hexhoneydiamond.png?raw=true "Hexprism Honeycomb Diamond")
 *Hexprism Honeycomb Diamond*
+
+[up](#toc)
 
 <a name="section-b"></a>
 ## digital discocubes
