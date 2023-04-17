@@ -8,9 +8,7 @@
 - [Dependencies](#section-e)
 - [Running Times up to 8 billion](#section-f)
 - [Licensing](#section-g)
-<hr
-    style="height: 2px"
-    >
+<hr style="height: 1px;">
 <br>
 
 <a name="section-a"></a>
