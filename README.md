@@ -18,6 +18,11 @@
 ![Very first discocube in Berghain](imgs/ako.png)
 <sup><sub><em>Me and Discocube in Berghain</em></sup></sub>
 
+
+[Go back up](#toc)
+<br>
+<br>
+
 <a name="section-a"></a>
 <small><em>“A great discovery solves a great problem, but there is a grain of discovery in the solution of any problem. Your problem may be modest, but if it challenges your curiosity and brings into play your inventive faculties, and if you solve it by your own means, you may experience the tension and enjoy the triumph of discovery.”</em>
 
@@ -82,6 +87,8 @@ This algorithm has no while loops and will terminate after a definitive set of s
 *Hexprism Honeycomb Diamond*
 
 [Go back up](#toc)
+<br>
+<br>
 
 <a name="section-b"></a>
 ## digital discocubes
@@ -93,7 +100,11 @@ As each solution is as unique as a fingerprint, or a diamond it allows one to ha
 
 The always turning hamiltonian cycle digital discocubes are not produced by the algorithm in this repository, but by another polynomial-time algorithm.
 
+
 [Go back up](#toc)
+<br>
+<br>
+
 <a name="section-c"></a>
 
 ## Command line usage
@@ -106,11 +117,20 @@ cargo run --release 1 100 1 100
 ```
 build > run > make > solve > certify > for each graph starting from 32 to 1.373 million vertices in steps of 1 and run each order 100x.
 
+[Go back up](#toc)
+<br>
+<br>
+
 <a name="section-d"></a>
+
+
 ## Plotting the solution
 The solution can be plotted using pandas, numpy and plotly. I've put together an easy to use python module: https://github.com/discocube/plot_solution to plot and very the solution visually instead of only programmatically.
 
 [Go back up](#toc)
+<br>
+<br>
+
 <a name="section-e"></a>
 ## Dependencies
 
@@ -128,7 +148,10 @@ This repository is grateful for the availability of the following crates (ordere
 <em>For timestamping:</em>
 - [chrono](https://docs.rs/chrono/latest/chrono/): It aims to be a feature-complete superset of the time library.
 
+
 [Go back up](#toc)
+<br>
+<br>
 
 <a name="section-f"></a>
 ## Running times
@@ -702,10 +725,19 @@ ESTIMATED SIZE OF SOLUTION
 | 9.5              | 55.88     |
 | 10               | 58.82     |
 
+
 [Go back up](#toc)
+<br>
+<br>
+
 <a name="section-g"></a>
 ## Licensing:
 
 This package is licensed under the MIT license.
  
 Thanks for making it this far!
+
+[Go back up](#toc)
+<br>
+<br>
+
