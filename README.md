@@ -134,7 +134,7 @@ This repository uses the following crates (ordered by most to least used) for wh
 
 <em>For serializing and writing to</em> `.csv` <em>file:</em>
 - [`csv`](https://docs.rs/csv/latest/csv/)    Fast and flexible CSV reader and writer, with support for Serde.
-- [`serde`](https://docs.rs/serde/latest/serde/)    Framework for serializing and deserializing Rust data structures efficiently and generically. Used by [`csv`](https://docs.rs/csv/latest/csv/).
+- [`serde`](https://docs.rs/serde/latest/serde/)    Framework for serializing and deserializing Rust data structures efficiently and generically.
 
 <em>For timestamping:</em>
 - [`chrono`](https://docs.rs/chrono/latest/chrono/)    A feature-complete superset of the time library.
