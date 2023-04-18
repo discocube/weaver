@@ -123,7 +123,7 @@ The solution can be plotted using [this](https://github.com/discocube/plot_solut
 <a name="section-e"></a>
 ## [⇪](#toc) Dependencies
 
-This repository is grateful for the availability of the following crates (ordered by most to least used).
+This repository uses the following crates (ordered by most to least used) for which it is grateful.
 
 <em>For iterator traits, ndarrays, matrix operations on ndarrays, and parallelizing sequential computations:</em>
 - [`itertools`](https://docs.rs/itertools/latest/itertools/)    Extra iterator adaptors, functions and macros.
