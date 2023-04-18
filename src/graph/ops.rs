@@ -990,7 +990,7 @@ mod tests_prepare_yarn {
         let n = 3_usize;
         let pins = PinCushion::with_capacity(n);
         let yarns = Yarns::color_spun(Spindle::spin(n.spool_size()));
-        let prepared = yarns.prep(-1, 3, 0).split(&pins);
+        let prepared = yarns.prep(-1, 3, 0).chop(&pins);
         let expected = vec![vec![
             [5, 1, -1],
             [5, -1, -1],
@@ -1038,7 +1038,7 @@ mod tests_prepare_yarn {
             [1, 3, -1],
             [1, 1, -1],
         ];
-        let warps = to_cut.split(&pins);
+        let warps = to_cut.chop(&pins);
         let expected = vec![
             vec![
                 [-1, 1, -1],
@@ -1099,9 +1099,9 @@ mod tests_extend_threads {
         let n = 2;
         let mut loom = Loom::with_capacity(n.loom_size());
         let yarns = Yarns::color_spun(Spindle::spin(n.spool_size()));
-        loom.extend_threads(yarns.prep(-3, 1, 8).split(&vec![]));
+        loom.extend_threads(yarns.prep(-3, 1, 8).chop(&vec![]));
         assert_eq!(loom, [[[1, 1, -3], [1, -1, -3], [-1, -1, -3], [-1, 1, -3]]]);
-        loom.extend_threads(yarns.prep(-1, 3, 0).split(&vec![[1, 1, -1], [-1, 1, -1]]));
+        loom.extend_threads(yarns.prep(-1, 3, 0).chop(&vec![[1, 1, -1], [-1, 1, -1]]));
         assert_eq!(
             loom,
             vec![
