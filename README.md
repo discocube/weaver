@@ -91,6 +91,7 @@ This algorithm has no while loops and will terminate after a definitive set of s
 <a name="section-b"></a>
 ## [⇪](#toc) digital discocubes  
 [Play around and inspect a digital discocube here](https://playcanvas.com/model-viewer?load=https://raw.githubusercontent.com/discocube/weaver/main/imgs/snow3641.glb)
+
 As each solution is as unique as a fingerprint, or a diamond it allows one to have their own digital version of a discocube, which is also an instruction for building your own.
 
 ![Discocube 3640 view](imgs/icy_cube.png?raw=true "icy cube") 
