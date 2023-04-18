@@ -14,7 +14,7 @@
 - [Running Times up to 8 billion](#section-f)
 - [Licensing](#section-g)
 <br>
-[⬇](#section-a)
+[⇓](#section-a)
 <br>
 <br>
 ![Very first discocube in Berghain](imgs/ako.png)
