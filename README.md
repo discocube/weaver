@@ -13,7 +13,7 @@
 - [Dependencies](#section-e)
 - [Running Times up to 8 billion](#section-f)
 - [Licensing](#section-g)
-[⇓](#section-a)
+
 
 <br>
 <br>
