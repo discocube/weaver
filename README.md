@@ -42,7 +42,7 @@ What links an endless contour line drawing and a Hamiltonian cycle? Both entail 
 Similarly, a Hamiltonian cycle describes a graph by tracing a path along edges of the graph, visiting vertex precisely once before returning to the beginning vertex. The path connects the vertices in a continuous line, describing the graph object.
 
 ![Alt text](imgs/hambw.png)
-<small><em>The graphs from all the platonic solids are Hamiltonian.</em></small>
+<small><em>The graphs from platonic solids are all Hamiltonian.</em></small>
 
 <div style="display: flex;">
   <div style="flex: 1;">
