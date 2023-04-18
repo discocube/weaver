@@ -73,6 +73,8 @@ To paraphrase Hauy:
 What started as a hack-your-own version of a depth-first search with shortcuts for the discocube graph (solving up to 960 vertices) metastasized into pages of overgrown mixin classes mysteriously coupled to each other like overgrown vines, pushing me deeper and deeper into the underbelly of its mutant tentacles. Although able to solve instances with over a million vertices, the algorithm had the clarity of primordial soup. So, as a sadistic gardener, I painstakingly pruned my own pubicity (my unescapable web of thorny vines) into presentable tiny bonsai trees. So what is a bonsai if not a tree in intimate scope?
 
 https://user-images.githubusercontent.com/93198518/232765555-511aaf82-6276-45b7-96c4-3a8865eebe0d.mp4
+
+
 https://user-images.githubusercontent.com/93198518/232765984-5b94c0e0-d788-4d1f-a1d3-457600b73daf.mp4
 
 The result of this creative process is a family of algorithms developed specifically to solve various graph problems on dodecahedron graphs, 3D grid graphs, and hexprism honeycomb diamond graphs.
