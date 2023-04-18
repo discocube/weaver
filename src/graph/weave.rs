@@ -111,7 +111,7 @@ pub fn weave(n: usize) -> Solution {
     let yarns = Yarns::color_spun(Spindle::spin(n.spool_size()));
     n.zrow_color_idx().iter().for_each(|&((zrow, color), idx)| {
         let pins = loom.pin_thread_ends(zrow);
-        loom.extend_threads(yarns.prep(zrow, color, idx).split(&pins));
+        loom.extend_threads(yarns.prep(zrow, color, idx).chop(&pins));
     });
     loom.mirror_threads();
     let (mut weft, mut loom) = loom.prepare_cycle_merging(n);
