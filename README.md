@@ -110,7 +110,7 @@ cargo run --release [Graph start instance] [Graph end instance] [steps] [repeats
 ```
 cargo run --release 1 100 1 100
 ```
-build > run > make > solve > certify > for each graph starting from 32 to 1.373 million vertices in steps of 1 and run each order 100x.
+<em>For each graph starting from 32 to 1.373 million vertices solve each graph order in steps of one and running each 100x to get the best time.</em>
 <br>
 <br>
 <br>
