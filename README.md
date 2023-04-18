@@ -119,7 +119,7 @@ build > run > make > solve > certify > for each graph starting from 32 to 1.373 
 <br>
 <a name="section-d"></a>
 ## [⇪](#toc) Plotting the solution
-The solution can be plotted using this python module: https://github.com/discocube/plot_solution to visualize and check the solution.
+The solution can be plotted using [this](https://github.com/discocube/plot_solution) python module to visualize and check the solution.
 <br>
 <br>
 <br>
