@@ -279,6 +279,7 @@ pub mod prepare_yarn {
     use crate::graph::types::*;
     use itertools::Itertools;
     use ndarray::s;
+    use rayon::prelude::*;
 
     /// 👨‍🍳 Prepare yarn to be extennded onto the individual thread ends.
     pub trait PrepYarnExtensions {
