@@ -326,32 +326,29 @@ pub mod prepare_yarn {
         /// Before cutting add the z-value to the 2-dimensional vector, thereby making it 3d and positioning the yarn to the current level on the z-axis.
         ///
         ///
-        fn split(self, pins: &PinCushion) -> Warps;
+        fn chop(self, pins: &PinCushion) -> Warps;
     }
 
     impl SegmentYarn for Warp {
-        fn split(self, pins: &PinCushion) -> Warps {
+        fn chop(mut self, pins: &PinCushion) -> Warps {
             match !pins.is_empty() {
                 true => {
                     let mut warps = Warps::with_capacity(pins.len() + 1);
-                    let last_iyarn = self.len() - 1;
-                    let last_ipin = pins.len() - 1;
-                    let mut iprev = 0_usize;
-                    self.iter()
-                        .enumerate()
-                        .filter_map(|(idx, point)| (pins.contains(point)).then_some(idx))
-                        .enumerate()
-                        .for_each(|(ipin, iyarn)| {
-                            if ipin == last_ipin && iyarn != last_iyarn {
-                                warps.push(self[iyarn..].to_vec());
-                                if let Some(s) = self.get(iprev..iyarn).filter(|s| !s.is_empty()) {
-                                    warps.push(s.iter().rev().cloned().collect())
-                                };
-                            } else {
-                                warps.push((self[iprev..=iyarn]).iter().rev().cloned().collect());
-                                iprev = iyarn + 1;
-                            }
-                        });
+                    let mut indices = [
+                        vec![0],
+                        self.par_iter()
+                            .enumerate()
+                            .filter_map(|(icut, point)| (pins.contains(point)).then_some(icut + 1))
+                            .collect(),
+                    ]
+                    .concat();
+                    let last = indices.pop().unwrap() - 1;
+                    if last != self.len() - 1 {
+                        warps.push(self.drain(last..).collect::<Vec<_>>());
+                    }
+                    indices.iter().rev().for_each(|icut| {
+                        warps.push(self.drain(icut..).rev().collect::<Vec<_>>());
+                    });
                     warps
                 }
                 false => vec![self],
