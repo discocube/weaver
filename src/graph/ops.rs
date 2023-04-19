@@ -335,14 +335,16 @@ pub mod prepare_yarn {
             match !pins.is_empty() {
                 true => {
                     let mut warps = Warps::with_capacity(pins.len() + 1);
-                    let mut indices = [
+                    let mut indices = vec![
                         vec![0],
                         self.par_iter()
                             .enumerate()
                             .filter_map(|(icut, point)| (pins.contains(point)).then_some(icut + 1))
-                            .collect(),
+                            .collect::<Vec<_>>(),
                     ]
-                    .concat();
+                    .into_iter()
+                    .flatten()
+                    .collect::<Vec<_>>();
                     let last = indices.pop().unwrap() - 1;
                     if last != self.len() - 1 {
                         warps.push(self.drain(last..).collect::<Vec<_>>());
