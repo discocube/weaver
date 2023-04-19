@@ -327,28 +327,25 @@ pub mod prepare_yarn {
         /// Before cutting add the z-value to the 2-dimensional vector, thereby making it 3d and positioning the yarn to the current level on the z-axis.
         ///
         ///
-        fn chop(self, pins: &PinCushion) -> Warps;
+        fn chop(self, pins: &mut PinCushion) -> Warps;
     }
 
     impl SegmentYarn for Warp {
-        fn chop(mut self, pins: &PinCushion) -> Warps {
+        fn chop(mut self, pins: &mut PinCushion) -> Warps {
             match !pins.is_empty() {
                 true => {
+                    pins.push(self[0]);
                     let mut warps = Warps::with_capacity(pins.len() + 1);
-                    let mut indices = [
-                        vec![0],
-                        self.par_iter()
+                    let mut indices = self.par_iter()
                             .enumerate()
-                            .filter_map(|(i, point)| (pins.contains(point)).then_some(i + 1))
-                            .collect(),
-                    ]
-                    .concat();
+                            .filter_map(|(i, point)| (pins.contains(point)).then_some(if i != 0 {i + 1} else {0}))
+                            .collect::<Vec<_>>();
                     let last = indices.pop().unwrap() - 1;
                     if last != self.len() - 1 {
                         warps.push(self.drain(last..).collect::<Vec<_>>());
                     }
-                    indices.iter().rev().for_each(|icut| {
-                        warps.push(self.drain(icut..).rev().collect::<Vec<_>>());
+                    indices.iter().rev().for_each(|i| {
+                        warps.push(self.drain(i..).rev().collect::<Vec<_>>());
                     });
                     warps
                 }
