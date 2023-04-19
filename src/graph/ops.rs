@@ -439,8 +439,8 @@ mod merge_cycles {
                 // into_iter() + par_drain() faster than into_par_iter() + par_drain() and into_iter() + drain().
                 Weft::new(self[0].split_off(0), n.get_order_from_n()),
                 self.split_off(1)
-                    .into_iter()
-                    .map(|mut data| data.par_drain(..).collect())
+                    .into_par_iter()
+                    .map(|mut data| data.drain(..).collect())
                     .collect(),
             )
         }
