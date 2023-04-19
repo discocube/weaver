@@ -30,7 +30,7 @@ use super::ops::prelude::*;
 ///        // Extend each thread end w/ segmented yarn using pins for cutting.
 ///        // prep: get requested color and cut from yarns from idx. Add the zrow to the 2d vector to position the yarn to the elevation.
 ///        // split: using pins, split the finished yarn so that the lhs of each sequence matches to a thread end in the loom.
-///        loom.extend_threads(yarns.prep(zrow, color, idx).split(&pins));
+///        loom.extend_threads(yarns.prep(zrow, color, idx).chop(&pins));
 ///    });
 ///
 ///    // Mirror each thread in loom to form cycles from chains for subsequent cycle merging.
@@ -68,7 +68,7 @@ use super::ops::prelude::*;
 ///    weft.get_woven()
 ///
 ///    // Output results to a csv file:
-///    weft.export_csv()l
+///    weft.export_csv()
 ///}
 ///```
 /// ---\
@@ -94,7 +94,7 @@ use super::ops::prelude::*;
 ///
 ///extend_threads::ExtendThreads ───────➤  loom.extend_threads()
 ///
-///mirror_loom::MirrorLoomThreads ──────➤ loom.mirror_threads()
+///mirror_loom::MirrorLoomThreads ──────➤  loom.mirror_threads()
 ///
 ///merge_cycles::* ─────────────────────➤  loom.prepare_cycle_merging()
 ///                                        warp.edges()
@@ -110,8 +110,8 @@ pub fn weave(n: usize) -> Solution {
     let mut loom = Loom::with_capacity(n.loom_size());
     let yarns = Yarns::color_spun(Spindle::spin(n.spool_size()));
     n.zrow_color_idx().iter().for_each(|&((zrow, color), idx)| {
-        let pins = loom.pin_thread_ends(zrow);
-        loom.extend_threads(yarns.prep(zrow, color, idx).chop(&pins));
+        let mut pins = loom.pin_thread_ends(zrow);
+        loom.extend_threads(yarns.prep(zrow, color, idx).chop(&mut pins));
     });
     loom.mirror_threads();
     let (mut weft, mut loom) = loom.prepare_cycle_merging(n);
