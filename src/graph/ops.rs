@@ -338,7 +338,9 @@ pub mod prepare_yarn {
                     let mut warps = Warps::with_capacity(pins.len() + 1);
                     let mut indices = self.par_iter()
                             .enumerate()
-                            .filter_map(|(i, point)| (pins.contains(point)).then_some(if i != 0 {i + 1} else {0}))
+                            .filter_map(|(i, point)| {
+                                pins.contains(point).then_some(if i != 0 { i + 1 } else { 0 })
+                            })
                             .collect::<Vec<_>>();
                     let last = indices.pop().unwrap() - 1;
                     if last != self.len() - 1 {
