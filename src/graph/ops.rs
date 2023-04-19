@@ -25,8 +25,6 @@ pub mod graph_info_from_n {
         fn get_max_xyz(self) -> ScalarXyz;
         /// Get maximum scalar value allowed for x, y or z where n is the order.
         fn get_max_xyz_from_order(self) -> SignedIdx;
-        /// Minimum scalar value allowed for x, y, or z.
-        fn get_min_xyz(self) -> ScalarXyz;
         /// get level from order, or n.
         fn get_n_from_order(self) -> Count;
         /// get order from level/n.
@@ -52,10 +50,6 @@ pub mod graph_info_from_n {
 
         fn get_max_xyz_from_order(self) -> SignedIdx {
             (((3 * self) / 4) as f64).powf(1.0 / 3.0) as i32 * 2 - 1
-        }
-
-        fn get_min_xyz(self) -> ScalarXyz {
-            (self * 2 - 5) as ScalarXyz
         }
 
         fn get_n_from_order(self) -> Count {
@@ -312,7 +306,7 @@ pub mod prepare_yarn {
 
     /// 🔪 Cut yarn using pins from the pins as cut markers so it can be extended upon the individual threads in the loom.
     pub trait SegmentYarn {
-        /// 🔪 Cut yarn using pins from the pins as cut markers.
+        /// 🔪 Chop yarn using pins from the pins as cut markers.
         ///
         /// ---\
         /// `🎉 warps`: yarn that is cut and prepared to be incorporated.\
@@ -336,12 +330,13 @@ pub mod prepare_yarn {
                 true => {
                     pins.push(self[0]);
                     let mut warps = Warps::with_capacity(pins.len() + 1);
-                    let mut indices = self.par_iter()
-                            .enumerate()
-                            .filter_map(|(i, point)| {
-                                pins.contains(point).then_some(if i != 0 { i + 1 } else { 0 })
-                            })
-                            .collect::<Vec<_>>();
+                    let mut indices = self
+                        .par_iter()
+                        .enumerate()
+                        .filter_map(|(i, p)| {
+                            pins.contains(p).then_some(if i != 0 { i + 1 } else { 0 })
+                        })
+                        .collect::<Vec<_>>();
                     let last = indices.pop().unwrap() - 1;
                     if last != self.len() - 1 {
                         warps.push(self.drain(last..).collect::<Vec<_>>());
@@ -375,7 +370,6 @@ mod extend_threads {
                         (true, _) => {
                             thread.pop_front();
                             warp.drain(..).for_each(|item| thread.push_front(item));
-                            // Using warp.drain(..).skip(1) is shorter but slower.
                         }
                         (_, true) => {
                             thread.pop_back();
@@ -436,7 +430,6 @@ mod merge_cycles {
     impl GetWeftWarps for Loom {
         fn prepare_cycle_merging(mut self, n: usize) -> (Weft, Warps) {
             (
-                // into_iter() + par_drain() faster than into_par_iter() + par_drain() and into_iter() + drain().
                 Weft::new(self[0].split_off(0), n.get_order_from_n()),
                 self.split_off(1)
                     .into_par_iter()
@@ -564,10 +557,9 @@ mod merge_cycles {
 
     impl Bridge<WeftEdge> for WarpEdges {
         /// Using the & set operator, find the common bridge i.e., intersection between a set of edges and a set of adjacent edges and return the next() from the set.
-        /// This version automatically reverses the edge as it is always the case (removed the check).
         fn bridge(&self, (weft_lhs, weft_rhs): &WeftEdge) -> BridgeEdge {
-            let (warp_lhs, warp_rhs) = (&((*weft_lhs, *weft_rhs).eadjs()) & self)
-                .into_iter()
+            let &(warp_lhs, warp_rhs) = ((*weft_lhs, *weft_rhs).eadjs())
+                .intersection(self)
                 .next()
                 .unwrap();
             (warp_rhs, warp_lhs)
@@ -636,6 +628,152 @@ mod merge_cycles {
                 }
                 (idx_lhs, _) => self.rotate_left(idx_lhs),
             }
+        }
+    }
+}
+
+/// Get information about solution like non-turn count and a count of the axes of edges.
+pub mod grade_solution {
+    use itertools::Itertools;
+
+    use super::prelude::{Edge, Solution};
+
+    /// Grade Solution for edges' axes count and count of nonturns in solution.
+    pub trait Grade {
+        /// Calculate the axis on which each edge lies.
+        fn axes(&self) -> [usize; 3];
+        /// get axes count and divide each axis by order
+        fn axis_percent(&self) -> [f64; 3];
+        /// Count the number of nonturns of solution.
+        fn nonturns(&self) -> usize;
+    }
+
+    impl Grade for Solution {
+        fn axes(&self) -> [usize; 3] {
+            self.iter()
+                .circular_tuple_windows()
+                .fold([0; 3], |mut acc, (m, n)| {
+                    acc[(*m, *n).axis()] += 1;
+                    acc
+                })
+        }
+
+        fn axis_percent(&self) -> [f64; 3] {
+            let [x_count, y_count, z_count] = self.axes();
+            let [x_count, y_count, z_count] = [x_count as f64, y_count as f64, z_count as f64];
+            let order = x_count + y_count + z_count;
+            [
+                (x_count / order) * 100.0,
+                (y_count / order) * 100.0,
+                (z_count / order) * 100.0,
+            ]
+        }
+
+        fn nonturns(&self) -> usize {
+            let mut nonturns: usize = 0;
+            let mut prev_axis = (self[self.len() - 1], self[0]).axis();
+            self.iter()
+                .circular_tuple_windows()
+                .for_each(|(m, n): (&[i16; 3], &[i16; 3])| {
+                    let curr_axis = match (*m, *n).axis() {
+                        curr_axis if curr_axis == prev_axis => {
+                            nonturns += 1;
+                            curr_axis
+                        }
+                        curr_axis => curr_axis,
+                    };
+                    prev_axis = curr_axis;
+                });
+            nonturns
+        }
+    }
+
+    /// Get the given axis of a self and test if the length is the edge's unit length of 2.
+    pub trait GetEdgeAxis {
+        /// Get axis of edge.
+        fn axis(&self) -> usize;
+    }
+
+    impl GetEdgeAxis for Edge {
+        fn axis(&self) -> usize {
+            let ([a, b, c], [x, y, z]) = *self;
+            match [a != x, b != y, c != z] {
+                [true, false, false] if ((a - x).abs() == 2) => 0,
+                [false, true, false] if ((b - y).abs() == 2) => 1,
+                [false, false, true] if ((c - z).abs() == 2) => 2,
+                _ => panic!("NOT A VALID EDGE"),
+            }
+        }
+    }
+
+    /// 🩺 Test `axis()`, `axes()`, `nonturns()` by solving smaller instances and checking the expected with the actual output.
+    #[cfg(test)]
+    mod tests_grade_solution {
+        use crate::graph::{ops::prelude::InfoN, weave::weave};
+
+        use super::*;
+
+        #[test]
+        /// Solve for n and count edges axes which is around 50% for each x and y and 0.1% for z.
+        fn test_count_axes() {
+            // Test cube (the first instance) which has a different count ratio than the proceeding orders.
+            let n_1 = 1_usize;
+            let mut order = n_1.get_order_from_n();
+            let [mut x_count, mut y_count, mut z_count] = weave(n_1).axes();
+            // Test that x and z count is 2 and y count == 4.
+            assert!(z_count == x_count && x_count == 2 && y_count == 4);
+            // sum of the xyz counts should equal the order.
+            assert_eq!(order, [x_count, y_count, z_count].iter().sum());
+            // Test the rest of the orders which have the same count proportions.
+            for n in 2..=100 {
+                order = n.get_order_from_n();
+                let solution = weave(n);
+                [x_count, y_count, z_count] = solution.axes();
+                let [x_part, y_part, z_part] = solution.axis_percent();
+                // check that z < x < y;
+                assert!(z_count < x_count && x_count < y_count);
+                // sum of the xyz counts should equal the order.
+                assert_eq!(order, [x_count, y_count, z_count].iter().sum());
+                // check that x and y are around about 50% and z at 1% when rounded. Closer to 50/50/1 when n increases.
+                let [xc, yc, zc] = [x_part.round(), y_part.round(), z_part.round()];
+                assert!(if n > 48 && n < 70 {
+                    xc == 49.0 && yc == 49.0 && zc == 1.0
+                } else if n < 49 {
+                    xc <= 49.0 && yc <= 49.0 && zc <= 19.0
+                } else {
+                    xc <= 50.0 && yc == 50.0 && zc == 1.0
+                });
+            }
+        }
+
+        #[test]
+        /// Solve for n and count nonturns if n < 3 the result is zero else 2.
+        fn test_count_nonturns() {
+            for n in 1..=100 {
+                assert_eq!(if n < 3 { 0 } else { 2 }, weave(n).nonturns());
+            }
+        }
+
+        #[test]
+        /// Test if given edge.axis() is expected.
+        fn test_edge_axis() {
+            assert_eq!(([0, 2, 0], [0, 0, 0]).axis(), 1);
+            assert_eq!(([0, 2, 0], [0, 2, 2]).axis(), 2);
+            assert_eq!(([0, 2, 2], [2, 2, 2]).axis(), 0);
+        }
+
+        #[test]
+        #[should_panic(expected = "NOT A VALID EDGE")]
+        /// Test expected panic of same edge.
+        fn test_invalid_same_edge() {
+            ([0, 2, 0], [0, 2, 0]).axis();
+        }
+
+        #[test]
+        #[should_panic(expected = "NOT A VALID EDGE")]
+        /// Test expected panic of invalid Edge Length.
+        fn test_invalid_same_edge_bad_length() {
+            ([0, 2, 0], [0, 2, 3]).axis();
         }
     }
 }
@@ -743,9 +881,10 @@ pub mod certify_solution {
 
     impl IsAdjacent for V3d {
         fn is_adj_to(&self, [x, y, z]: V3d) -> bool {
-            let [a, b, c] = self;
-            let n = a - x + b - y + c - z;
-            n == 2 || n == -2
+            match self[0] - x + self[1] - y + self[2] - z {
+                n if n == 2 || n == -2 => true,
+                _ => false,
+            }
         }
     }
 }
@@ -816,7 +955,6 @@ mod tests_graph_info_from_n {
         assert_eq!(max_i16.get_max_absumv() as i16, -1);
         assert_eq!(max_i16.get_max_xyz(), -3);
         assert_eq!(max_i16.get_max_xyz_from_order(), 57);
-        assert_eq!(max_i16.get_min_xyz(), max_i16.get_max_xyz() - 4);
         assert_eq!(max_i16.get_n_from_order(), 29);
         assert_eq!(max_i16.get_order_from_n(), 46912496074752);
         assert_eq!(max_i16.spool_size(), (32767, 2147418112));
@@ -830,7 +968,6 @@ mod tests_graph_info_from_n {
         assert_eq!(n.get_max_absumv(), 201);
         assert_eq!(n.get_max_xyz(), 199);
         assert_eq!((n + 60).get_max_xyz_from_order(), 7);
-        assert_eq!(n.get_min_xyz(), n.get_max_xyz() - 4);
         assert_eq!((n - 20).get_n_from_order(), 3);
         assert_eq!(n.get_order_from_n(), 1373600);
         assert_eq!(n.spool_size(), (n, 20200));
@@ -1030,7 +1167,32 @@ mod tests_extend_threads {
     // use super::prelude::*;
 
     #[test]
-    fn test_extend_threads() {}
+    fn test_extend_threads() {
+        // let n = 2;
+        // let mut loom = Loom::with_capacity(n.loom_size());
+        // let yarns = Yarns::color_spun(Spindle::spin(n.spool_size()));
+        // loom.extend_threads(yarns.prep(-3, 1, 8).chop(&vec![]));
+        // assert_eq!(loom, [[[1, 1, -3], [1, -1, -3], [-1, -1, -3], [-1, 1, -3]]]);
+        // loom.extend_threads(yarns.prep(-1, 3, 0).chop(&vec![[1, 1, -1], [-1, 1, -1]]));
+        // assert_eq!(
+        //     loom,
+        //     vec![
+        //         vec![[1, 1, -3], [1, -1, -3], [-1, -1, -3], [-1, 1, -3]],
+        //         vec![
+        //             [-1, 1, -1],
+        //             [-3, 1, -1],
+        //             [-3, -1, -1],
+        //             [-1, -1, -1],
+        //             [-1, -3, -1],
+        //             [1, -3, -1],
+        //             [1, -1, -1],
+        //             [3, -1, -1],
+        //             [3, 1, -1]
+        //         ],
+        //         vec![[1, 1, -1], [1, 3, -1], [-1, 3, -1]]
+        //     ]
+        // );
+    }
 }
 
 /// 🩺 Test if input loom is properly mirrored.
