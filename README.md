@@ -155,10 +155,10 @@ This repository uses the following crates (ordered by most to least used) for wh
 ## [⇪](#toc) Running times
 ![8_to_8billion](https://user-images.githubusercontent.com/93198518/233331166-cae7145c-cf2c-4be5-bf00-77d042756fb1.png)
 <small>Running times from 8 to over 8 billion vertices</small> 
+<br>
+<br>
+### [⇪](#toc) Running times for graphs with 8 to over 8 billion vertices (solved in under 2 hours)
 
-<br>
-<br>
-#### [⇪](#toc) Running times for graphs with 8 to over 8 billion vertices (solved in under 2 hours)
 ```
 | 🇳    1 | ⭕️          8 | 🕗 0.0000121670 
 | 🇳    2 | ⭕️         32 | 🕗 0.0000336670 
