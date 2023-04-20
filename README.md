@@ -159,7 +159,7 @@ This repository uses the following crates (ordered by most to least used) for wh
 <br>
 <br>
 
-### [⇪](#toc) Running times for graphs with 8 to over 8 billion vertices (solved in under 2 hours)
+### [⇪](#toc) Running times for graphs with 8 to over 8 billion vertices (solved in under 1 hour)
 
 ```
 | 🇳    1 | ⭕️          8 | 🕗 0.0000121670 
