@@ -6,7 +6,7 @@
 
 ## Table of Contents
 
-- [What happens if a graph object becomes an artist's muse?](#section-a)
+- [What if a graph object becomes an artist's muse?](#section-a)
 - [Digital Discocubes](#section-b)
 - [Command Line Usage](#section-c)
 - [Plotting the Solution](#section-d)
