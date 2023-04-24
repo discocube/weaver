@@ -1,8 +1,9 @@
 <a name="toc"></a>
-![algo_drawing1](https://user-images.githubusercontent.com/93198518/234009715-5660d7af-5e09-4c9e-8581-4d5bf720f0c4.svg)
+[algodraw1](https://user-images.githubusercontent.com/93198518/234018102-68dc857f-36f3-4861-b3a5-4b91cc19e482.png)
 <sup><sub><em>Drawing of algorithm</em></sup></sub>
 
-## Table of Contents
+## Table of Contents!
+
 
 - [What if a graph object becomes an artist's muse?](#section-a)
 - [Digital Discocubes](#section-b)
