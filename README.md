@@ -1,5 +1,6 @@
 <a name="toc"></a>
-![algo_drawing](https://user-images.githubusercontent.com/93198518/234003081-08d1c538-b8b5-400c-abf1-b0d083f82aa2.svg)
+![algo_drawing](https://user-images.githubusercontent.com/93198518/234003666-4524f190-fb5d-4994-82c9-5d242e6b472b.svg)
+<sup><sub><em>Drawing of algorithm</em></sup></sub>
 
 ## Table of Contents
 
