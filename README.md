@@ -1,5 +1,5 @@
 <a name="toc"></a>
-![algodraw2](https://user-images.githubusercontent.com/93198518/234079567-ee80242e-4701-4570-8ed5-67116c623a4d.png)
+![algodraw2](https://user-images.githubusercontent.com/93198518/234082373-0fe7e893-1f0c-4ab9-8e1c-44e713724515.png)
 <sup><sub><em>Drawing of algorithm</em></sup></sub>
 
 ## Table of Contents!
