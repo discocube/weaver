@@ -109,6 +109,8 @@ As each solution is as unique as a fingerprint, or a diamond it allows one to ha
 
 ![Discocube 3640 view](imgs/icy_cube.png?raw=true "icy cube") 
 ![Discocube 3640 view](imgs/icy_cube3.png?raw=true "confetti cube")
+[see confetti cube digital here](https://playcanvas.com/model-viewer?load=https://raw.githubusercontent.com/discocube/weaver/main/imgs/confetti.glb)
+
 *Discocubes as glb, using different mirrored texture yields personalized results and unique reflections meaning each discocube has its own reflection/shadow fingerprint! With millions of combinations available (glass texture/image/color, mirror texture/image/color, edge texture/image/color), the possibilities are endless!*
 
 The always turning hamiltonian cycle digital discocubes are not produced by the algorithm in this repository, but by another polynomial-time algorithm.
