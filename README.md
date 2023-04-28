@@ -3,8 +3,7 @@
 ![algodraw2](https://user-images.githubusercontent.com/93198518/234086062-8f9632c7-e6f7-4de1-8595-df439fba9742.png)
 <sup><sub><em>Drawing of algorithm</em></sup></sub>
 
-## Table of Contents!
-
+## Table of Contents
 
 - [Graph object as artist's muse](#section-a)
 - [Digital Discocubes](#section-b)
