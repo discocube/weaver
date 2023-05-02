@@ -90,8 +90,10 @@ This algorithm has no while loops and will terminate after a definitive set of s
 <br>
 <br>
 ### [⇪](#toc) Links
+<li>
+  <a href="https://youtu.be/ctwX--JEzSA">NP-Completeness explained</a>
+</li>
 
-<a href="https://youtu.be/ctwX--JEzSA">NP-Completeness explained</a>.
 
 ![Discocubes](imgs/dcviews.png?raw=true "Discocubes")
 *Discocubes 8 - 1760*
