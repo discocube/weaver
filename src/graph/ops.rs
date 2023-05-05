@@ -141,8 +141,8 @@ mod spin_yarn {
         fn spin_easy(radius: usize) -> Spindle {
             (1..radius + 1)
                 .step_by(2)
-                .flat_map(|x| [x; 2])
                 .rev()
+                .flat_map(|x| [x; 2])
                 .prefaced_with(radius)
                 .enumerate()
                 .flat_map(|(ix, len)| {
