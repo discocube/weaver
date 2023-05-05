@@ -87,12 +87,20 @@ mod spin_yarn {
     use crate::graph::types::*;
     use std;
 
-    /// 2d displacement vectors for walking a zig-zag.
+    /// 2d displacement vectors for walking a zig-zag: [x, y].
     pub const DISP_VECTORS: [[V2d; 2]; 4] = [
         [[-2, 0], [0, -2]],
         [[-2, 0], [0, 2]],
         [[2, 0], [0, 2]],
         [[2, 0], [0, -2]],
+    ];
+
+    /// 2d displacement vectors for walking a zig-zag inwards: [y, x].
+    pub const DV_YX: [[[i16; 2]; 2]; 4] = [
+        [[0, -2], [-2, 0]],
+        [[0, 2], [-2, 0]],
+        [[0, 2], [2, 0]],
+        [[0, -2], [2, 0]],
     ];
 
     /// 🪀 Spin a zigzagging-inward-spiralling Hamiltonian chain using displacement vectors to determine the next step. No backtracking, just a switching of displacement vectors at specific indices to assure the path form is turning always inwards.
@@ -110,6 +118,9 @@ mod spin_yarn {
         ///
         ///
         fn spin(n_spool_size: (usize, usize)) -> Spindle;
+
+        /// 🪀 Spin a zigzagging-inward-spiralling Hamiltonian chain.
+        fn spin_easy(radius: usize) -> Spindle;
     }
 
     impl Spin for Spindle {
@@ -124,6 +135,27 @@ mod spin_yarn {
                 spool[idx + 1] = spool[idx].add(zigzag[yx])
             });
             spool
+        }
+
+        /// Similar to the `spin()` without the Spinner.
+        fn spin_easy(radius: usize) -> Spindle {
+            (1..radius + 1)
+                .step_by(2)
+                .flat_map(|x| [x; 2])
+                .rev()
+                .prefaced_with(radius)
+                .enumerate()
+                .flat_map(|(ix, len)| {
+                    (0..len)
+                        .map(move |i| DV_YX[ix % 4][(ix + i) % 2])
+                        .into_iter()
+                })
+                .prefaced_with([radius as i16, 1])
+                .scan([0, 0], |state, [x, y]| {
+                    *state = [state[0] + x, state[1] + y];
+                    Some(*state)
+                })
+                .collect()
         }
     }
 
