@@ -22,17 +22,19 @@ pub mod graph_info_from_n {
         /// Get the maximum L1-norm for n.
         fn get_max_absumv(self) -> ScalarXyz;
         /// Get maximum scalar value allowed for x, y or z.
-        fn get_max_xyz(self) -> ScalarXyz;
+        fn get_radius(self) -> ScalarXyz;
         /// Get maximum scalar value allowed for x, y or z where n is the order.
-        fn get_max_xyz_from_order(self) -> SignedIdx;
+        fn get_radius_usize(self) -> usize;
+        /// Get maximum scalar value allowed for x, y or z where n is the order.
+        fn get_radius_from_order(self) -> ScalarXyz;
         /// get level from order, or n.
         fn get_n_from_order(self) -> Count;
         /// get order from level/n.
         fn get_order_from_n(self) -> Count;
         /// spool size is the number of verts in the graph whose z-scalar value is -1.
-        fn spool_size(self) -> (Count, Count);
+        fn get_spool_size(self) -> Count;
         /// Get length of the current level.
-        fn zrow_color_idx(self) -> ZrowColorSize;
+        fn z_color_len(self) -> ZrowColorSize;
     }
 
     impl InfoN for Count {
@@ -44,12 +46,16 @@ pub mod graph_info_from_n {
             (self * 2 + 1) as ScalarXyz
         }
 
-        fn get_max_xyz(self) -> ScalarXyz {
+        fn get_radius(self) -> ScalarXyz {
             (self * 2 - 1) as ScalarXyz
         }
 
-        fn get_max_xyz_from_order(self) -> SignedIdx {
-            (((3 * self) / 4) as f64).powf(1.0 / 3.0) as i32 * 2 - 1
+        fn get_radius_usize(self) -> usize {
+            self * 2 - 1
+        }
+
+        fn get_radius_from_order(self) -> ScalarXyz {
+            (((3 * self) / 4) as f64).powf(1.0 / 3.0) as i16 * 2 - 1
         }
 
         fn get_n_from_order(self) -> Count {
@@ -60,12 +66,11 @@ pub mod graph_info_from_n {
             (4 * (self + 2) * (self + 1) * self) / 3
         }
 
-        fn spool_size(self) -> (Count, Count) {
-            (self, 2 * self * (self + 1))
+        fn get_spool_size(self) -> Count {
+            2 * self * (self + 1)
         }
 
-        fn zrow_color_idx(self) -> ZrowColorSize {
-            let spool_length = 2 * self * (self + 1);
+        fn z_color_len(self) -> ZrowColorSize {
             zip(
                 zip(
                     (-((self * 2 - 1) as i16)..=-1).step_by(2),
@@ -74,7 +79,7 @@ pub mod graph_info_from_n {
                         _ => repeat(3).take(self).interleave(repeat(1).take(self)),
                     },
                 ),
-                (1..=self).map(|_n| spool_length - (2 * _n * (_n + 1))),
+                (1..=self).map(|f| 2 * f * (f + 1)),
             )
             .collect()
         }
@@ -83,74 +88,80 @@ pub mod graph_info_from_n {
 
 /// 🛞 Spin a zigzagging-inward-spiralling Hamiltonian chain from the outer to innermost vert where the scalar z value of the points equals -1.
 mod spin_yarn {
-    use super::graph_info_from_n::InfoN;
+    use super::{graph_info_from_n::InfoN, prepost_iter::{PostfacedIter, PrefacedIter}};
     use crate::graph::types::*;
-    use std;
 
-    /// 2d displacement vectors for walking a zig-zag: [x, y].
-    pub const DISP_VECTORS: [[V2d; 2]; 4] = [
-        [[-2, 0], [0, -2]],
-        [[-2, 0], [0, 2]],
-        [[2, 0], [0, 2]],
-        [[2, 0], [0, -2]],
-    ];
-
-    /// 2d displacement vectors for walking a zig-zag inwards: [y, x].
-    pub const DV_YX: [[[i16; 2]; 2]; 4] = [
-        [[0, -2], [-2, 0]],
-        [[0, 2], [-2, 0]],
+    /// 2d displacement vectors for walking a zig-zag inwards.
+    pub const DPYX_EVEN: [[[i16; 2]; 2]; 4] = [
         [[0, 2], [2, 0]],
+        [[0, 2], [-2, 0]],
+        [[0, -2], [-2, 0]],
         [[0, -2], [2, 0]],
     ];
 
-    /// 🪀 Spin a zigzagging-inward-spiralling Hamiltonian chain using displacement vectors to determine the next step. No backtracking, just a switching of displacement vectors at specific indices to assure the path form is turning always inwards.
+    /// 2d displacement vectors for walking a zig-zag inwards.
+    pub const DPYX_ODD: [[[i16; 2]; 2]; 4] = [
+        [[0, -2], [-2, 0]],
+        [[0, -2], [2, 0]],
+        [[0, 2], [2, 0]],
+        [[0, 2], [-2, 0]],
+    ];
+
+    /// 🪀 Spin a zigzagging-inward-spiralling Hamiltonian chain using displacement vectors to determine the next step. No backtracking, just a switching of displacement vectors at specific cuts to assure the path form is turning always inwards.
     pub trait Spin {
         /// 🪀 Spin a zigzagging-inward-spiralling Hamiltonian chain.
         ///
         ///---\
         /// `📏 spool_size`: Spool length and longest hamiltonian chain consisting only of points whose scalar z-value is -1.\
         /// `🧵 spool`: Container upon which the yarn is spun or the tour recorded.\
-        /// `🛞 turns`: Indices indicating when to get `next(pair of xy-zigzag displacement vectors)`.\
-        /// `🎚️ max_xyz`:  Max scalar value for x, y, z used as the first step and to seed the array: `[max_xyz, 1]`.\
-        /// `🔀 switch`:  an infinite switch iterator of indices [[1, 0]] of the y and x axis of the displacement vector.\
+        /// `🛞 turns`: cuts indicating when to get `next(pair of xy-zigzag displacement vectors)`.\
+        /// `🎚️ radius`:  Max scalar value for x, y, z used as the first step and to seed the array: `[radius, 1]`.\
+        /// `🔀 switch`:  an infinite switch iterator of cuts [[1, 0]] of the y and x axis of the displacement vector.\
         ///---\
         /// Pre-populate the `spool` with start the vector `[max_yxz, 1]` * `spool_size` to avoid reallocation of space. Take steps by looping over the pre-populated elements of `spool` starting from the first index `spool[0]` and calculating the next step by adding either an x or y (switching at each step) displacement vector to the current vector `spool[idx].add_vec(zigzag[y_or_x])` and taking that step by assigning the result to the next index `spool[idx + 1]`. When it's time to turn `turn == idx`, get the new set of zig-zag vectors to change direction (turning inward) and take a step: add that new x or y vector to the current vector and assign to the next index. Each step alternates between x and y.
         ///
         ///
-        fn spin(n_spool_size: (usize, usize)) -> Spindle;
-
-        /// 🪀 Spin a zigzagging-inward-spiralling Hamiltonian chain.
-        fn spin_easy(radius: usize) -> Spindle;
+        fn spin_out(n: usize) -> Spindle;
     }
 
     impl Spin for Spindle {
-        fn spin((n, spool_size): (usize, usize)) -> Spindle {
-            let mut spool = vec![[n.get_max_xyz(), 1]; spool_size];
-            let (mut spinner, (mut iturn, mut zigzag)) = Spinner::start(n);
-            (0..spool_size - 1).for_each(|idx| {
-                let yx = *spinner.yxyx.next().unwrap();
-                if iturn == idx {
-                    (iturn, zigzag) = spinner.turn(yx);
-                };
-                spool[idx + 1] = spool[idx].add(zigzag[yx])
-            });
-            spool
-        }
-
-        /// Similar to the `spin()` without the Spinner.
-        fn spin_easy(radius: usize) -> Spindle {
-            (1..radius + 1)
+        fn spin_out(n: usize) -> Spindle {
+            // if n == 4:
+            // r = n * 2 - 1
+            // r = (4 * 2) - 1
+            // r = 7
+            let r = n.get_radius_usize();
+            let (start, disp_vects) = if n % 2 == 0 {
+                ([1, 1], DPYX_EVEN)
+            } else {
+                ([-1, 1], DPYX_ODD)
+            };
+            (1..r + 1)
+                // (1, 2, 3, 4, 5, 6, 7)
                 .step_by(2)
-                .rev()
+                // (1, 3, 5, 7)
                 .flat_map(|x| [x; 2])
-                .prefaced_with(radius)
+                // .flat_map(|x| if x < r {vec![x; 2]} else {vec![x; 3]})
+                // (1, 1, 3, 3, 5, 7, 7)
+                .postfaced_with(r)
+                // (1, 1, 3, 3, 5, 7, 7, 7)
                 .enumerate()
-                .flat_map(|(ix, len)| {
+                // idx is used to cycle over the disp_vectors, the first `idx % 4` cycles through the disp_vects [0, 1, 2, 3]
+                // and the second: `(idx + 1) % 2` results in [0, 1, 0, 1, ...] which alternates between the y and x displacement vector.
+                // [(0, 1), (1, 1), (2, 3), (3, 3), (4, 5), (5, 5), (6, 7), (7, 7), (8, 7)]
+                .flat_map(|(idx, len)| {
                     (0..len)
-                        .map(move |i| DV_YX[ix % 4][(ix + i) % 2])
+                        .map(move |i| disp_vects[idx % 4][(idx + i) % 2])
+                        // `[idx % 4]` => 0, 1, 2, 3
+                        // Cycles through the zigzag vectors.
+                        // `[(idx + i) % 2]` => 0, 1, 0, 1
+                        // replaces the infinite iterator of [0, 1] to access y or x displacement vector in the zigzag
+                        // displacement vector
                         .into_iter()
                 })
-                .prefaced_with([radius as i16, 1])
+                // preface with start of path: [radius, 1]
+                .prefaced_with(start)
+                // Apply the displacement vectors to a start state of [0, 0] to the following results.
                 .scan([0, 0], |state, [x, y]| {
                     *state = [state[0] + x, state[1] + y];
                     Some(*state)
@@ -159,67 +170,45 @@ mod spin_yarn {
         }
     }
 
-    /// A struct responsible for providing the right set of displacement vectors to add to the current step to produce the next so that from an initial vector, an inward-turning zigzag is produced
-    pub struct Spinner<'a> {
-        /// Value of n.
-        pub n: Count,
-        /// A list of indices indicating when the displacement vectors should be replaced with a new set.
-        pub turns: Counts,
-        /// An infinite iterator of displacement vectors.
-        pub zigzags: std::iter::Cycle<core::slice::Iter<'static, [V2d; 2]>>,
-        /// An infinite iterator of alternating 1 and 0 which indexes to either a y-axis displacement vector or x.
-        pub yxyx: std::iter::Cycle<core::slice::Iter<'a, usize>>,
-    }
+    /// 🩺 Test `prepare_yarn` and `cut_yarn`
+    #[cfg(test)]
+    mod tests_spin_easy {
+        use std::collections::HashSet;
 
-    impl<'a> Spinner<'a> {
-        pub fn start(n: Count) -> (Self, (Count, &'static [V2d; 2])) {
-            let mut turns = Spinner::get_turns(n);
-            let mut zigzags = Spinner::get_zigzags();
-            let turn = turns.pop().unwrap();
-            let zigzag = zigzags.next().unwrap();
-            let spinner = Spinner {
-                n,
-                turns,
-                zigzags,
-                yxyx: [1, 0].iter().cycle(),
-            };
-            (spinner, (turn, zigzag))
-        }
+        use itertools::all;
+        use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 
-        pub fn turn(&mut self, iyx: Count) -> (Count, &'static [V2d; 2]) {
-            (
-                self.turns.pop().unwrap() - iyx,
-                self.zigzags.next().unwrap(),
-            )
-        }
+        use super::super::prelude::*;
 
-        fn get_turns(n: Count) -> Counts {
-            let mut result = (-(n as i64 * 2)..=-2)
-                .step_by(2)
-                .flat_map(|turn| [-turn as usize; 2])
-                .scan(0, |state, n| {
-                    *state += n;
-                    Some(*state - 1)
-                })
-                .collect::<Counts>();
-            result.reverse();
-            result
-        }
-
-        fn get_zigzags() -> std::iter::Cycle<core::slice::Iter<'static, [V2d; 2]>> {
-            DISP_VECTORS.iter().cycle()
-        }
-    }
-
-    /// Add another vector to self.
-    pub trait AddVec {
-        // add two 2-dimensional vectors together.
-        fn add(&self, other: V2d) -> V2d;
-    }
-
-    impl AddVec for V2d {
-        fn add(&self, [a, b]: V2d) -> V2d {
-            [self[0] + a, self[1] + b]
+        #[test]
+        /// Run and test first 200 orders if output is whatexpected.
+        /// Test:
+        ///     l1-norm within max_l1-norm,
+        ///     first and last item matches expected,
+        ///     length of spun yarn,
+        ///     no duplicates.
+        fn test_spin_outward() {
+            (1..100).for_each(|n| {
+                let result = Spindle::spin_out(n);
+                let radius = n.get_radius();
+                // spool size: `2 * n * (n + 1)`
+                let spool_size = n.get_spool_size();
+                assert_eq!(result.len(), spool_size);
+                assert_eq!(result[0], [if n % 2 == 0 { 1 } else { -1 }, 1]);
+                assert_eq!(*result.last().unwrap(), [radius, 1]);
+                let [first_x, first_y] = result.first().unwrap();
+                assert_eq!(*first_y, 1);
+                assert!(*first_x == -1 || *first_x == 1);
+                assert!(all(result, |vert| vert.l1norm() <= n.get_max_absumv()));
+                let result = Spindle::spin_out(n);
+                let set_result = result.par_iter().collect::<HashSet<_>>();
+                assert_eq!(spool_size, set_result.len());
+                let first = result.first().unwrap();
+                match n % 2 == 0 {
+                    true => assert_eq!(*first, [1, 1]),
+                    false => assert_eq!(*first, [-1, 1]),
+                }
+            });
         }
     }
 }
@@ -252,6 +241,121 @@ mod color_yarn {
             Yarns::from([(3, blue), (1, red)])
         }
     }
+}
+
+/// Append prepend to iterator
+pub mod prepost_iter {
+
+    /// Trait for types that can be prepended with an element of the same type.
+    pub trait PrefacedWith<T, U> {
+        /// Returns a new instance of the type that has `item` prepended to it.
+        ///
+        /// ## Arguments
+        ///
+        /// * `item` - The element to prepend to the container.
+        ///
+        /// ## Returns
+        ///
+        /// A new instance of the type with `item` prepended to it.
+        fn prefaced_with(self, item: T) -> U;
+    }
+
+    use std::iter::{once, Chain, FromIterator, Once};
+
+    impl<T, U> PrefacedWith<T, U> for U
+    where
+        U: IntoIterator<Item = T> + FromIterator<T>,
+    {
+        /// Returns a new instance of the type that has `item` prepended to it.
+        ///
+        /// ## Arguments
+        ///
+        /// * `item` - The element to prepend to the container.
+        ///
+        /// ## Returns
+        ///
+        /// A new instance of the type with `item` prepended to it.
+        fn prefaced_with(self, item: T) -> U {
+            once(item).chain(self.into_iter()).collect()
+        }
+    }
+
+    /// Trait for iterators that can be prepended with an element of the same type.
+    pub trait PostfacedIter<T>: Iterator<Item = T> {
+        /// Returns a new iterator that has `item` prepended to it.
+        ///
+        /// ## Arguments
+        ///
+        /// * `item` - The element to prepend to the iterator.
+        ///
+        /// ## Returns
+        ///
+        /// A new iterator that has `item` prepended to it.
+        fn postfaced_with(self, item: T) -> Chain<Self, Once<T>>
+        where
+            Self: Sized;
+    }
+
+    impl<T, I> PostfacedIter<T> for I
+    where
+        I: Iterator<Item = T>,
+    {
+        /// Returns a new iterator that has `item` prepended to it.
+        ///
+        /// ## Arguments
+        ///
+        /// * `item` - The element to prepend to the iterator.
+        ///
+        /// ## Returns
+        ///
+        /// A new iterator that has `item` prepended to it.
+        /// same as:
+        /// ```
+        /// self.chain(once(item))
+        /// ```
+        fn postfaced_with(self, item: T) -> Chain<Self, Once<T>> {
+            self.chain(once(item))
+        }
+    }
+
+    /// Trait for iterators that can be prepended with an element of the same type.
+    pub trait PrefacedIter<T>: Iterator<Item = T> {
+        /// Returns a new iterator that has `item` prepended to it.
+        ///
+        /// ## Arguments
+        ///
+        /// * `item` - The element to prepend to the iterator.
+        ///
+        /// ## Returns
+        ///
+        /// A new iterator that has `item` prepended to it.
+        fn prefaced_with(self, item: T) -> std::iter::Chain<std::iter::Once<T>, Self>
+        where
+            Self: Sized;
+    }
+
+    impl<T, I> PrefacedIter<T> for I
+    where
+        I: Iterator<Item = T>,
+    {
+        /// Returns a new iterator that has `item` prepended to it.
+        ///
+        /// ## Arguments
+        ///
+        /// * `item` - The element to prepend to the iterator.
+        ///
+        /// ## Returns
+        ///
+        /// A new iterator that has `item` prepended to it.
+        /// same as:
+        /// ```
+        /// once(item).chain(self)
+        /// ```
+        fn prefaced_with(self, item: T) -> Chain<Once<T>, Self> {
+            once(item).chain(self)
+        }
+    }
+
 }
 
 /// 📌 Mark ends with a pin from which to extend the prepared yarn. Each pin is a point constructed from each end of each thread in the loom where there an edge length is added to the z-scalar value of each end: thread_end [x, y, z] -> pin [x, y, z + 2]
@@ -327,9 +431,9 @@ pub mod prepare_yarn {
     }
 
     impl PrepYarnExtensions for Yarns {
-        fn prep(&self, zpos: i16, color: u8, start_idx: usize) -> Warp {
+        fn prep(&self, zpos: i16, color: u8, len: usize) -> Warp {
             self[&color]
-                .slice(s![start_idx.., ..])
+                .slice(s![..len, ..])
                 .outer_iter()
                 .map(|row| [row[0], row[1], zpos])
                 .collect_vec()
@@ -357,28 +461,33 @@ pub mod prepare_yarn {
     }
 
     impl SegmentYarn for Warp {
-        fn chop(mut self, pins: &mut PinCushion) -> Warps {
+        fn chop(mut self: Warp, pins: &mut PinCushion) -> Warps {
+            // This version would probably be faster if I constructed the yarn so it's reversed to begin with.
+            // This involves, changing prep(), and changing the whole spin() module to spin outward.
+            // the displacement vectors also have to be changed.
             match !pins.is_empty() {
                 true => {
-                    pins.push(self[0]);
                     let mut warps = Warps::with_capacity(pins.len() + 1);
-                    let mut indices = self
-                        .par_iter()
+                    self.par_iter()
                         .enumerate()
-                        .filter_map(|(i, p)| {
-                            pins.contains(p).then_some(if i != 0 { i + 1 } else { 0 })
-                        })
-                        .collect::<Vec<_>>();
-                    let last = indices.pop().unwrap() - 1;
-                    if last != self.len() - 1 {
-                        warps.push(self.drain(last..).collect::<Vec<_>>());
-                    }
-                    indices.iter().rev().for_each(|i| {
-                        warps.push(self.drain(i..).rev().collect::<Vec<_>>());
-                    });
+                        .filter_map(|(i, p)| pins.contains(p).then_some(i))
+                        .collect::<Vec<_>>()
+                        .into_iter()
+                        .enumerate()
+                        .rev()
+                        .for_each(|(idx, i)| match idx == 0 {
+                            true if !pins.contains(&self[0]) => {
+                                warps.push(self.drain(i + 1..).collect::<Vec<_>>());
+                                warps.push(self.drain(..).rev().collect::<Vec<_>>())
+                            }
+                            _ => warps.push(self.drain(i..).collect::<Vec<_>>()),
+                        });
                     warps
                 }
-                false => vec![self],
+                false => {
+                    self.reverse();
+                    vec![self]
+                }
             }
         }
     }
@@ -491,7 +600,7 @@ mod merge_cycles {
         pub fn new(mut data: LoomThread, order: Count) -> Weft {
             let mut preallocated = Warp::with_capacity(order);
             preallocated.extend(data.drain(..));
-            let max_abs_z = (order.get_max_xyz_from_order() - 4) as i16;
+            let max_abs_z = (order.get_radius_from_order() - 4) as i16;
             Weft {
                 data: preallocated,
                 joined: false,
@@ -985,11 +1094,11 @@ mod tests_graph_info_from_n {
         let max_i16 = std::i16::MAX as Count;
         assert_eq!(max_i16.loom_size() as i16, 16384);
         assert_eq!(max_i16.get_max_absumv() as i16, -1);
-        assert_eq!(max_i16.get_max_xyz(), -3);
-        assert_eq!(max_i16.get_max_xyz_from_order(), 57);
+        assert_eq!(max_i16.get_radius(), -3);
+        assert_eq!(max_i16.get_radius_from_order(), 57);
         assert_eq!(max_i16.get_n_from_order(), 29);
         assert_eq!(max_i16.get_order_from_n(), 46912496074752);
-        assert_eq!(max_i16.spool_size(), (32767, 2147418112));
+        assert_eq!(max_i16.get_spool_size(), 2147418112);
     }
 
     #[test]
@@ -998,107 +1107,11 @@ mod tests_graph_info_from_n {
         let n = 100;
         assert_eq!(n.loom_size() as i16, 51);
         assert_eq!(n.get_max_absumv(), 201);
-        assert_eq!(n.get_max_xyz(), 199);
-        assert_eq!((n + 60).get_max_xyz_from_order(), 7);
+        assert_eq!(n.get_radius(), 199);
+        assert_eq!((n + 60).get_radius_from_order(), 7);
         assert_eq!((n - 20).get_n_from_order(), 3);
         assert_eq!(n.get_order_from_n(), 1373600);
-        assert_eq!(n.spool_size(), (n, 20200));
-    }
-}
-
-/// 🩺 Test if result from `spin` is same as expected.
-#[cfg(test)]
-mod tests_spin_yarn {
-    use super::{
-        prelude::{InfoN, Spin, V2d},
-        spin_yarn::{AddVec, Spinner},
-    };
-
-    #[test]
-    /// Test the result of spin whose input is determined by a call to InfoN.
-    /// Results provided are zigzag hamiltonian chains from outer to inner vert.
-    fn test_spin() {
-        // Spin cube.
-        let spun = <Vec<V2d> as Spin>::spin(1_usize.spool_size());
-        let expected = [[1, 1], [1, -1], [-1, -1], [-1, 1]];
-        assert_eq!(spun, expected);
-        // Spin order 32 with 12 verts at zlevel -1.
-        let spun = <Vec<V2d> as Spin>::spin(2_usize.spool_size());
-        let expected = [
-            [3, 1],
-            [3, -1],
-            [1, -1],
-            [1, -3],
-            [-1, -3],
-            [-1, -1],
-            [-3, -1],
-            [-3, 1],
-            [-1, 1],
-            [-1, 3],
-            [1, 3],
-            [1, 1],
-        ];
-        assert_eq!(spun, expected);
-        // Spin order 80 with 24 verts at zlevel -1.
-        let spun = <Vec<V2d> as Spin>::spin(3_usize.spool_size());
-        let expected = [
-            [5, 1],
-            [5, -1],
-            [3, -1],
-            [3, -3],
-            [1, -3],
-            [1, -5],
-            [-1, -5],
-            [-1, -3],
-            [-3, -3],
-            [-3, -1],
-            [-5, -1],
-            [-5, 1],
-            [-3, 1],
-            [-3, 3],
-            [-1, 3],
-            [-1, 5],
-            [1, 5],
-            [1, 3],
-            [3, 3],
-            [3, 1],
-            [1, 1],
-            [1, -1],
-            [-1, -1],
-            [-1, 1],
-        ];
-        assert_eq!(spun, expected);
-    }
-
-    #[test]
-    /// Test that spinner gives the right zigzag that matches the right index.
-    fn test_spinner() {
-        let (n, spool_size) = 2_usize.spool_size();
-        let (mut spinner, (mut iturn, mut zigzag)) = Spinner::start(n);
-        (0..spool_size - 1).for_each(|idx| {
-            let yx = *spinner.yxyx.next().unwrap();
-            if iturn == idx {
-                match idx {
-                    3 => assert_eq!(&[[-2, 0], [0, -2]], zigzag),
-                    7 => assert_eq!(&[[-2, 0], [0, 2]], zigzag),
-                    9 => assert_eq!(&[[2, 0], [0, 2]], zigzag),
-                    11 => assert_eq!(&[[2, 0], [0, -2]], zigzag),
-                    _ => panic!("Wrong index"),
-                }
-                (iturn, zigzag) = spinner.turn(yx);
-            };
-        });
-    }
-
-    #[test]
-    /// Test the add vec to self
-    fn test_add_vec() {
-        let result = [0, 1].add([1, 0]);
-        assert_eq!(result, [1, 1]);
-        let result = [-1, -1].add([1, 1]);
-        assert_eq!(result, [0, 0]);
-        let result = [-13, 11].add([100, 12]);
-        assert_eq!(result, [87, 23]);
+        assert_eq!(n.get_spool_size(), 20200);
     }
 }
 
