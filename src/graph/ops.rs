@@ -109,18 +109,7 @@ mod spin_yarn {
 
     /// 🪀 Spin a zigzagging-inward-spiralling Hamiltonian chain using displacement vectors to determine the next step. No backtracking, just a switching of displacement vectors at specific cuts to assure the path form is turning always inwards.
     pub trait Spin {
-        /// 🪀 Spin a zigzagging-inward-spiralling Hamiltonian chain.
-        ///
-        ///---\
-        /// `📏 spool_size`: Spool length and longest hamiltonian chain consisting only of points whose scalar z-value is -1.\
-        /// `🧵 spool`: Container upon which the yarn is spun or the tour recorded.\
-        /// `🛞 turns`: cuts indicating when to get `next(pair of xy-zigzag displacement vectors)`.\
-        /// `🎚️ radius`:  Max scalar value for x, y, z used as the first step and to seed the array: `[radius, 1]`.\
-        /// `🔀 switch`:  an infinite switch iterator of cuts [[1, 0]] of the y and x axis of the displacement vector.\
-        ///---\
-        /// Pre-populate the `spool` with start the vector `[max_yxz, 1]` * `spool_size` to avoid reallocation of space. Take steps by looping over the pre-populated elements of `spool` starting from the first index `spool[0]` and calculating the next step by adding either an x or y (switching at each step) displacement vector to the current vector `spool[idx].add_vec(zigzag[y_or_x])` and taking that step by assigning the result to the next index `spool[idx + 1]`. When it's time to turn `turn == idx`, get the new set of zig-zag vectors to change direction (turning inward) and take a step: add that new x or y vector to the current vector and assign to the next index. Each step alternates between x and y.
-        ///
-        ///
+        /// 🪀 Spin a zigzagging-outward-spiralling Hamiltonian chain.
         fn spin_out(n: usize) -> Spindle;
     }
 
@@ -574,7 +563,7 @@ mod merge_cycles {
                 Weft::new(self[0].split_off(0), n.get_order_from_n()),
                 self.split_off(1)
                     .into_par_iter()
-                    .map(|mut data| data.drain(..).collect())
+                    .map(|mut data| data.par_drain(..).collect())
                     .collect(),
             )
         }
