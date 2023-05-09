@@ -32,7 +32,7 @@ pub mod make {
     /// make graph with an xs_adjacency for zlevel == =1.
     pub fn make_z_graph(n: usize) -> (usize, ZAdjacency, ZOrder, i16) {
         let order = n.get_order_from_n();
-        let max_xyz = order.get_max_xyz_from_order() as i16;
+        let max_xyz = order.get_radius_from_order() as i16;
         let (z_adj, z_order) = make_xs_adjacency(n, max_xyz);
         (order, z_adj, z_order, max_xyz - 4)
     }
@@ -40,7 +40,7 @@ pub mod make {
     /// An even smaller graph without an adjacency.
     pub fn make_xs_graph(n: usize) -> (usize, ZOrder, i16) {
         let order = n.get_order_from_n();
-        let max_xyz = n.get_max_xyz_from_order() as i16;
+        let max_xyz = n.get_radius_from_order() as i16;
         let z_order = get_zlevel_order(n);
         (order, z_order, max_xyz - 4)
     }
@@ -94,7 +94,7 @@ pub mod make {
     /// Make an adjacency list based on n.
     pub fn make_adjacency(n: usize) -> Adjacency {
         let order = n.get_order_from_n();
-        let max_xyz = order.get_max_xyz_from_order() as i16;
+        let max_xyz = order.get_radius_from_order() as i16;
         let verts: Vec<[i16; 3]> = vertices(max_xyz);
         adjacency_map(&verts, max_xyz + 2)
     }
