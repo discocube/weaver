@@ -1030,6 +1030,624 @@ pub mod certify_solution {
     }
 }
 
+/// ✅ Certify if the solution is Hamiltonian.
+pub mod certify_solution_node {
+    use crate::graph::types::{V2d, V3d};
+    use itertools::Itertools;
+
+    use std::{
+        collections::{HashMap, HashSet},
+        fmt,
+    };
+
+    #[derive(Debug, PartialEq)]
+    /// Enum describing possible ids of a solution: Broken, Chain, Cycle.
+    pub enum SequenceID {
+        Broken,
+        HamChain,
+        HamCycle,
+    }
+
+    /// impl Display to print out SequenceID w/o debug.
+    impl fmt::Display for SequenceID {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            match self {
+                SequenceID::Broken => write!(f, "Broken"),
+                SequenceID::HamChain => write!(f, "HamChain"),
+                SequenceID::HamCycle => write!(f, "HamCycle"),
+            }
+        }
+    }
+
+    /// Certify if a sequence is a Hamiltonian cycle by:
+    /// Checking for duplicates
+    /// Check that solution length is equal to the order of the graph.
+    /// The sum of all displacement vectors used to construct the cycle is equal to [0, 0, 0]
+    /// Check that the current node is adjacent to the next node.
+    /// Check that the last node is adjacent to the first. If not is is a HamChain else HamCycle.
+    pub trait CertifyNode<SequenceID> {
+        /// Certify if a sequence is a Hamiltonian cycle by:
+        /// Checking for duplicates
+        /// Check that solution length is equal to the order of the graph.
+        /// The sum of all displacement vectors used to construct the cycle is equal to [0, 0, 0]
+        /// Check that the current node is adjacent to the next node.
+        /// Check that the last node is adjacent to the first. If not is is a HamChain else HamCycle.
+        fn certify(&mut self, adj: &HashMap<u32, HashSet<u32>>) -> SequenceID;
+    }
+
+    impl CertifyNode<SequenceID> for &mut Vec<u32> {
+        fn certify(&mut self, adj: &HashMap<u32, HashSet<u32>>) -> SequenceID {
+            if self.iter().duplicates().count() > 0 || self.len() != adj.len() {
+                return SequenceID::Broken;
+            }
+            match self
+                .windows(2)
+                .all(|window| adj[&window[0]].contains(&window[1]))
+            {
+                true if adj[&self[self.len() - 1]].contains(&self[0]) => SequenceID::HamCycle,
+                true => SequenceID::HamChain,
+                false => SequenceID::Broken,
+            }
+        }
+    }
+
+    impl CertifyNode<SequenceID> for &mut [u32; 12320] {
+        fn certify(&mut self, adj: &HashMap<u32, HashSet<u32>>) -> SequenceID {
+            if self.iter().duplicates().count() > 0 || self.len() != adj.len() {
+                return SequenceID::Broken;
+            }
+            match self
+                .windows(2)
+                .all(|window| adj[&window[0]].contains(&window[1]))
+            {
+                true if adj[&self[self.len() - 1]].contains(&self[0]) => SequenceID::HamCycle,
+                true => SequenceID::HamChain,
+                false => SequenceID::Broken,
+            }
+        }
+    }
+
+    impl CertifyNode<SequenceID> for Vec<u32> {
+        fn certify(&mut self, adj: &HashMap<u32, HashSet<u32>>) -> SequenceID {
+            if self.iter().duplicates().count() > 0 || self.len() != adj.len() {
+                return SequenceID::Broken;
+            }
+            match self
+                .windows(2)
+                .all(|window| adj[&window[0]].contains(&window[1]))
+            {
+                true if adj[&self[self.len() - 1]].contains(&self[0]) => SequenceID::HamCycle,
+                true => SequenceID::HamChain,
+                false => SequenceID::Broken,
+            }
+        }
+    }
+
+    /// Calculate the L1-norm for a vector, i.e., the sum of the absolute value of each scalar x, y and or z.
+    /// Also known as the L1-Norm- manhattan distance from a to b where b is the origin (0, 0, 0)
+    /// The L1 norm is calculated as the sum of the absolute vector values, where the absolute value of a scalar uses the notation |a1|.
+    /// In effect, the norm is a calculation of the Manhattan distance from the origin of the vector space.
+    pub trait L1Norm {
+        /// Calculate the L1-norm for a vector, i.e., the sum of the absolute value of each scalar x, y and or z.
+        fn l1norm(&self) -> i16;
+    }
+
+    impl L1Norm for V3d {
+        fn l1norm(&self) -> i16 {
+            self.iter().map(|v| v.abs()).sum()
+        }
+    }
+
+    impl L1Norm for V2d {
+        fn l1norm(&self) -> i16 {
+            self.iter()
+                .map(|v| {
+                    let mask = v >> 15;
+                    (v ^ mask) - mask
+                })
+                .sum()
+        }
+    }
+
+    /// Test that input vector is adjacent to self where the points are points in a 3d grid.
+    pub trait IsAdjacent {
+        /// Check if self is adjacent to another vertex.
+        fn is_adj_to(&self, other: V3d) -> bool;
+    }
+
+    impl IsAdjacent for V3d {
+        fn is_adj_to(&self, [x, y, z]: V3d) -> bool {
+            match self[0] - x + self[1] - y + self[2] - z {
+                n if n == 2 || n == -2 => true,
+                _ => false,
+            }
+        }
+    }
+}
+
+/// Module for translating the solution into a string by using a list of 30 unique characters
+/// Goal: Either choose your own unique 30 chars or
+pub mod translate {
+    use itertools::{Itertools, iproduct};
+    use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
+
+    use super::prelude::{L1Norm, Node, Nodes, Vectors, InfoN};
+    
+    /// Makes vertices based on radius.
+    pub fn make_vertices(order: usize) -> Vec<[i16; 3]> {
+        let radius = order.get_radius_from_order();
+        let radius_plus_4 = radius + 4;
+        iproduct!(
+            (-radius..=radius).step_by(2),
+            (-radius..=radius).step_by(2),
+            (-radius..=radius).step_by(2)
+        )
+        .filter_map(|(x, y, z)| ([x, y, z].l1norm() < radius_plus_4).then_some([x, y, z]))
+        .sorted_by_key(|&vert| (vert.l1norm(), vert[0], vert[1]))
+        .collect::<Vec<_>>()
+    }
+
+    /// Convert a vector of indices to vectors to those vectors.
+    pub trait NodesToVectors {
+        fn to_vectors(&self) -> Vectors;
+    }
+
+    impl NodesToVectors for Nodes {
+        fn to_vectors(&self) -> Vectors {
+            let verts = make_vertices(self.len());
+            self.par_iter().map(|&node| verts[node as usize]).collect()
+        }
+    }
+
+    /// Convert a vector of points to a vector of their indices in the vertices list.
+    pub trait VectorsToNodes {
+        // Check which is faster?
+        fn to_nodes(&self) -> Nodes;
+    }
+
+    impl VectorsToNodes for Vectors {
+        fn to_nodes(&self) -> Nodes {
+            self.iter()
+                .enumerate()
+                .sorted_by_key(|&(_, v)| (v.l1norm(), v[0], v[1], v[2]))
+                .enumerate()
+                .sorted_by_key(|&(_, (i, _))| i)
+                .map(|(idx, _)| idx as Node)
+                .collect()
+        }
+    }
+}
+
+pub mod serialize_chars {
+    use std::{
+        collections::{HashMap, HashSet},
+        ops::Sub,
+    };
+
+    use lazy_static::lazy_static;
+
+    use common_macros::hash_map;
+    use itertools::Itertools;
+    use rayon::prelude::*;
+
+    use super::{
+        prelude::{Solution, Tour},
+        translate::VectorsToNodes,
+    };
+
+    pub fn md([a, b, c]: [i16; 3], [x, y, z]: [i16; 3]) -> usize {
+        ((a - x).abs() + (b - y).abs() + (c - z).abs())
+            .try_into()
+            .unwrap()
+    }
+
+    /// maps to and from a single-byte character. SBCS
+    static CORNERS: [&str; 30] = [
+        "XY", "XZ", "Xy", "Xz", "YX", "YZ", "Yx", "Yz", "ZX", "ZY", "Zx", "Zy", "xY", "xZ", "xy",
+        "xz", "yX", "yZ", "yx", "yz", "zX", "zY", "zx", "zy", "XX", "YY", "ZZ", "xx", "yy", "zz",
+    ];
+
+    /// US-ASCII first 128 chars
+    pub static VALID_CHARS: &str = r"!”#$%&’()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{}~";
+    lazy_static! {
+        static ref STR_VEC: HashMap<char, [i16; 3]> = {
+            hash_map! {
+                'S' => [-1, -1, -1],
+                'X' => [2, 0, 0],
+                'x' => [-2, 0, 0],
+                'Y' => [0, 2, 0],
+                'y' => [0, -2, 0],
+                'Z' => [0, 0, 2],
+                'z' => [0, 0, -2]
+            }
+        };
+        static ref VEC_STR: HashMap<[i16; 3], char> = {
+            hash_map! {
+                [2, 0, 0] => 'X',
+                [-2, 0, 0] => 'x',
+                [0, 2, 0] => 'Y',
+                [0, -2, 0] => 'y',
+                [0, 0, 2] => 'Z',
+                [0, 0, -2] => 'z',
+            }
+        };
+        static ref STR_CHR: HashMap<String, char> = {
+            hash_map! {
+                "XY".to_string() => 'a',
+                "XZ".to_string() => 'b',
+                "Xy".to_string() => 'c',
+                "Xz".to_string() => 'd',
+                "YX".to_string() => 'e',
+                "YZ".to_string() => 'f',
+                "Yx".to_string() => 'g',
+                "Yz".to_string() => 'h',
+                "ZX".to_string() => 'i',
+                "ZY".to_string() => 'j',
+                "Zx".to_string() => 'k',
+                "Zy".to_string() => 'l',
+                "xY".to_string() => 'm',
+                "xZ".to_string() => 'n',
+                "xy".to_string() => 'o',
+                "xz".to_string() => 'p',
+                "yX".to_string() => 'q',
+                "yZ".to_string() => 'r',
+                "yx".to_string() => 's',
+                "yz".to_string() => 't',
+                "zX".to_string() => 'u',
+                "zY".to_string() => 'v',
+                "zx".to_string() => 'w',
+                "zy".to_string() => 'x',
+                "XX".to_string() => '0',
+                "YY".to_string() => '1',
+                "ZZ".to_string() => '2',
+                "xx".to_string() => '3',
+                "yy".to_string() => '4',
+                "zz".to_string() => '5',
+
+            }
+        };
+        static ref CHR_STR: HashMap<char, String> = {
+            hash_map! {
+                'a' => "XY".to_string(),
+                'b' => "XZ".to_string(),
+                'c' => "Xy".to_string(),
+                'd' => "Xz".to_string(),
+                'e' => "YX".to_string(),
+                'f' => "YZ".to_string(),
+                'g' => "Yx".to_string(),
+                'h' => "Yz".to_string(),
+                'i' => "ZX".to_string(),
+                'j' => "ZY".to_string(),
+                'k' => "Zx".to_string(),
+                'l' => "Zy".to_string(),
+                'm' => "xY".to_string(),
+                'n' => "xZ".to_string(),
+                'o' => "xy".to_string(),
+                'p' => "xz".to_string(),
+                'q' => "yX".to_string(),
+                'r' => "yZ".to_string(),
+                's' => "yx".to_string(),
+                't' => "yz".to_string(),
+                'u' => "zX".to_string(),
+                'v' => "zY".to_string(),
+                'w' => "zx".to_string(),
+                'x' => "zy".to_string(),
+                '0' => "XX".to_string(),
+                '1' => "YY".to_string(),
+                '2' => "ZZ".to_string(),
+                '3' => "xx".to_string(),
+                '4' => "yy".to_string(),
+                '5' => "zz".to_string(),
+
+            }
+        };
+    }
+
+    pub trait GetPivotsKeyLhs {
+        fn get_pivot_key_lhs(
+            &self,
+            adj: &HashMap<u32, HashSet<u32>>,
+            verts: &Vec<[i16; 3]>,
+        ) -> usize;
+    }
+
+    pub trait GetPivotsKeyRhs {
+        fn get_pivot_key_rhs(
+            &self,
+            adj: &HashMap<u32, HashSet<u32>>,
+            verts: &Vec<[i16; 3]>,
+        ) -> usize;
+    }
+
+    impl GetPivotsKeyLhs for Vec<u32> {
+        fn get_pivot_key_lhs(
+            &self,
+            adj: &HashMap<u32, HashSet<u32>>,
+            verts: &Vec<[i16; 3]>,
+        ) -> usize {
+            let first = verts[self[0] as usize];
+            self.index(
+                self.get_pivots_lhs(adj)
+                    .into_iter()
+                    .sorted_by_key(|&node| md(verts[node as usize], first))
+                    .next()
+                    .unwrap(),
+            )
+        }
+    }
+
+    impl GetPivotsKeyRhs for Vec<u32> {
+        fn get_pivot_key_rhs(
+            &self,
+            adj: &HashMap<u32, HashSet<u32>>,
+            verts: &Vec<[i16; 3]>,
+        ) -> usize {
+            let first = verts[self[0] as usize];
+            self.index(
+                self.get_pivots_rhs(adj)
+                    .into_iter()
+                    .sorted_by_key(|&node| md(verts[node as usize], first))
+                    .next()
+                    .unwrap(),
+            ) + 1
+        }
+    }
+
+    pub trait GetPivotsLhs {
+        fn get_pivots_lhs(&self, adj: &HashMap<u32, HashSet<u32>>) -> HashSet<u32>;
+        fn get_pivot_lhs(&self, adj: &HashMap<u32, HashSet<u32>>) -> usize;
+    }
+
+    pub trait GetPivotsRhs {
+        fn get_pivots_rhs(&self, adj: &HashMap<u32, HashSet<u32>>) -> HashSet<u32>;
+        fn get_pivot_rhs(&self, adj: &HashMap<u32, HashSet<u32>>) -> usize;
+    }
+
+    impl GetPivotsLhs for Vec<u32> {
+        fn get_pivots_lhs(&self, adj: &HashMap<u32, HashSet<u32>>) -> HashSet<u32> {
+            adj[&self[0]].sub(&HashSet::from([self[1]]))
+        }
+
+        fn get_pivot_lhs(&self, adj: &HashMap<u32, HashSet<u32>>) -> usize {
+            self.index(self.get_pivots_lhs(adj).into_iter().next().unwrap().clone())
+        }
+    }
+
+    impl GetPivotsRhs for Vec<u32> {
+        fn get_pivots_rhs(&self, adj: &HashMap<u32, HashSet<u32>>) -> HashSet<u32> {
+            let last = self.len() - 1;
+            adj[&self[last]].sub(&HashSet::from([self[last - 1]]))
+        }
+
+        fn get_pivot_rhs(&self, adj: &HashMap<u32, HashSet<u32>>) -> usize {
+            self.index(self.get_pivots_rhs(adj).into_iter().next().unwrap()) + 1
+        }
+    }
+
+    pub trait Index<T> {
+        fn index(&self, item: T) -> usize;
+    }
+
+    impl Index<u32> for Vec<u32> {
+        fn index(&self, item: u32) -> usize {
+            self.par_iter().position_any(|&n| n == item).unwrap()
+        }
+    }
+    /// Rotate the loop so that [1, 1, 1] is in the first position and loop[1] < loop[-1] after keying.
+    /// ```
+    /// let mut vecloop = vec![[3, 3, 1], [3, 1, 1], [1, 1, 1], [1, 1, -1]];
+    /// vecloop.keyed();
+    /// assert_eq!(vecloop, vec![[1, 1, 1], [1, 1, -1], [3, 3, 1], [3, 1, 1]]);
+    /// ```
+    pub trait KeyLoop {
+        /// Rotate the loop so that [1, 1, 1] is in the first position and loop[1] < loop[-1] after keying.
+        fn keyed(&self) -> Tour;
+    }
+
+    impl KeyLoop for Tour {
+        fn keyed(&self) -> Tour {
+            let mut result = self.clone();
+            let idx = result
+                .par_iter()
+                .position_any(|&vert| vert == [-1, -1, -1])
+                .unwrap();
+            result.rotate_left(idx);
+            if result[result.len() - 1] < result[1] {
+                result.rotate_left(1);
+                result.reverse();
+            }
+            result
+        }
+    }
+
+    pub trait AddVectors {
+        fn add(self, prev: Self) -> Self;
+    }
+
+    impl AddVectors for [i16; 3] {
+        fn add(self, [x, y, z]: Self) -> Self {
+            [x + self[0], y + self[1], z + self[2]]
+        }
+    }
+
+    pub trait SubtractVectors {
+        fn sub(self, prev: Self) -> Self;
+    }
+
+    impl SubtractVectors for [i16; 3] {
+        fn sub(self, [x, y, z]: Self) -> Self {
+            [x - self[0], y - self[1], z - self[2]]
+        }
+    }
+
+    pub trait VectorDisplacement {
+        fn get_vdisps(&self) -> Solution;
+    }
+
+    impl VectorDisplacement for Solution {
+        fn get_vdisps(&self) -> Solution {
+            let last_idx = self.len() - 1;
+            self.par_iter()
+                .enumerate()
+                .map(|(i, v)| v.sub(self[if i != last_idx { i + 1 } else { 0 }]))
+                .collect()
+        }
+    }
+
+    pub trait ChardDisplacementVector {
+        fn as_chrds(self) -> String;
+    }
+
+    impl ChardDisplacementVector for Solution {
+        fn as_chrds(self) -> String {
+            self.par_iter().map(|vec| VEC_STR[vec]).collect()
+        }
+    }
+
+    pub trait PairChrds {
+        fn pair(&self) -> Vec<String>;
+    }
+
+    pub trait VecToString {
+        fn to_string(&self) -> String;
+        fn to_string_with(&self, key: &str) -> String;
+    }
+
+    impl VecToString for Vec<String> {
+        fn to_string(&self) -> String {
+            self.par_iter().map(|p| STR_CHR[p]).collect()
+        }
+
+        fn to_string_with(&self, key: &str) -> String {
+            let str_chr: HashMap<String, char> = HashMap::from(
+                key.chars()
+                    .enumerate()
+                    .map(|(idx, key)| (CORNERS[idx].to_string(), key))
+                    .collect::<HashMap<String, char>>(),
+            );
+            self.par_iter().map(|p| str_chr[p]).collect()
+        }
+    }
+
+    pub trait Encode {
+        fn encode(&self) -> String;
+        fn encode_with(&self, key: &str) -> String;
+    }
+
+    impl Encode for Solution {
+        fn encode(&self) -> String {
+            self.keyed().get_vdisps().as_chrds().pair().to_string()
+        }
+
+        fn encode_with(&self, key: &str) -> String {
+            self.keyed()
+                .get_vdisps()
+                .as_chrds()
+                .pair()
+                .to_string_with(key)
+        }
+    }
+
+    pub trait Decode {
+        fn decode(&self) -> Solution;
+        fn decode_with(&self, key: String) -> Solution;
+        fn decode_to_node(&self) -> Vec<u32>;
+    }
+
+    impl Decode for String {
+        fn decode(&self) -> Solution {
+            [
+                vec![[-1, -1, -1]],
+                self.chars()
+                    .flat_map(|letter| CHR_STR[&letter].unpair())
+                    .into_iter()
+                    .map(|s| STR_VEC[&s])
+                    .collect_vec()[..(self.len() * 2) - 1]
+                    .to_vec(),
+            ]
+            .concat()
+            .iter()
+            .scan([0, 0, 0], |state, vd| {
+                *state = state.add(*vd);
+                Some(*state)
+            })
+            .collect_vec()
+        }
+
+        fn decode_to_node(&self) -> Vec<u32> {
+            self.decode().to_nodes()
+        }
+
+        fn decode_with(&self, key: String) -> Solution {
+            let decoder: HashMap<char, &str> = HashMap::from(
+                key.chars()
+                    .enumerate()
+                    .map(|(idx, c)| (c, CORNERS[idx]))
+                    .collect::<HashMap<char, &str>>(),
+            );
+            [
+                vec![[-1, -1, -1]],
+                self.chars()
+                    .flat_map(|letter| decoder[&letter].unpair())
+                    .into_iter()
+                    .map(|s| STR_VEC[&s])
+                    .collect_vec()[..(self.len() * 2) - 1]
+                    .to_vec(),
+            ]
+            .concat()
+            .iter()
+            .scan([0, 0, 0], |state, vd| {
+                *state = state.add(*vd);
+                Some(*state)
+            })
+            .collect_vec()
+        }
+    }
+
+    pub trait Unpair {
+        fn unpair(&self) -> Vec<char>;
+    }
+
+    impl Unpair for String {
+        fn unpair(&self) -> Vec<char> {
+            self.chars().collect_vec()
+        }
+    }
+
+    impl Unpair for &str {
+        fn unpair(&self) -> Vec<char> {
+            self.chars().collect_vec()
+        }
+    }
+
+    pub trait GetVectors {
+        fn as_points(self) -> Solution;
+    }
+
+    impl GetVectors for String {
+        fn as_points(self) -> Solution {
+            ['S'.to_string(), self[..self.len() - 1].to_string()]
+                .concat()
+                .chars()
+                .scan([0, 0, 0], |state, char| {
+                    *state = state.add(STR_VEC[&char]);
+                    Some(*state)
+                })
+                .collect_vec()
+        }
+    }
+
+    impl PairChrds for String {
+        fn pair(&self) -> Vec<String> {
+            self.chars()
+                .collect_vec()
+                .chunks(2)
+                .map(|chunk| chunk.iter().collect::<String>())
+                .collect_vec()
+        }
+    }
+}
+
 /// 📤 Module for exporting the solution to a .csv file where each row is x, y, z.
 pub mod serialize_csv {
     use crate::graph::types::Solution;
