@@ -88,7 +88,10 @@ pub mod graph_info_from_n {
 
 /// 🛞 Spin a zigzagging-inward-spiralling Hamiltonian chain from the outer to innermost vert where the scalar z value of the points equals -1.
 mod spin_yarn {
-    use super::{graph_info_from_n::InfoN, prepost_iter::{PostfacedIter, PrefacedIter}};
+    use super::{
+        graph_info_from_n::InfoN,
+        prepost_iter::{PostfacedIter, PrefacedIter},
+    };
     use crate::graph::types::*;
 
     /// 2d displacement vectors for walking a zig-zag inwards.
@@ -343,7 +346,6 @@ pub mod prepost_iter {
             once(item).chain(self)
         }
     }
-
 }
 
 /// 📌 Mark ends with a pin from which to extend the prepared yarn. Each pin is a point constructed from each end of each thread in the loom where there an edge length is added to the z-scalar value of each end: thread_end [x, y, z] -> pin [x, y, z + 2]
@@ -455,11 +457,9 @@ pub mod prepare_yarn {
                                 warps.push(self.drain(i + 1..).collect::<Vec<_>>());
                                 warps.push(self.drain(..).rev().collect::<Vec<_>>())
                             }
-                            _ => {
-                                match self.drain(i..).collect::<Vec<_>>() {
-                                    n if !n.is_empty() => warps.push(n),
-                                    _ => (),
-                                }
+                            _ => match self.drain(i..).collect::<Vec<_>>() {
+                                n if !n.is_empty() => warps.push(n),
+                                _ => (),
                             },
                         });
                     warps
@@ -1155,11 +1155,11 @@ pub mod certify_solution_node {
 /// Module for translating the solution into a string by using a list of 30 unique characters
 /// Goal: Either choose your own unique 30 chars or
 pub mod translate {
-    use itertools::{Itertools, iproduct};
+    use itertools::{iproduct, Itertools};
     use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 
-    use super::prelude::{L1Norm, Node, Nodes, Vectors, InfoN};
-    
+    use super::prelude::{InfoN, L1Norm, Node, Nodes, Vectors};
+
     /// Makes vertices based on radius.
     pub fn make_vertices(order: usize) -> Vec<[i16; 3]> {
         let radius = order.get_radius_from_order();
@@ -1337,7 +1337,7 @@ pub mod serialize_chars {
             self.par_iter().position_any(|&n| n == item).unwrap()
         }
     }
-    
+
     /// 🔁 Rotate the loop so that [1, 1, 1] is in the first position and loop[1] < loop[-1] after keying.
     /// ```
     /// let mut vecloop = vec![[3, 3, 1], [3, 1, 1], [1, 1, 1], [1, 1, -1]];
