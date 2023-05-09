@@ -432,28 +432,11 @@ pub mod prepare_yarn {
     /// 🔪 Cut yarn using pins from the pins as cut markers so it can be extended upon the individual threads in the loom.
     pub trait SegmentYarn {
         /// 🔪 Chop yarn using pins from the pins as cut markers.
-        ///
-        /// ---\
-        /// `🎉 warps`: yarn that is cut and prepared to be incorporated.\
-        /// `🎨 last_iyarn`: index of last item in yarn.\
-        /// `📏 last_ipin`: index of last item in the pin_pins.\
-        /// `🖇 i`: index of the previous iyarn.\
-        /// `🧶 ipin`: index of the item in the pins.\
-        /// `🧶 iyarn`: index of the item in the yarn.\
-        /// ---\
-        ///
-        /// Because there's no previous in the beginning there's no pins to use for cutting the yarn.
-        /// Before cutting add the z-value to the 2-dimensional vector, thereby making it 3d and positioning the yarn to the current level on the z-axis.
-        ///
-        ///
         fn chop(self, pins: &mut PinCushion) -> Warps;
     }
 
     impl SegmentYarn for Warp {
         fn chop(mut self: Warp, pins: &mut PinCushion) -> Warps {
-            // This version would probably be faster if I constructed the yarn so it's reversed to begin with.
-            // This involves, changing prep(), and changing the whole spin() module to spin outward.
-            // the displacement vectors also have to be changed.
             match !pins.is_empty() {
                 true => {
                     let mut warps = Warps::with_capacity(pins.len() + 1);
@@ -474,6 +457,7 @@ pub mod prepare_yarn {
                     warps
                 }
                 false => {
+                    // Because there's no previous in the beginning there's no pins to use for cutting the yarn.
                     self.reverse();
                     vec![self]
                 }
@@ -1208,10 +1192,7 @@ pub mod translate {
 }
 
 pub mod serialize_chars {
-    use std::{
-        collections::{HashMap, HashSet},
-        ops::Sub,
-    };
+    use std::collections::HashMap;
 
     use lazy_static::lazy_static;
 
@@ -1237,6 +1218,7 @@ pub mod serialize_chars {
     ];
 
     /// US-ASCII first 128 chars
+    /// Will be used eventually to encode a sequence using a user's personal code.
     pub static VALID_CHARS: &str = r"!”#$%&’()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{}~";
     lazy_static! {
         static ref STR_VEC: HashMap<char, [i16; 3]> = {
@@ -1332,87 +1314,6 @@ pub mod serialize_chars {
         };
     }
 
-    pub trait GetPivotsKeyLhs {
-        fn get_pivot_key_lhs(
-            &self,
-            adj: &HashMap<u32, HashSet<u32>>,
-            verts: &Vec<[i16; 3]>,
-        ) -> usize;
-    }
-
-    pub trait GetPivotsKeyRhs {
-        fn get_pivot_key_rhs(
-            &self,
-            adj: &HashMap<u32, HashSet<u32>>,
-            verts: &Vec<[i16; 3]>,
-        ) -> usize;
-    }
-
-    impl GetPivotsKeyLhs for Vec<u32> {
-        fn get_pivot_key_lhs(
-            &self,
-            adj: &HashMap<u32, HashSet<u32>>,
-            verts: &Vec<[i16; 3]>,
-        ) -> usize {
-            let first = verts[self[0] as usize];
-            self.index(
-                self.get_pivots_lhs(adj)
-                    .into_iter()
-                    .sorted_by_key(|&node| md(verts[node as usize], first))
-                    .next()
-                    .unwrap(),
-            )
-        }
-    }
-
-    impl GetPivotsKeyRhs for Vec<u32> {
-        fn get_pivot_key_rhs(
-            &self,
-            adj: &HashMap<u32, HashSet<u32>>,
-            verts: &Vec<[i16; 3]>,
-        ) -> usize {
-            let first = verts[self[0] as usize];
-            self.index(
-                self.get_pivots_rhs(adj)
-                    .into_iter()
-                    .sorted_by_key(|&node| md(verts[node as usize], first))
-                    .next()
-                    .unwrap(),
-            ) + 1
-        }
-    }
-
-    pub trait GetPivotsLhs {
-        fn get_pivots_lhs(&self, adj: &HashMap<u32, HashSet<u32>>) -> HashSet<u32>;
-        fn get_pivot_lhs(&self, adj: &HashMap<u32, HashSet<u32>>) -> usize;
-    }
-
-    pub trait GetPivotsRhs {
-        fn get_pivots_rhs(&self, adj: &HashMap<u32, HashSet<u32>>) -> HashSet<u32>;
-        fn get_pivot_rhs(&self, adj: &HashMap<u32, HashSet<u32>>) -> usize;
-    }
-
-    impl GetPivotsLhs for Vec<u32> {
-        fn get_pivots_lhs(&self, adj: &HashMap<u32, HashSet<u32>>) -> HashSet<u32> {
-            adj[&self[0]].sub(&HashSet::from([self[1]]))
-        }
-
-        fn get_pivot_lhs(&self, adj: &HashMap<u32, HashSet<u32>>) -> usize {
-            self.index(self.get_pivots_lhs(adj).into_iter().next().unwrap().clone())
-        }
-    }
-
-    impl GetPivotsRhs for Vec<u32> {
-        fn get_pivots_rhs(&self, adj: &HashMap<u32, HashSet<u32>>) -> HashSet<u32> {
-            let last = self.len() - 1;
-            adj[&self[last]].sub(&HashSet::from([self[last - 1]]))
-        }
-
-        fn get_pivot_rhs(&self, adj: &HashMap<u32, HashSet<u32>>) -> usize {
-            self.index(self.get_pivots_rhs(adj).into_iter().next().unwrap()) + 1
-        }
-    }
-
     pub trait Index<T> {
         fn index(&self, item: T) -> usize;
     }
@@ -1422,7 +1323,8 @@ pub mod serialize_chars {
             self.par_iter().position_any(|&n| n == item).unwrap()
         }
     }
-    /// Rotate the loop so that [1, 1, 1] is in the first position and loop[1] < loop[-1] after keying.
+    
+    /// 🔁 Rotate the loop so that [1, 1, 1] is in the first position and loop[1] < loop[-1] after keying.
     /// ```
     /// let mut vecloop = vec![[3, 3, 1], [3, 1, 1], [1, 1, 1], [1, 1, -1]];
     /// vecloop.keyed();
