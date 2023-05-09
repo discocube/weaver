@@ -5,8 +5,10 @@ edition = "2021"
 
 [dependencies]
 chrono = "0.4.24"
+common_macros = "0.1.1"
 csv = "1.2.1"
 itertools = "0.10.5"
+lazy_static = "1.4.0"
 ndarray = "0.15.0"
 rayon = "1.7.0"
 serde = { version = "1", features = ["derive"] }
