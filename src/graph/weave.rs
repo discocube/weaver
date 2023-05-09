@@ -108,10 +108,10 @@ use super::ops::prelude::*;
 ///
 pub fn weave(n: usize) -> Solution {
     let mut loom = Loom::with_capacity(n.loom_size());
-    let yarns = Yarns::color_spun(Spindle::spin(n.spool_size()));
-    n.zrow_color_idx().iter().for_each(|&((zrow, color), idx)| {
-        let mut pins = loom.pin_thread_ends(zrow);
-        loom.extend_threads(yarns.prep(zrow, color, idx).chop(&mut pins));
+    let yarns = Yarns::color_spun(Spindle::spin_out(n));
+    n.z_color_len().into_iter().for_each(|((z, color), len)| {
+        let mut pins = loom.pin_thread_ends(z);
+        loom.extend_threads(yarns.prep(z, color, len).chop(&mut pins));
     });
     loom.mirror_threads();
     let (mut weft, mut loom) = loom.prepare_cycle_merging(n);
