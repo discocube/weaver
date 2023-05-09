@@ -234,6 +234,7 @@ mod color_yarn {
 
 /// Append prepend to iterator
 pub mod prepost_iter {
+    use std::iter::{once, Chain, FromIterator, Once};
 
     /// Trait for types that can be prepended with an element of the same type.
     pub trait PrefacedWith<T, U> {
@@ -248,8 +249,6 @@ pub mod prepost_iter {
         /// A new instance of the type with `item` prepended to it.
         fn prefaced_with(self, item: T) -> U;
     }
-
-    use std::iter::{once, Chain, FromIterator, Once};
 
     impl<T, U> PrefacedWith<T, U> for U
     where
@@ -432,6 +431,10 @@ pub mod prepare_yarn {
     /// 🔪 Cut yarn using pins from the pins as cut markers so it can be extended upon the individual threads in the loom.
     pub trait SegmentYarn {
         /// 🔪 Chop yarn using pins from the pins as cut markers.
+        ///    
+        ///---\
+        /// `📌 pins`: Contains the pins used as markers for cutting yarn.\
+        ///---\
         fn chop(self, pins: &mut PinCushion) -> Warps;
     }
 
@@ -452,7 +455,12 @@ pub mod prepare_yarn {
                                 warps.push(self.drain(i + 1..).collect::<Vec<_>>());
                                 warps.push(self.drain(..).rev().collect::<Vec<_>>())
                             }
-                            _ => warps.push(self.drain(i..).collect::<Vec<_>>()),
+                            _ => {
+                                match self.drain(i..).collect::<Vec<_>>() {
+                                    n if !n.is_empty() => warps.push(n),
+                                    _ => (),
+                                }
+                            },
                         });
                     warps
                 }
@@ -699,8 +707,11 @@ mod merge_cycles {
                     ((x == 3 || x == 1) && (y == 3 || y == 1)).then_some(
                         // Determine along which axis this edge lies to get parallel edge.
                         match (a != x, b != y, c != z) {
+                            // Edge along x-axis
                             (true, false, false) => ([a, b - 2, c], [x, y - 2, z]),
+                            // Edge along y-axis
                             (false, true, false) => ([a, b, c + 2], [x, y, z + 2]),
+                            // Edge along z-axis
                             (false, false, true) => ([a - 2, b, c], [x - 2, y, z]),
                             _ => panic!("NOT A VALID EDGE"),
                         },
@@ -715,8 +726,11 @@ mod merge_cycles {
             let ([a, b, c], [x, y, z]) = *self;
             // Determine along which axis this edge lies to get parallel edge.
             match (a != x, b != y, c != z) {
+                // Edge along x-axis
                 (true, false, false) => [([a, b + 2, c], [x, y + 2, z])].into(),
+                // Edge along y-axis
                 (false, true, false) => [([a + 2, b, c], [x + 2, y, z])].into(),
+                // Edge along z-axis
                 (false, false, true) => [([a + 2, b, c], [x + 2, y, z])].into(),
                 _ => panic!("NOT A VALID EDGE"),
             }
