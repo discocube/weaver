@@ -128,12 +128,12 @@ mod spin_yarn {
             } else {
                 ([-1, 1], DPYX_ODD)
             };
+            // r inclusive similar to 1..=r
             (1..r + 1)
                 // (1, 2, 3, 4, 5, 6, 7)
                 .step_by(2)
                 // (1, 3, 5, 7)
-                .flat_map(|x| [x; 2])
-                // .flat_map(|x| if x < r {vec![x; 2]} else {vec![x; 3]})
+                .flat_map(|x| [x, x])
                 // (1, 1, 3, 3, 5, 7, 7)
                 .postfaced_with(r)
                 // (1, 1, 3, 3, 5, 7, 7, 7)
@@ -437,35 +437,34 @@ pub mod prepare_yarn {
         ///---\
         /// `📌 pins`: Contains the pins used as markers for cutting yarn.\
         ///---\
+        ///
+        /// Cut a warp into many warps.
         fn chop(self, pins: &mut PinCushion) -> Warps;
     }
 
     impl SegmentYarn for Warp {
         fn chop(mut self: Warp, pins: &mut PinCushion) -> Warps {
             match !pins.is_empty() {
-                true => {
-                    let mut warps = Warps::with_capacity(pins.len() + 1);
-                    self.par_iter()
-                        .enumerate()
-                        .filter_map(|(i, p)| pins.contains(p).then_some(i))
-                        .collect::<Vec<_>>()
-                        .into_iter()
-                        .enumerate()
-                        .rev()
-                        .for_each(|(idx, i)| match idx == 0 {
-                            true if !pins.contains(&self[0]) => {
-                                warps.push(self.drain(i + 1..).collect::<Vec<_>>());
-                                warps.push(self.drain(..).rev().collect::<Vec<_>>())
-                            }
-                            _ => match self.drain(i..).collect::<Vec<_>>() {
-                                n if !n.is_empty() => warps.push(n),
-                                _ => (),
-                            },
-                        });
-                    warps
-                }
+                true => self
+                    .par_iter()
+                    .enumerate()
+                    .filter_map(|(i, p)| pins.contains(p).then_some(i))
+                    .collect::<Vec<_>>()
+                    .into_iter()
+                    .enumerate()
+                    .rev()
+                    .flat_map(|(idx, i)| match idx == 0 {
+                        true if !pins.contains(&self[0]) => {
+                            vec![
+                                self.drain(i + 1..).collect::<Warp>(),
+                                self.drain(..).rev().collect::<Warp>(),
+                            ]
+                        }
+                        _ => vec![self.drain(i..).collect::<Warp>()],
+                    })
+                    .collect(),
                 false => {
-                    // Because there's no previous in the beginning there's no pins to use for cutting the yarn.
+                    // No pins no cutting.
                     self.reverse();
                     vec![self]
                 }
