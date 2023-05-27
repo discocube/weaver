@@ -1,8 +1,7 @@
 <a name="toc"></a>
+
+[0001-1233.webm](https://github.com/discocube/weaver/assets/93198518/50ec18ba-a65d-4fd9-a706-70f951d0384c)
 [Weave animated](https://raw.githubusercontent.com/discocube/weaver/main/imgs/0001-1233.mp4)
-
-![Animated Draw](https://raw.githubusercontent.com/discocube/weaver/main/imgs/0001-1233.mov)
-
 
 ![algodraw2](https://user-images.githubusercontent.com/93198518/234086062-8f9632c7-e6f7-4de1-8595-df439fba9742.png)
 <sup><sub><em>Drawing of algorithm</em></sup></sub>
