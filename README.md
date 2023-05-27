@@ -1,5 +1,6 @@
 <a name="toc"></a>
-![Weave animated](https://github.com/discocube/weaver/assets/93198518/56a0987d-1f16-45fe-82f2-c85da0f71fb5)
+![Weave animated](https://raw.githubusercontent.com/discocube/weaver/main/imgs/0001-1233.mov)
+
 
 ![algodraw2](https://user-images.githubusercontent.com/93198518/234086062-8f9632c7-e6f7-4de1-8595-df439fba9742.png)
 <sup><sub><em>Drawing of algorithm</em></sup></sub>
