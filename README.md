@@ -4,6 +4,7 @@
 <sup><sub><em>Drawing of algorithm</em></sup></sub>
 
 [0001-1233.webm](https://github.com/discocube/weaver/assets/93198518/50ec18ba-a65d-4fd9-a706-70f951d0384c)
+
 <sup><sub><em>Animation of algorithm</em></sup></sub>
 
 ## Table of Contents
