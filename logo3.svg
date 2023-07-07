@@ -1,0 +1,85 @@
+<svg id="dc-logo-sw3-overlay" width="90" height="100.1" version="1.1" viewBox="0 0 23.785714 26.454999"
+  xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Animation for ov class -->
+    <linearGradient id="gradient" x1="0" y1="0" x2="100%" y2="0">
+      <stop offset="0%" stop-color="#0800ff">
+        <animate attributeName="stop-color" values="#ff00d9; #0800ff; #00bfff; #b551a8" dur="5s"
+          repeatCount="indefinite" />
+      </stop>
+    </linearGradient>
+    <!-- Animation for wh class -->
+    <linearGradient id="wh-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <animate attributeName="x1" values="0%; -100%" dur="3s" repeatCount="indefinite" />
+      <animate attributeName="x2" values="100%; 0%" dur="3s" repeatCount="indefinite" />
+      <stop offset="0%" stop-color="#adabab" />
+      <stop offset="50%" stop-color="#bababa" />
+      <stop offset="100%" stop-color="#adabab" />
+    </linearGradient>
+    <!-- Animation for gr class -->
+    <linearGradient id="gr-gradient" x1="0%" y1="0%" x2="100%" y2="75%">
+      <animate attributeName="x1" values="0%; -100%" dur="4s" repeatCount="indefinite" />
+      <animate attributeName="x2" values="100%; 0%" dur="4s" repeatCount="indefinite" />
+      <stop offset="0%" stop-color="#635acf" />
+      <stop offset="50%" stop-color="#746dc3" />
+      <stop offset="100%" stop-color="#635acf" />
+    </linearGradient>
+    <!-- Animation for bl class -->
+    <linearGradient id="bl-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <animate attributeName="x1" values="0%; -100%" dur="5s" repeatCount="indefinite" />
+      <animate attributeName="x2" values="100%; 0%" dur="5s" repeatCount="indefinite" />
+      <stop offset="0%" stop-color="#151515" />
+      <stop offset="50%" stop-color="#212020" />
+      <stop offset="100%" stop-color="#151515" />
+    </linearGradient>
+    <style>
+      .graytones {
+        opacity: 0.9;
+      }
+
+      .overlay {
+        opacity: 0.5;
+      }
+
+      .bl {
+        fill: url(#bl-gradient);
+      }
+
+      .gr {
+        fill: url(#gr-gradient);
+      }
+
+      .wh {
+        fill: url(#wh-gradient);
+      }
+
+      .ov {
+        fill: url(#gradient);
+      }
+    </style>
+  </defs>
+  <!-- GRAYS -->
+  <g class="graytones">
+    <!-- WHITE -->
+    <path class="wh"
+      d="m2.0272819e-7 5.9464295 11.8928658-5.946429143 11.892847 5.953980043-11.892847 5.9464276-3.3035802-1.657449 8.4382742-4.2096923-5.134694-2.7221442-8.5892946 4.2889795z" />
+    <path class="wh"
+      d="m15.196429 20.75398 8.589285-4.304082-6.484099-3.232599-2.105186 1.046578v1.204388l1.982142 0.923113-1.982142 1.057143z" />
+    <path class="wh" d="m6.6071428 13.165204 1.982143-0.989184v3.303572l-1.982143 0.989184z" />
+    <!-- GRAY -->
+    <path class="gr"
+      d="m11.892866 3.3111225-9e-6 4.0397958-5.2857143 2.6428571v6.4750006l1.9821431-0.989184v4.039796l-5.2857144 2.642857v-14.562143z" />
+    <path class="gr"
+      d="m11.892866 11.900408 11.892847-5.9464276 1e-6 4.039795-8.589285 4.2701016v6.490103l8.589285-4.304082v4.058673l-11.892857 5.946429z" />
+    <!-- BLACK -->
+    <path class="bl" d="m11.892866 3.3111225-9e-6 4.0397958 1.227041 0.6229592 3.907662-1.9406108z" />
+    <path class="bl" d="M 2.0272819e-7,5.9464295 3.3035714,7.600102 V 22.162245 L 0,20.50102 Z" />
+    <path class="bl" d="m8.5892858 10.242959 3.3035802 1.657449-9e-6 14.554592-3.3035712-1.661225z" />
+    <path class="bl" d="m15.196429 17.448521 1.982142-1.057143-1.982142-0.923113z" />
+  </g>
+  <!-- OVERLAY -->
+  <g class="overlay">
+    <path class="ov"
+      d="m11.892857 0-11.892857 5.9464285v14.5548125l3.3035714 1.661077 5.2857142-2.642857v5.274358l3.3035714 1.661077 11.892857-5.946428v-4.058747l-6.484291-3.232338 6.484291-3.2235634v-4.0396484l-11.892857-5.9541712zm0 7.3509625 1.226967 0.6230329-4.5305384 2.2691406v1.933105l-1.9821429 0.989007v-3.1714284l5.2857143-2.6428571z" />
+  </g>
+</svg>
