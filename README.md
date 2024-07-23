@@ -20,10 +20,14 @@
 - [⇓](#section-a)
 ---
 
-<br>
+![Planar embedding of Cube and Discocubes](imgs/planar_emb.png?raw=true "Planar embedding of Cube and Discocubes")
+<sup><sub><em>Planar embedding of a cube and a discocube. From the set of all graphs G, where the order of G is of the ***Uncentered octahedral numbers*** [A130809](https://oeis.org/A130809), only the first two instances shown above; n[0] and n[1] are planarly embeddable i.e., it can be represented on a two-dimensional surface without any of its edges crossing.</em></em></sup>
 <br>
 <a name="section-a"></a>
-## Graph object as artist's muse
+
+<br>
+
+## [⇪](#toc) Graph object as artist's muse
 <small><em>“A great discovery solves a great problem, but there is a grain of discovery in the solution of any problem. Your problem may be modest, but if it challenges your curiosity and brings into play your inventive faculties, and if you solve it by your own means, you may experience the tension and enjoy the triumph of discovery.”</em>
 
 George Pólya: <em>How to Solve It: A New Aspect of Mathematical Method</em></small>
@@ -31,9 +35,6 @@ George Pólya: <em>How to Solve It: A New Aspect of Mathematical Method</em></sm
 A deterministic and linear-time algorithm for constructing a Hamiltonian cycle on all instances of discocube graphs (tested for graphs with over 8 billion vertices, the world's population). Discocube graphs are
 3-dimensional grid graphs derived from: a polycube of an octahedron | a Hauy construction of an octahedron with cubes as identical building blocks | the accretion of cubes around a central cube forming an octahedron at the limit |
 the subgraph of the infinite 3-dimensional square grid graph consisting only of points contained within an octahedron | a 3d L1-norm unit ball. 
-
-![Planar embedding of Cube and Discocubes](imgs/planar_emb.png?raw=true "Planar embedding of Cube and Discocubes")
-<sup><sub><em>Planar embedding of a cube and a discocube. From the set of all graphs G, where the order of G is of the ***Uncentered octahedral numbers*** [A130809](https://oeis.org/A130809), only the first two instances shown above; n[0] and n[1] are planarly embeddable i.e., it can be represented on a two-dimensional surface without any of its edges crossing.</em></em></sup>
 
 This algorithm is an artist's rendering of his muse, a graph object, using programming as a language (instead of painting flowers and apples or singing hymns about angels) and a means by which to describe his muse's body as an endless contour drawing or,  in graph theory terms, a Hamiltonian cycle.
 
