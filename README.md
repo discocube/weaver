@@ -20,8 +20,6 @@
 - [⇓](#section-a)
 ---
 
-<sup><sub><em>Me and Discocube in Berghain</em></sup></sub>
-<br>
 <br>
 <br>
 <a name="section-a"></a>
